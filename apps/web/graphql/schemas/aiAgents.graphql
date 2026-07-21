@@ -1,0 +1,16 @@
+type AiAgent {
+  agentId: String!
+  category: String!
+  name: String!
+  description: String!
+}
+
+type AiAgentConfiguration {
+  agentId: String!
+  systemPrompt: String!
+}
+
+extend type Query {
+  aiAgents: [AiAgent!]!
+  aiAgentConfiguration(agentId: String!): AiAgentConfiguration
+}

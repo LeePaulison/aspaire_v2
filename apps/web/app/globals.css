@@ -1,0 +1,809 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Saigely Theme
+   ========================================================================== */
+
+@theme inline {
+  /* ------------------------------------------------------------------------
+   Mist
+   ------------------------------------------------------------------------ */
+
+  --color-mist-50: oklch(0.985 0.004 175);
+  --color-mist-100: oklch(0.968 0.006 175);
+  --color-mist-200: oklch(0.935 0.009 175);
+  --color-mist-300: oklch(0.885 0.012 175);
+  --color-mist-400: oklch(0.8 0.015 175);
+  --color-mist-500: oklch(0.7 0.018 175);
+  --color-mist-600: oklch(0.6 0.02 175);
+  --color-mist-700: oklch(0.5 0.018 175);
+  --color-mist-800: oklch(0.39 0.015 175);
+  --color-mist-900: oklch(0.28 0.012 175);
+
+  /* ------------------------------------------------------------------------
+     Slate (Foundation)
+     ------------------------------------------------------------------------ */
+
+  --color-slate-50: oklch(0.984 0.003 255);
+  --color-slate-100: oklch(0.968 0.004 255);
+  --color-slate-200: oklch(0.928 0.006 255);
+  --color-slate-300: oklch(0.869 0.008 255);
+  --color-slate-400: oklch(0.704 0.011 255);
+  --color-slate-500: oklch(0.554 0.014 255);
+  --color-slate-600: oklch(0.446 0.014 255);
+  --color-slate-700: oklch(0.372 0.013 255);
+  --color-slate-800: oklch(0.279 0.011 255);
+  --color-slate-900: oklch(0.208 0.01 255);
+  --color-slate-950: oklch(0.129 0.008 255);
+
+  /* Saigely extensions */
+
+  --color-slate-960: oklch(0.118 0.008 255);
+  --color-slate-970: oklch(0.108 0.007 255);
+  --color-slate-980: oklch(0.098 0.007 255);
+
+  /* ------------------------------------------------------------------------
+     Emerald (Brand)
+     ------------------------------------------------------------------------ */
+
+  --color-emerald-500: oklch(0.64 0.095 170);
+  --color-emerald-600: oklch(0.56 0.088 170);
+  --color-emerald-700: oklch(0.485 0.078 170);
+  --color-emerald-800: oklch(0.4 0.065 170);
+  --color-emerald-900: oklch(0.315 0.05 170);
+  --color-emerald-950: oklch(0.225 0.038 170);
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+
+  --color-surface: var(--color-surface);
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-surface-tertiary: var(--color-surface-tertiary);
+
+  --color-foreground: var(--color-foreground);
+  --color-foreground-muted: var(--color-foreground-muted);
+
+  --color-border: var(--color-border);
+
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+
+  --color-sidebar: var(--color-sidebar);
+  --color-sidebar-hover: var(--color-sidebar-hover);
+  --color-sidebar-active: var(--color-sidebar-active);
+
+  --color-ring: var(--color-ring);
+
+  --color-message: var(--color-message);
+  --color-message-user: var(--color-message-user);
+
+  --color-input: var(--color-input);
+  --color-input-placeholder: var(--color-input-placeholder);
+  --color-send: var(--color-send);
+}
+
+/* ==========================================================================
+   Light Theme
+   ========================================================================== */
+
+:root,
+.light {
+  color-scheme: light;
+
+  --color-background: var(--color-slate-50);
+
+  --color-surface: white;
+  --color-surface-secondary: var(--color-slate-100);
+  --color-surface-tertiary: var(--color-slate-200);
+
+  --color-foreground: var(--color-slate-900);
+  --color-foreground-muted: var(--color-slate-600);
+
+  --color-border: var(--color-slate-200);
+
+  --color-primary: var(--color-emerald-700);
+  --color-primary-hover: var(--color-emerald-600);
+
+  --color-sidebar-hover: var(--color-slate-100);
+  --color-sidebar-active: var(--color-slate-200);
+
+  --color-ring: var(--color-emerald-600);
+
+  --color-message: var(--color-mist-300);
+  --color-message-user: var(--color-mist-400);
+
+  --color-input: var(--color-mist-600);
+  --color-input-placeholder: var(--color-slate-50);
+  --color-send: var(--color-emerald-700);
+}
+
+/* ==========================================================================
+   Dark Theme
+   ========================================================================== */
+
+.dark {
+  color-scheme: dark;
+
+  --color-background: var(--color-slate-900);
+
+  --color-surface: var(--color-slate-800);
+  --color-surface-secondary: var(--color-slate-700);
+  --color-surface-tertiary: var(--color-slate-600);
+
+  --color-foreground: var(--color-slate-50);
+  --color-foreground-muted: var(--color-slate-400);
+
+  --color-border: color-mix(in oklch, var(--color-slate-700) 20%, transparent);
+
+  --color-primary: var(--color-emerald-700);
+  --color-primary-hover: var(--color-emerald-600);
+
+  --color-sidebar-hover: color-mix(
+    in oklab,
+    var(--color-slate-800) 75%,
+    var(--color-slate-700) 25%
+  );
+  --color-sidebar-active: var(--color-slate-800);
+
+  --color-ring: var(--color-emerald-600);
+
+  --color-message: var(--color-mist-800);
+  --color-message-user: color-mix(
+    in oklab,
+    var(--color-mist-800) 60%,
+    var(--color-mist-900) 40%
+  );
+
+  --color-input: var(--color-mist-800);
+  --color-input-placeholder: var(--color-slate-50);
+  --color-send: var(--color-emerald-800);
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ChatComposerSelect {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  padding: 0.5rem;
+  color: var(--color-foreground);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.ChatComposerSelect:hover:not(:disabled) {
+  background: var(--color-surface-secondary);
+}
+
+.ChatComposerSelect:focus-visible {
+  border-color: var(--color-ring);
+}
+
+.ChatComposerSelect:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ChatComposerSelect option,
+.ChatComposerSelect optgroup {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}
+
+.DeleteDialogContent {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 51;
+  width: min(calc(100vw - 2rem), 28rem);
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  padding: 1.5rem;
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 28%),
+    0 6px 18px rgb(0 0 0 / 14%);
+}
+
+.DeleteDialogContent:focus {
+  outline: none;
+}
+
+/* ===========================================================================
+   Message Markdown
+   ========================================================================== */
+
+.message-bubble .message-markdown {
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.message-bubble .message-markdown > :first-child {
+  margin-top: 0;
+}
+
+.message-bubble .message-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.message-bubble .message-markdown > * + * {
+  margin-top: 0.8rem;
+}
+
+.message-bubble .message-markdown h1,
+.message-bubble .message-markdown h2,
+.message-bubble .message-markdown h3,
+.message-bubble .message-markdown h4 {
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.message-bubble .message-markdown h1 {
+  font-size: 1.35rem;
+}
+
+.message-bubble .message-markdown h2 {
+  font-size: 1.2rem;
+}
+
+.message-bubble .message-markdown h3 {
+  font-size: 1.08rem;
+}
+
+.message-bubble .message-markdown h4 {
+  font-size: 1rem;
+}
+
+.message-bubble .message-markdown ul,
+.message-bubble .message-markdown ol {
+  padding-left: 1.5rem;
+}
+
+.message-bubble .message-markdown ul {
+  list-style-type: disc;
+}
+
+.message-bubble .message-markdown ol {
+  list-style-type: decimal;
+}
+
+.message-bubble .message-markdown ul ul {
+  list-style-type: circle;
+}
+
+.message-bubble .message-markdown ol ol {
+  list-style-type: lower-alpha;
+}
+
+.message-bubble .message-markdown li + li {
+  margin-top: 0.25rem;
+}
+
+.message-bubble .message-markdown li > ul,
+.message-bubble .message-markdown li > ol {
+  margin-top: 0.25rem;
+}
+
+.message-bubble .message-markdown :not(pre) > code {
+  border-radius: 0.25rem;
+  background: color-mix(in oklab, currentColor 10%, transparent);
+  padding: 0.1rem 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9em;
+}
+
+.message-bubble .message-markdown blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 0.9rem;
+  color: var(--color-foreground-muted);
+}
+
+.message-bubble .message-markdown a {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.message-bubble .message-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.message-bubble .message-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+
+.message-bubble .message-markdown th,
+.message-bubble .message-markdown td {
+  border: 1px solid var(--color-border);
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.message-bubble .message-markdown th {
+  background: color-mix(in oklab, currentColor 8%, transparent);
+  font-weight: 700;
+}
+
+.ScrollAreaRoot {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  --scrollbar-size: 10px;
+}
+
+.ScrollAreaViewport {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.ScrollAreaViewport > div:first-child {
+  display: block !important;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ScrollAreaScrollbar {
+  display: flex;
+
+  /* ensures no selection */
+  user-select: none;
+
+  /* disable browser handling of all panning and zooming gestures on touch devices */
+  touch-action: none;
+
+  padding: 2px;
+  background: var(--color-surface-secondary);
+  transition: background-color 160ms ease-out;
+}
+
+.ScrollAreaScrollbar:hover {
+  background: var(--color-surface-tertiary);
+}
+
+.ScrollAreaScrollbar[data-orientation="vertical"] {
+  width: var(--scrollbar-size);
+}
+
+.ScrollAreaScrollbar[data-orientation="horizontal"] {
+  flex-direction: column;
+  height: var(--scrollbar-size);
+}
+
+.ScrollAreaThumb {
+  flex: 1;
+  background: var(--color-mist-400);
+  border-radius: var(--scrollbar-size);
+  position: relative;
+  transition: background-color 160ms ease-out;
+}
+
+.ScrollAreaThumb:hover {
+  background: var(--color-mist-500);
+}
+
+/* increase target size for touch devices
+   https://www.w3.org/WAI/WCAG21/Understanding/target-size.html */
+.ScrollAreaThumb::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.ScrollAreaCorner {
+  background: var(--color-surface-secondary);
+}
+
+.DropdownMenuContent {
+  min-width: 220px;
+
+  padding: 0.5rem;
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+
+  box-shadow:
+    0 16px 40px rgb(0 0 0 / 28%),
+    0 4px 12px rgb(0 0 0 / 12%);
+
+  animation: dropdownShow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.DropdownMenuContent:focus {
+  outline: none;
+}
+
+.DropdownMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  height: 2.5rem;
+
+  padding: 0 0.75rem;
+
+  border-radius: 0.5rem;
+
+  color: var(--color-foreground);
+
+  font-size: 0.9rem;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.DropdownMenuItem[data-highlighted] {
+  background: var(--color-surface-secondary);
+  outline: none;
+}
+
+.DropdownMenuItem[data-disabled] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.DropdownMenuItemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+
+  color: var(--color-foreground-muted);
+
+  flex-shrink: 0;
+}
+
+.DropdownMenuItem[data-highlighted] .DropdownMenuItemIcon {
+  color: var(--color-primary);
+}
+
+.DropdownMenuLabel {
+  padding: 0.5rem 0.75rem 0.35rem;
+
+  color: var(--color-foreground-muted);
+
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.DropdownMenuSeparator {
+  height: 1px;
+
+  margin: 0.5rem 0;
+
+  background: var(--color-border);
+}
+
+.DropdownMenuShortcut {
+  margin-left: auto;
+
+  color: var(--color-foreground-muted);
+
+  font-size: 0.75rem;
+}
+
+.DropdownMenuArrow {
+  fill: var(--color-surface);
+}
+
+@keyframes dropdownShow {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.DropdownMenuContent[data-side="top"] {
+  animation-name: dropdownUp;
+}
+
+.UserMenuAvatar,
+.UserMenuFallback {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+}
+
+.UserMenuAvatar {
+  display: block;
+  object-fit: cover;
+}
+
+.UserMenuFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-secondary);
+  color: var(--color-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+@keyframes dropdownUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.DialogOverlay {
+  position: fixed;
+  inset: 0;
+
+  background: color-mix(in oklch, black 72%, transparent);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  animation: overlayShow 180ms ease;
+}
+
+.DialogContent {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(94vw, 760px);
+  height: min(88svh, 860px);
+  overflow: hidden;
+
+  border-radius: 0.875rem;
+
+  background: var(--color-surface);
+
+  border: 1px solid var(--color-surface-secondary);
+
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 35%),
+    0 8px 24px rgb(0 0 0 / 18%);
+
+  animation: contentShow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.DialogContent:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+.DialogTitle {
+  margin: 0;
+
+  padding: 1.5rem;
+  padding-bottom: 0;
+
+  color: var(--color-foreground);
+
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.DialogDescription {
+  margin: 0.5rem 0 1.5rem;
+
+  padding: 0 1.5rem;
+
+  color: var(--color-foreground-muted);
+
+  line-height: 1.6;
+}
+
+.DialogScrollArea {
+  flex: 1;
+  min-height: 0;
+}
+
+.DialogViewport {
+  height: 100%;
+
+  padding: 0 2rem 0.75rem 1.5rem;
+}
+
+.DialogSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.DialogCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.DialogCard + .DialogCard {
+  margin-top: 1.5rem;
+}
+
+.DialogCardTitle {
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+
+  color: var(--color-foreground);
+
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.DialogField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.DialogLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-foreground);
+}
+
+.DialogInput,
+.DialogSelect,
+.DialogSlider {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface-secondary);
+  padding-block: 0.5rem;
+  padding-inline: 0.5rem;
+  cursor: pointer;
+}
+
+.DialogInput:focus,
+.DialogSelect:focus {
+  border-color: var(--color-ring);
+}
+
+.FieldDescription {
+  font-size: 0.875rem;
+  color: var(--color-foreground-muted);
+  line-height: 1.4;
+}
+
+.DialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 -10px 24px rgb(0 0 0 / 8%);
+}
+
+.DialogScrollbar {
+  display: flex;
+
+  user-select: none;
+  touch-action: none;
+
+  width: 12px;
+  padding: 2px;
+
+  background: transparent;
+
+  transition:
+    background-color 160ms ease,
+    opacity 160ms ease;
+
+  opacity: 0.65;
+}
+
+.DialogScrollArea:hover .DialogScrollbar,
+.DialogScrollbar[data-state="visible"] {
+  opacity: 1;
+}
+
+.DialogScrollbar:hover {
+  background: rgb(255 255 255 / 0.04);
+}
+
+.DialogScrollThumb {
+  position: relative;
+  flex: 1;
+
+  border-radius: 999px;
+
+  background: var(--color-surface-tertiary);
+
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.DialogScrollThumb:hover {
+  background: var(--color-mist-500);
+}
+
+.DialogScrollThumb:active {
+  background: var(--color-primary);
+}
+
+.DialogScrollThumb::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.DialogScrollCorner {
+  background: transparent;
+}
+
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

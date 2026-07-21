@@ -1,0 +1,26 @@
+type Preferences {
+  userId: String!
+  theme: String!
+  defaultModelId: String!
+  temperature: Float!
+  defaultReasoningId: String!
+  defaultVerbosityId: String!
+  defaultAgentId: String!
+}
+
+extend type Query {
+  preferences: Preferences
+}
+
+input UpdatePreferencesInput {
+  theme: String!
+  defaultModelId: String!
+  temperature: Float!
+  defaultReasoningId: String!
+  defaultVerbosityId: String!
+  defaultAgentId: String!
+}
+
+extend type Mutation {
+  updatePreferences(input: UpdatePreferencesInput!): Preferences
+}

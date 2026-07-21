@@ -1,0 +1,32 @@
+{
+  "name": "aspaire",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AspAIre product workspace",
+  "workspaces": [
+    "apps/web",
+    "apps/ai-server"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @aspaire/web run dev",
+    "dev:ai": "npm --workspace @aspaire/ai-server run dev",
+    "build": "npm --workspace @aspaire/web run build",
+    "build:web": "npm --workspace @aspaire/web run build",
+    "start:web": "npm --workspace @aspaire/web run start",
+    "start:ai": "npm --workspace @aspaire/ai-server run start",
+    "lint": "npm --workspace @aspaire/web run lint",
+    "test": "npm --workspaces run test",
+    "test:web": "npm --workspace @aspaire/web run test",
+    "test:ai": "npm --workspace @aspaire/ai-server run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeePaulison/aspaire_v2.git"
+  },
+  "author": "Lee Paulison Jr",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LeePaulison/aspaire_v2/issues"
+  },
+  "homepage": "https://github.com/LeePaulison/aspaire_v2#readme"
+}
