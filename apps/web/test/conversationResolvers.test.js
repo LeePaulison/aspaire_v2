@@ -93,6 +93,67 @@ test("new turns are created for the authenticated user", async () => {
   assert.ok(received.messages.every((message) => message.createdAt instanceof Date));
 });
 
+test("new conversations can be scoped to a domain object", async () => {
+  let received;
+  const repository = createRepository({
+    createConversation: async (input) => {
+      received = input;
+      return { conversationId: "new-id" };
+    },
+  });
+  const resolvers = createConversationResolvers(repository);
+
+  await resolvers.Mutation.saveConversationTurn(
+    null,
+    {
+      input: {
+        domain: "resume_analysis",
+        domainId: "job-1",
+        userMessage: "hello",
+        assistantMessage: "hi",
+      },
+    },
+    { authenticated: true, user: { id: "user-1" } },
+  );
+
+  assert.equal(received.domain, "resume_analysis");
+  assert.equal(received.domainId, "job-1");
+});
+
+test("conversation list forwards domain filters", async () => {
+  let received;
+  const repository = createRepository({
+    getUserConversations: async (userId, filters) => {
+      received = { userId, filters };
+      return [];
+    },
+  });
+  const resolvers = createConversationResolvers(repository);
+
+  await resolvers.Query.conversations(
+    null,
+    { domain: "resume_analysis", domainId: "job-1" },
+    { authenticated: true, user: { id: "user-1" } },
+  );
+
+  assert.deepEqual(received, {
+    userId: "user-1",
+    filters: {
+      domain: "resume_analysis",
+      domainId: "job-1",
+    },
+  });
+});
+
+test("legacy conversations resolve to the general domain", () => {
+  const resolvers = createConversationResolvers(createRepository());
+
+  assert.equal(resolvers.Conversation.domain({}), "general");
+  assert.equal(resolvers.Conversation.domainId({}), null);
+  assert.equal(resolvers.ConversationSummary.domain({}), "general");
+  assert.equal(resolvers.ConversationSummary.domainId({}), null);
+});
+
 test("existing turns require ownership before append", async () => {
   let appended = false;
   const repository = createRepository({

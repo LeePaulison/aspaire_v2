@@ -5,8 +5,15 @@ const GET_AIAGENTS_QUERY = `
     aiAgents {
       agentId
       category
+      domain
+      workflowType
       name
       description
+      contextPolicy
+      toolPolicy
+      promptVersion
+      enabled
+      sortOrder
     }
   }
 `;

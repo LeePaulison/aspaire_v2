@@ -66,6 +66,57 @@ test("conversation summaries project the first message as their preview", async 
   assert.equal(findOptions.projection.messages.$slice, 1);
 });
 
+test("new conversations store domain metadata", async () => {
+  let inserted;
+  const id = new ObjectId();
+  const repository = createConversationRepository({
+    getDatabase: async () => databaseWithCollection({
+      insertOne: async (document) => {
+        inserted = document;
+        return { insertedId: id };
+      },
+    }),
+  });
+
+  await repository.createConversation({
+    userId: "user-1",
+    domain: "resume_analysis",
+    domainId: "job-1",
+    messages: [{ role: "user", content: "hello", createdAt: new Date() }],
+  });
+
+  assert.equal(inserted.userId, "user-1");
+  assert.equal(inserted.domain, "resume_analysis");
+  assert.equal(inserted.domainId, "job-1");
+});
+
+test("conversation list can be scoped by user and domain metadata", async () => {
+  let filter;
+  const cursor = {
+    sort() { return this; },
+    async toArray() { return []; },
+  };
+  const repository = createConversationRepository({
+    getDatabase: async () => databaseWithCollection({
+      find: (value) => {
+        filter = value;
+        return cursor;
+      },
+    }),
+  });
+
+  await repository.getUserConversations("user-1", {
+    domain: "resume_analysis",
+    domainId: "job-1",
+  });
+
+  assert.deepEqual(filter, {
+    userId: "user-1",
+    domain: "resume_analysis",
+    domainId: "job-1",
+  });
+});
+
 test("conversation deletion validates the ID before querying MongoDB", async () => {
   let databaseRequested = false;
   const repository = createConversationRepository({

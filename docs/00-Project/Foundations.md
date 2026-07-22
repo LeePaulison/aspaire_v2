@@ -57,7 +57,8 @@ Examples include:
 * Career Profile
 * Application Tracking
 * Interview Preparation
-* AI Research
+* AI Workspace
+* Market Research
 
 ---
 
@@ -240,6 +241,7 @@ docs/
 │   ├── ApplicationTracking.md
 │   ├── InterviewPreparation.md
 │   ├── AIWorkspace.md
+│   ├── MarketResearch.md
 │   └── UserPreferences.md
 │
 ├── 03-Development/

@@ -10,6 +10,34 @@ Conversation is useful for exploration. This document is the durable record of d
 
 ---
 
+# Decision File Size Policy
+
+To keep decision history readable, decision records should be split into additional files after every 25 documented decisions.
+
+This file remains the primary entry point and should keep:
+
+* The purpose and decision format
+* The complete decision index
+* The active decision volume
+* Links or references to archived decision volumes
+
+When the project reaches `ASP-0026`, create:
+
+```text
+docs/00-Project/Decisions-0026-0050.md
+```
+
+Move full decision records `ASP-0026` through `ASP-0050` into that file as they are written. Continue the same pattern for later ranges:
+
+```text
+docs/00-Project/Decisions-0051-0075.md
+docs/00-Project/Decisions-0076-0100.md
+```
+
+The decision index in this file should continue listing every decision across all volumes so there is one place to scan project history.
+
+---
+
 # Decision Format
 
 Each decision should include:
@@ -42,6 +70,13 @@ Decision statuses:
 | ASP-0006 | Accepted | 2026-07-21 | AI is treated as a platform capability |
 | ASP-0007 | Accepted | 2026-07-21 | Durable career context is prioritized before advanced intelligence |
 | ASP-0008 | Accepted | 2026-07-21 | AspAIre is a user-facing career platform, not an employer job board |
+| ASP-0009 | Accepted | 2026-07-22 | Initial product domains are documented as first-class domain contracts |
+| ASP-0010 | Accepted | 2026-07-22 | Project documents define product direction, sequencing, and decision history |
+| ASP-0011 | Accepted | 2026-07-22 | Architecture documents define platform boundaries and subsystem contracts |
+| ASP-0012 | Accepted | 2026-07-22 | Development documents define contribution, testing, and implementation standards |
+| ASP-0013 | Accepted | 2026-07-22 | Reference documents define implementation-aligned technical inventories |
+| ASP-0014 | Accepted | 2026-07-22 | AspAIre MVP is defined as a focused profile-resume-job-analysis-tracking workflow |
+| ASP-0015 | Accepted | 2026-07-22 | Conversation documents are scoped by domain and domain object ID |
 
 ---
 
@@ -289,6 +324,261 @@ This keeps the product focused on the user's career workflow and avoids diluting
 * Employer accounts, recruiter tools, and public job board management are out of scope initially.
 * Saved jobs may reference external postings, but AspAIre does not need to host employer-created listings at the start.
 * Future employer-side capabilities should only be considered if they support the core user-facing career workflow.
+
+---
+
+# ASP-0009: Initial Product Domains Are Documented as First-Class Domain Contracts
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre's documentation-first workflow requires stable domain references before implementation begins. The project foundations identify independent product domains that should be built as vertical slices on top of the inherited platform.
+
+The `docs/02-Domains` folder has been created to define these domains before implementation. The domain set includes Career Profile, Resume Library, Resume Analysis, Job Search, Saved Jobs, Application Tracking, AI Workspace, Interview Preparation, Market Research, and User Preferences.
+
+## Decision
+
+AspAIre will maintain a first-class domain contract document for each initial product domain in `docs/02-Domains`.
+
+Each domain contract should describe the domain purpose, ownership, user capabilities, core concepts, data model direction, authorization rules, GraphQL/API direction, repository direction, UI direction, AI usage, validation, privacy, testing expectations, integration points, initial implementation slice, open questions, and definition of done.
+
+## Rationale
+
+Domain contracts give future implementation work a shared product and architecture reference. They preserve boundaries between related domains, clarify how AI participates without owning business data, and keep feature planning aligned with the vertical-slice development model.
+
+Market Research is included as a first-class domain because it appears in the product vision and roadmap as a distinct capability for company, role, skill, compensation, and market-pattern exploration.
+
+## Consequences
+
+* Domain implementation should start from the relevant `docs/02-Domains` contract.
+* Domain docs should evolve alongside implementation and remain aligned with reference docs.
+* Changes to the initial domain set should update `Foundations.md`, roadmap documentation where needed, and this decision record if the product boundary changes materially.
+* Market Research should be treated as separate from AI Workspace when persisted research topics, outputs, notes, and domain links need first-class ownership.
+
+---
+
+# ASP-0010: Project Documents Define Product Direction, Sequencing, and Decision History
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre needs a stable project-level documentation area that records product identity, mission, roadmap, and accepted decisions separately from architecture, domain contracts, implementation standards, and reference inventories.
+
+The `docs/00-Project` folder contains Foundations, Vision, Roadmap, and Decisions documents.
+
+## Decision
+
+AspAIre will maintain `docs/00-Project` as the authoritative project-level documentation area.
+
+Project documents define the product direction, platform philosophy, roadmap sequencing, documentation hierarchy, and durable decision history.
+
+## Rationale
+
+Project-level decisions should be easy to find without mixing them into implementation references or domain-specific planning. This keeps the project understandable across conversations and gives future work a clear source for why AspAIre exists, what it is building toward, and which decisions have been accepted.
+
+## Consequences
+
+* Product direction and roadmap changes should update `docs/00-Project`.
+* Material decisions should be recorded in `Decisions.md`.
+* Project documents should stay focused on direction and decisions rather than detailed implementation inventory.
+* Other documentation areas should align with project-level decisions.
+
+---
+
+# ASP-0011: Architecture Documents Define Platform Boundaries and Subsystem Contracts
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre inherits a working Saigely platform with clear subsystem concerns, including the Next.js web application, external AI server, authentication, GraphQL, database access, frontend structure, and deployment.
+
+These platform boundaries need durable documentation so product domains can be implemented without rediscovering inherited architecture through code archaeology.
+
+## Decision
+
+AspAIre will maintain `docs/01-Architecture` as the authoritative architecture documentation area.
+
+Architecture documents define platform ownership boundaries, subsystem responsibilities, request flows, security posture, data ownership rules, and integration contracts for the inherited and evolving system.
+
+## Rationale
+
+Architecture documentation keeps platform concerns separate from product domain contracts. It preserves the core rule that the Next.js application owns business data and workflows while the external AI server owns AI execution and streaming.
+
+## Consequences
+
+* Platform or subsystem changes should update the relevant architecture document.
+* Domain docs should reference architecture boundaries rather than redefining them.
+* AI server, GraphQL, authentication, database, frontend, and deployment behavior should remain documented in focused architecture files.
+* Architecture documents should describe current and intended system behavior at a level useful for implementation planning.
+
+---
+
+# ASP-0012: Development Documents Define Contribution, Testing, and Implementation Standards
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre development should remain consistent with inherited Saigely patterns while product domains are added as vertical slices.
+
+The project needs durable guidance for coding standards, component patterns, contribution workflow, and testing expectations.
+
+## Decision
+
+AspAIre will maintain `docs/03-Development` as the authoritative development-practice documentation area.
+
+Development documents define implementation standards, component guidance, testing approach, and contribution expectations.
+
+## Rationale
+
+Development guidance should be separate from product direction, architecture contracts, and reference inventories. This allows contributors to understand how work should be implemented without turning architecture or domain docs into style guides.
+
+## Consequences
+
+* Changes to coding conventions, testing strategy, contribution flow, or component standards should update `docs/03-Development`.
+* Domain implementation should follow development standards unless a documented decision creates an exception.
+* Development docs should stay practical and implementation-facing.
+* Standards should prefer existing project patterns over new conventions without a documented reason.
+
+---
+
+# ASP-0013: Reference Documents Define Implementation-Aligned Technical Inventories
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre needs stable technical references for details that should match implementation state, including database schema, GraphQL schema, environment variables, and third-party services.
+
+These references are different from architecture documents because they are inventories and lookup materials rather than design explanations.
+
+## Decision
+
+AspAIre will maintain `docs/04-Reference` as the authoritative technical reference documentation area.
+
+Reference documents define implementation-aligned inventories for schemas, environment variables, third-party services, and other operational facts that need to stay current with the codebase.
+
+## Rationale
+
+Reference documentation helps developers inspect the system quickly without reading implementation code or higher-level architecture prose. Keeping reference material separate makes it easier to update factual inventories when implementation changes.
+
+## Consequences
+
+* Database, GraphQL, environment, and third-party service changes should update the relevant reference document.
+* Reference docs should describe actual or intentionally planned implementation details clearly.
+* Reference docs should not store secrets, credentials, tokens, or private deployment values.
+* Architecture and domain docs should link conceptually to references when exact inventories are needed.
+
+---
+
+# ASP-0014: AspAIre MVP Is Defined as a Focused Profile-Resume-Job-Analysis-Tracking Workflow
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre has a broad long-term roadmap that includes career profile, resume library, saved jobs, resume analysis, application tracking, interview preparation, AI workspace, market research, personalization, and release readiness.
+
+As a solo-developer project, treating each roadmap phase as a full product build before proving the core loop would create too much scope and delay useful feedback.
+
+## Decision
+
+AspAIre's MVP will be defined as a focused workflow where an authenticated user can create career context, store resume content, save a job opportunity, run AI-assisted resume-to-job fit analysis, and track the opportunity's status and next action.
+
+The authoritative MVP scope and development sequence are documented in `docs/00-Project/MVP.md`.
+
+## Rationale
+
+This MVP compresses the most important early domains into one coherent vertical slice. It proves the product's central promise while avoiding premature investment in job scraping, employer workflows, document parsing, calendar integrations, autonomous application flows, and advanced personalization.
+
+## Consequences
+
+* MVP implementation should prioritize the profile-resume-job-analysis-tracking loop over isolated roadmap phases.
+* Manual job and resume entry are acceptable for the MVP if they keep development focused.
+* AI work should first prove value through fit analysis using persisted user context.
+* Post-MVP features should be chosen based on real usage of the core workflow.
+
+---
+
+# ASP-0015: Conversation Documents Are Scoped by Domain and Domain Object ID
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre inherits MongoDB-backed conversation persistence from Saigely. The inherited document model stores conversations by `userId` with an array of message turns.
+
+AspAIre's MVP introduces domain-specific workflows such as career profile, resume library, saved jobs, resume analysis, application tracking, and interview preparation. These workflows need a way to list conversations for a specific user and a specific domain object, such as conversations attached to a saved job or resume analysis.
+
+## Decision
+
+AspAIre conversation documents will include conversation-level domain metadata:
+
+* `domain`
+* `domainId`
+
+Message turns will remain simple role/content/timestamp records. Domain scoping belongs to the conversation document, not to each message.
+
+Conversation lists may be queried by authenticated `userId` plus optional `domain` and `domainId` filters.
+
+## Rationale
+
+Conversation-level scoping matches how MongoDB stores the conversation as a document. It enables efficient user/domain conversation lists without duplicating metadata across every turn.
+
+Keeping messages unchanged preserves compatibility with inherited conversations and avoids making the turn schema carry workflow ownership concerns.
+
+## Consequences
+
+* New scoped conversations should store `domain` and `domainId` on the conversation document.
+* Legacy conversations without domain metadata resolve as `domain: general` and `domainId: null`.
+* MongoDB indexes should support `userId`, `domain`, `domainId`, and `updatedAt` lookups.
+* Domain-specific product slices can attach conversations to their own records without changing the message schema.
+* If future workflows need mixed-domain conversations, the project should revisit this decision before adding message-level domain fields.
 
 ---
 

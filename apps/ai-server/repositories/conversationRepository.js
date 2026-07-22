@@ -3,6 +3,8 @@ import { graphqlRequest } from "../lib/graphql/request.js";
 export async function saveConversationTurn({
   token,
   conversationId,
+  domain,
+  domainId,
   userMessage,
   assistantMessage,
 }) {
@@ -20,6 +22,8 @@ export async function saveConversationTurn({
     variables: {
       input: {
         conversationId,
+        domain,
+        domainId,
         userMessage,
         assistantMessage,
       },
@@ -37,6 +41,8 @@ export async function getConversationById({ token, conversationId }) {
         conversation(id: $id) {
           id
           userId
+          domain
+          domainId
           createdAt
           updatedAt
           messages {
@@ -60,6 +66,8 @@ export async function getUserConversations({ token }) {
       query Conversations {
         conversations {
           id
+          domain
+          domainId
           preview
           updatedAt
         }

@@ -1,13 +1,26 @@
 type AiAgent {
   agentId: String!
   category: String!
+  domain: String!
+  workflowType: String!
   name: String!
   description: String!
+  contextPolicy: String!
+  toolPolicy: String!
+  promptVersion: Int!
+  enabled: Boolean!
+  sortOrder: Int!
 }
 
 type AiAgentConfiguration {
   agentId: String!
+  domain: String!
+  workflowType: String!
+  defaultModelId: String
+  contextPolicy: String!
+  toolPolicy: String!
   systemPrompt: String!
+  promptVersion: Int!
 }
 
 extend type Query {

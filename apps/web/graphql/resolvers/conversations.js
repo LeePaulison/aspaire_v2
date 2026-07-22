@@ -23,12 +23,15 @@ export function createConversationResolvers(repository = {
 
   return {
   Query: {
-    conversations: async (_, __, context) => {
+    conversations: async (_, args, context) => {
       if (!context.authenticated) {
         return [];
       }
 
-      return findUserConversations(context.user.id);
+      return findUserConversations(context.user.id, {
+        domain: args?.domain,
+        domainId: args?.domainId,
+      });
     },
 
     conversation: async (_, { id }, context) => {
@@ -63,7 +66,12 @@ export function createConversationResolvers(repository = {
       ];
 
       if (!input.conversationId) {
-        return createNewConversation({ userId: context.user.id, messages });
+        return createNewConversation({
+          userId: context.user.id,
+          domain: input.domain || "general",
+          domainId: input.domainId || null,
+          messages,
+        });
       }
 
       const conversation = await findConversationById(input.conversationId);
@@ -93,6 +101,10 @@ export function createConversationResolvers(repository = {
   ConversationSummary: {
     id: (conversation) => conversation._id.toString(),
 
+    domain: (conversation) => conversation.domain || "general",
+
+    domainId: (conversation) => conversation.domainId || null,
+
     updatedAt: (conversation) => conversation.updatedAt.toISOString(),
 
     preview: (conversation) => conversation.messages?.[0]?.content ?? null,
@@ -100,6 +112,10 @@ export function createConversationResolvers(repository = {
 
   Conversation: {
     id: (conversation) => conversation._id.toString(),
+
+    domain: (conversation) => conversation.domain || "general",
+
+    domainId: (conversation) => conversation.domainId || null,
 
     createdAt: (conversation) => conversation.createdAt.toISOString(),
 

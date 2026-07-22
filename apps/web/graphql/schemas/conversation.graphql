@@ -6,6 +6,8 @@ type Message {
 
 type ConversationSummary {
   id: ID!
+  domain: String!
+  domainId: String
   updatedAt: String!
   preview: String
 }
@@ -13,6 +15,8 @@ type ConversationSummary {
 type Conversation {
   id: ID!
   userId: String!
+  domain: String!
+  domainId: String
   createdAt: String!
   updatedAt: String!
   messages: [Message!]!
@@ -26,12 +30,14 @@ type SaveConversationTurnPayload {
 
 input SaveConversationTurnInput {
   conversationId: ID
+  domain: String
+  domainId: String
   userMessage: String!
   assistantMessage: String!
 }
 
 extend type Query {
-  conversations: [ConversationSummary!]!
+  conversations(domain: String, domainId: String): [ConversationSummary!]!
   conversation(id: ID!): Conversation
 }
 

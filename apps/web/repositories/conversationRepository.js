@@ -3,21 +3,28 @@ import { ObjectId } from "mongodb";
 import { getMongoDatabase } from "../lib/db/mongo.js";
 
 export function createConversationRepository({ getDatabase = getMongoDatabase } = {}) {
-  async function createConversation({ userId, messages }) {
+  async function createConversation({
+    userId,
+    domain = "general",
+    domainId = null,
+    messages,
+  }) {
     const database = await getDatabase();
 
-  const conversationsCollection = database.collection("conversations");
+    const conversationsCollection = database.collection("conversations");
 
-  const now = new Date();
+    const now = new Date();
 
-  const result = await conversationsCollection.insertOne({
-    userId,
+    const result = await conversationsCollection.insertOne({
+      userId,
+      domain,
+      domainId,
 
-    createdAt: now,
-    updatedAt: now,
+      createdAt: now,
+      updatedAt: now,
 
-    messages,
-  });
+      messages,
+    });
 
     return {
       conversationId: result.insertedId.toString(),
@@ -33,26 +40,26 @@ export function createConversationRepository({ getDatabase = getMongoDatabase } 
 
     const database = await getDatabase();
 
-  const conversationsCollection = database.collection("conversations");
+    const conversationsCollection = database.collection("conversations");
 
-  const now = new Date();
+    const now = new Date();
 
-  await conversationsCollection.updateOne(
-    {
-      _id: new ObjectId(conversationId),
-    },
-    {
-      $push: {
-        messages: {
-          $each: messages,
+    await conversationsCollection.updateOne(
+      {
+        _id: new ObjectId(conversationId),
+      },
+      {
+        $push: {
+          messages: {
+            $each: messages,
+          },
+        },
+
+        $set: {
+          updatedAt: now,
         },
       },
-
-      $set: {
-        updatedAt: now,
-      },
-    },
-  );
+    );
 
     return {
       conversationId,
@@ -68,23 +75,35 @@ export function createConversationRepository({ getDatabase = getMongoDatabase } 
 
     const database = await getDatabase();
 
-  const conversationsCollection = database.collection("conversations");
+    const conversationsCollection = database.collection("conversations");
 
     return conversationsCollection.findOne({
       _id: new ObjectId(conversationId),
     });
   }
 
-  async function getUserConversations(userId) {
+  async function getUserConversations(userId, { domain, domainId } = {}) {
     const database = await getDatabase();
 
-  const conversationsCollection = database.collection("conversations");
+    const conversationsCollection = database.collection("conversations");
+
+    const filter = { userId };
+
+    if (domain) {
+      filter.domain = domain;
+    }
+
+    if (domainId) {
+      filter.domainId = domainId;
+    }
 
     return conversationsCollection
       .find(
-        { userId },
+        filter,
         {
           projection: {
+            domain: 1,
+            domainId: 1,
             updatedAt: 1,
             messages: {
               $slice: 1,

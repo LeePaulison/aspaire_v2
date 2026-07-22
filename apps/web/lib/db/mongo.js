@@ -24,5 +24,5 @@ export async function getMongoDatabase() {
   const client = getMongoClient();
   await client.connect();
 
-  return client.db("saigely");
+  return client.db(process.env.MONGODB_DATABASE || "aspaire");
 }
