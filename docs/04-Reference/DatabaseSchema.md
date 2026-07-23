@@ -52,6 +52,7 @@ Current exported schema modules include:
 * `preferences`
 * `reasoning_levels`
 * `resume_analyses`
+* `resume_files`
 * `resumes`
 * `saved_jobs`
 * `verbosity_levels`
@@ -333,9 +334,40 @@ Stores manually entered resume records for the text-first MVP.
 | `target_role` | text | Required, defaults empty |
 | `notes` | text | Required, defaults empty |
 | `resume_text` | text | Required, defaults empty |
+| `status` | text | Required, defaults `draft`; expected values are `draft`, `active`, `archived` |
+| `source_type` | text | Required, defaults `manual`; expected values are `manual`, `upload` |
 | `is_primary` | boolean | Required, defaults false |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |
+
+Indexes:
+
+* `resumes_user_id_idx` on `user_id`
+* `resumes_profile_id_idx` on `profile_id`
+* `resumes_status_idx` on `status`
+
+## `resume_files`
+
+Stores uploaded resume original file metadata. S3 stores the binary file; PostgreSQL stores ownership, resume relationship, storage key, upload metadata, and extraction state.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | text | Primary key |
+| `resume_id` | text | Required, references `resumes.id`, cascade delete |
+| `user_id` | text | Required, references `user.id`, cascade delete |
+| `original_filename` | text | Required uploaded original filename |
+| `content_type` | text | Required uploaded original MIME type |
+| `file_size` | integer | Required uploaded original size in bytes |
+| `storage_key` | text | Required private S3 object key, never exposed through GraphQL |
+| `text_extraction_status` | text | Required, defaults `pending` |
+| `uploaded_at` | timestamp with timezone | Required, defaults now |
+| `created_at` | timestamp with timezone | Required, defaults now |
+| `updated_at` | timestamp with timezone | Required, defaults now |
+
+Indexes:
+
+* `resume_files_resume_id_idx` on `resume_id`
+* `resume_files_user_id_idx` on `user_id`
 
 ## `saved_jobs`
 

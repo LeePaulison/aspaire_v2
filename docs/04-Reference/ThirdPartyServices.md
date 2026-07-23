@@ -18,6 +18,7 @@ It records service responsibilities and integration boundaries. It must not cont
 | Fly.io | AI server and MongoDB Community | Hosting AI WebSocket gateway and existing MongoDB server |
 | Neon | Web application | PostgreSQL database |
 | MongoDB Community | Web application | Conversation document storage |
+| Amazon S3 | Web application | Private uploaded resume original storage |
 | OpenAI | AI server | Responses API streaming |
 | GitHub OAuth | Web application | User sign-in |
 | Google OAuth | Web application | User sign-in |
@@ -99,6 +100,40 @@ AspAIre needs:
 * Existing MongoDB Community connection URL in `MONGODB_URI`
 * Explicit `MONGODB_DATABASE=aspaire`
 * Optional AspAIre-specific least-privilege user for production hardening
+
+---
+
+# Amazon S3
+
+Amazon S3 stores private uploaded resume original files for the Resume Library.
+
+The web application owns:
+
+* Upload route handling
+* File validation
+* S3 object key generation
+* Resume and resume file metadata persistence
+* Ownership checks before upload, download, delete, or signed URL creation
+
+PostgreSQL remains the source of truth for resume ownership, resume metadata, uploaded file metadata, extracted text, and domain relationships.
+
+S3 objects should use user- and resume-scoped keys:
+
+```text
+users/{userId}/resumes/{resumeId}/{safeFilename}
+```
+
+The bucket must remain private. Browser access should use short-lived signed URLs generated only after the application verifies authenticated ownership.
+
+The current first upload slice sends the file to an authenticated Next.js route handler, which uploads the original object to S3 server-side and then persists `resume_files` metadata. Browser code never receives AWS credentials, bucket names, object keys, or signed URLs.
+
+Resume deletion attempts to delete every associated uploaded original from S3 before deleting the PostgreSQL resume record and cascading file metadata. The deletion receipt reports whether uploaded-original cleanup completed without exposing storage internals.
+
+Individual uploaded-original deletion follows the same ownership boundary: the web app verifies authenticated resume/file ownership, deletes the private S3 object, then deletes the `resume_files` metadata row.
+
+User-facing deletion confirmations should describe private resume storage status without exposing S3 bucket names, object keys, AWS regions, or signed URLs.
+
+Required environment variables are documented in `docs/04-Reference/Environment.md`.
 
 ---
 

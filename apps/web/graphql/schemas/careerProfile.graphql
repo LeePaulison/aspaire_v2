@@ -1,0 +1,117 @@
+type CareerProfile {
+  profileId: String!
+  headline: String!
+  summary: String!
+  careerGoals: String!
+  experience: [CareerExperience!]!
+  education: [CareerEducation!]!
+  skills: [CareerSkill!]!
+  preferences: CareerProfilePreferences
+}
+
+type CareerExperience {
+  experienceId: String!
+  company: String!
+  title: String!
+  location: String!
+  startDate: String!
+  endDate: String!
+  isCurrent: Boolean!
+  description: String!
+  achievements: [String!]!
+  sortOrder: Int!
+}
+
+type CareerEducation {
+  educationId: String!
+  institution: String!
+  degree: String!
+  fieldOfStudy: String!
+  startDate: String!
+  endDate: String!
+  notes: String!
+  sortOrder: Int!
+}
+
+type CareerSkill {
+  skillId: String!
+  name: String!
+  category: String!
+  proficiency: String!
+  evidence: String!
+  sortOrder: Int!
+}
+
+type CareerProfilePreferences {
+  preferenceId: String!
+  targetRoles: [String!]!
+  targetIndustries: [String!]!
+  locations: [String!]!
+  workModes: [String!]!
+  compensationGoals: String!
+  constraints: String!
+}
+
+input UpdateCareerProfileSummaryInput {
+  headline: String
+  summary: String
+  careerGoals: String
+}
+
+input UpsertCareerExperienceInput {
+  experienceId: String
+  company: String!
+  title: String!
+  location: String!
+  startDate: String!
+  endDate: String!
+  isCurrent: Boolean!
+  description: String!
+  achievements: String!
+  sortOrder: Int
+}
+
+input UpsertCareerEducationInput {
+  educationId: String
+  institution: String!
+  degree: String!
+  fieldOfStudy: String!
+  startDate: String!
+  endDate: String!
+  notes: String!
+  sortOrder: Int
+}
+
+input UpsertCareerSkillInput {
+  skillId: String
+  name: String!
+  category: String!
+  proficiency: String!
+  evidence: String!
+  sortOrder: Int
+}
+
+input UpdateCareerPreferencesInput {
+  targetRoles: String!
+  targetIndustries: String!
+  locations: String!
+  workModes: String!
+  compensationGoals: String!
+  constraints: String!
+}
+
+extend type Query {
+  careerProfile: CareerProfile
+}
+
+extend type Mutation {
+  createCareerProfile: CareerProfile!
+  updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!
+  upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!
+  deleteCareerExperience(experienceId: String!): CareerProfile!
+  upsertCareerEducation(input: UpsertCareerEducationInput!): CareerProfile!
+  deleteCareerEducation(educationId: String!): CareerProfile!
+  upsertCareerSkill(input: UpsertCareerSkillInput!): CareerProfile!
+  deleteCareerSkill(skillId: String!): CareerProfile!
+  updateCareerPreferences(input: UpdateCareerPreferencesInput!): CareerProfile!
+}

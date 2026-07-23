@@ -1,0 +1,168 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+process.env.DATABASE_URL ??= "postgresql://user:password@example.com/aspaire_test";
+
+const { createResumeRepository } = await import("../repositories/resumeRepository.js");
+
+class SelectQuery {
+  constructor(rows) {
+    this.rows = rows;
+  }
+
+  from() {
+    return this;
+  }
+
+  where() {
+    return this;
+  }
+
+  limit() {
+    return this.rows;
+  }
+
+  orderBy() {
+    return this.rows;
+  }
+
+  then(resolve, reject) {
+    return Promise.resolve(this.rows).then(resolve, reject);
+  }
+}
+
+function createDeleteQuery(onDelete) {
+  return {
+    where() {
+      onDelete();
+      return Promise.resolve();
+    },
+  };
+}
+
+test("resume deletion removes uploaded originals from storage before deleting metadata", async () => {
+  const deletedStorageKeys = [];
+  let deletedRecord = false;
+  const uploadedAt = new Date("2026-07-23T19:00:00.000Z");
+  const fileRows = [
+    {
+      fileId: "file-1",
+      resumeId: "resume-1",
+      userId: "user-1",
+      originalFilename: "resume.pdf",
+      contentType: "application/pdf",
+      fileSize: 100,
+      storageKey: "users/user-1/resumes/resume-1/file-1-resume.pdf",
+      textExtractionStatus: "pending",
+      uploadedAt,
+      createdAt: uploadedAt,
+      updatedAt: uploadedAt,
+    },
+    {
+      fileId: "file-2",
+      resumeId: "resume-1",
+      userId: "user-1",
+      originalFilename: "resume.txt",
+      contentType: "text/plain",
+      fileSize: 50,
+      storageKey: "users/user-1/resumes/resume-1/file-2-resume.txt",
+      textExtractionStatus: "pending",
+      uploadedAt,
+      createdAt: uploadedAt,
+      updatedAt: uploadedAt,
+    },
+  ];
+  const selectResults = [
+    [
+      {
+        resumeId: "resume-1",
+        userId: "user-1",
+        title: "Resume",
+        files: [],
+      },
+    ],
+    fileRows,
+    fileRows,
+  ];
+  const repository = createResumeRepository({
+    database: {
+      select() {
+        return new SelectQuery(selectResults.shift() ?? []);
+      },
+      delete() {
+        return createDeleteQuery(() => {
+          deletedRecord = true;
+        });
+      },
+    },
+    deleteStoredOriginal: async (storageKey) => {
+      assert.equal(deletedRecord, false);
+      deletedStorageKeys.push(storageKey);
+    },
+  });
+
+  const receipt = await repository.deleteResume("user-1", "resume-1");
+
+  assert.deepEqual(deletedStorageKeys, [
+    "users/user-1/resumes/resume-1/file-1-resume.pdf",
+    "users/user-1/resumes/resume-1/file-2-resume.txt",
+  ]);
+  assert.equal(deletedRecord, true);
+  assert.equal(receipt.uploadedOriginalDeleted, true);
+  assert.equal(receipt.uploadedOriginalCount, 2);
+});
+
+test("resume file deletion removes one uploaded original and metadata row", async () => {
+  const deletedStorageKeys = [];
+  let deletedFileMetadata = false;
+  const uploadedAt = new Date("2026-07-23T19:00:00.000Z");
+  const resumeRow = {
+    resumeId: "resume-1",
+    userId: "user-1",
+    title: "Resume",
+    files: [],
+  };
+  const fileRow = {
+    fileId: "file-1",
+    resumeId: "resume-1",
+    userId: "user-1",
+    originalFilename: "resume.pdf",
+    contentType: "application/pdf",
+    fileSize: 100,
+    storageKey: "users/user-1/resumes/resume-1/file-1-resume.pdf",
+    textExtractionStatus: "pending",
+    uploadedAt,
+    createdAt: uploadedAt,
+    updatedAt: uploadedAt,
+  };
+  const selectResults = [[resumeRow], [fileRow], [fileRow], [resumeRow], []];
+  const repository = createResumeRepository({
+    database: {
+      select() {
+        return new SelectQuery(selectResults.shift() ?? []);
+      },
+      delete() {
+        return createDeleteQuery(() => {
+          deletedFileMetadata = true;
+        });
+      },
+    },
+    deleteStoredOriginal: async (storageKey) => {
+      assert.equal(deletedFileMetadata, false);
+      deletedStorageKeys.push(storageKey);
+    },
+  });
+
+  const updatedResume = await repository.deleteResumeFile(
+    "user-1",
+    "resume-1",
+    "file-1",
+  );
+
+  assert.deepEqual(deletedStorageKeys, [
+    "users/user-1/resumes/resume-1/file-1-resume.pdf",
+  ]);
+  assert.equal(deletedFileMetadata, true);
+  assert.equal(updatedResume.resumeId, "resume-1");
+  assert.deepEqual(updatedResume.files, []);
+});

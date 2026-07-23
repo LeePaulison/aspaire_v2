@@ -29,7 +29,7 @@ export default function LoginPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-360 items-center justify-center px-4 py-8">
       <div className="w-full max-w-lg rounded-xl border border-border bg-card p-8 shadow-lg">
         <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold">Saigely</h1>
+          <h1 className="text-3xl font-bold">AspAIre</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             A modern AI workspace featuring configurable AI models, persistent
             conversation history, and technical problem solving.
@@ -71,7 +71,7 @@ export default function LoginPage() {
 
         <aside className="mt-6 rounded-lg border border-ring/35 bg-surface p-4 text-xs text-muted-foreground">
           <h2 className="text-sm font-semibold text-foreground">
-            What Saigely accesses
+            What AspAIre accesses
           </h2>
 
           <ul className="mt-3 space-y-3">

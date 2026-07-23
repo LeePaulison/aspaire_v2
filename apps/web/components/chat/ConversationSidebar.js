@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Cross2Icon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
-import { AlertDialog } from "radix-ui";
+import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useConversationsStore } from "@/store/stores/conversationsStore";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 
 export const ConversationSidebar = ({
   activeConversationId,
@@ -140,63 +140,18 @@ export const ConversationSidebar = ({
         })}
       </div>
 
-      <AlertDialog.Root
+      <ConfirmationDialog
         open={Boolean(pendingDeletion)}
         onOpenChange={handleDialogChange}
-      >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="DialogOverlay" />
-          <AlertDialog.Content className="DeleteDialogContent">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <AlertDialog.Title className="text-lg font-semibold text-foreground">
-                  Delete conversation?
-                </AlertDialog.Title>
-                <AlertDialog.Description className="mt-2 text-sm leading-6 text-foreground-muted">
-                  “{pendingDeletion?.preview || "Untitled conversation"}” will be
-                  permanently deleted. This cannot be undone.
-                </AlertDialog.Description>
-              </div>
-              <AlertDialog.Cancel asChild>
-                <button
-                  type="button"
-                  aria-label="Close deletion confirmation"
-                  disabled={deleting}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-md text-foreground-muted hover:bg-surface-secondary hover:text-foreground disabled:opacity-50"
-                >
-                  <Cross2Icon />
-                </button>
-              </AlertDialog.Cancel>
-            </div>
-
-            {deleteError && (
-              <p className="mt-4 text-sm text-red-500" role="alert">
-                {deleteError}
-              </p>
-            )}
-
-            <div className="mt-6 flex justify-end gap-3">
-              <AlertDialog.Cancel asChild>
-                <button
-                  type="button"
-                  disabled={deleting}
-                  className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-secondary disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              </AlertDialog.Cancel>
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={confirmDeletion}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {deleting ? "Deleting…" : "Delete"}
-              </button>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+        title="Delete conversation?"
+        description={`“${pendingDeletion?.preview || "Untitled conversation"}” will be permanently deleted. This cannot be undone.`}
+        error={deleteError}
+        loading={deleting}
+        confirmLabel="Delete"
+        loadingLabel="Deleting..."
+        variant="destructive"
+        onConfirm={confirmDeletion}
+      />
     </aside>
   );
 };

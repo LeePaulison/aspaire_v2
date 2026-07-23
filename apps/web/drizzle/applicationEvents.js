@@ -6,8 +6,8 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth-schema";
-import { savedJobs } from "./savedJobs";
+import { user } from "./auth-schema.ts";
+import { savedJobs } from "./savedJobs.js";
 
 export const applicationEvents = pgTable(
   "application_events",

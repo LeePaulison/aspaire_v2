@@ -3,10 +3,10 @@ import { Providers } from "@/providers/Providers";
 
 export const metadata = {
   title: {
-    default: "sAIgely — AI chat",
-    template: "%s — sAIgely",
+    default: "AspAIre — Career workspace",
+    template: "%s — AspAIre",
   },
-  description: "A focused workspace for thoughtful AI conversations.",
+  description: "A focused AI workspace for career planning and job search.",
 };
 
 export default function RootLayout({ children }) {

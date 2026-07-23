@@ -1,7 +1,14 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import Image from "next/image";
+import Link from "next/link";
 
-import { GearIcon, ExitIcon, PersonIcon } from "@radix-ui/react-icons";
+import {
+  GearIcon,
+  ExitIcon,
+  IdCardIcon,
+  PersonIcon,
+  ReaderIcon,
+} from "@radix-ui/react-icons";
 
 export function UserMenu({ user, onOpenSettings, onLogout }) {
   const initials = user?.name
@@ -44,6 +51,20 @@ export function UserMenu({ user, onOpenSettings, onLogout }) {
           align="end"
           sideOffset={8}
         >
+          <DropdownMenu.Item className="DropdownMenuItem" asChild>
+            <Link href="/career-profile">
+              <IdCardIcon size={18} className="DropdownMenuItemIcon" />
+              Career Profile
+            </Link>
+          </DropdownMenu.Item>
+
+          <DropdownMenu.Item className="DropdownMenuItem" asChild>
+            <Link href="/resumes">
+              <ReaderIcon size={18} className="DropdownMenuItemIcon" />
+              Resume Library
+            </Link>
+          </DropdownMenu.Item>
+
           <DropdownMenu.Item
             className="DropdownMenuItem"
             onSelect={onOpenSettings}

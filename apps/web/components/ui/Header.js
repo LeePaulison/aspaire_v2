@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
 
@@ -25,7 +26,9 @@ export const Header = () => {
 
   return (
     <section className="flex justify-between items-center p-4 border-b border-border">
-      <h1 className="font-bold text-2xl">sAIgely</h1>
+      <Link href="/chat" className="font-bold text-2xl">
+        AspAIre
+      </Link>
       <UserMenu
         user={session?.user}
         onOpenSettings={() => setSettingsOpen(true)}

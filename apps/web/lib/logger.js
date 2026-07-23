@@ -16,7 +16,7 @@ function write(level, message, meta = {}) {
   const output = JSON.stringify({
     timestamp: new Date().toISOString(),
     level,
-    service: "saigely",
+    service: "aspaire",
     message: sanitize(message),
     ...sanitize(meta),
   });

@@ -1,0 +1,75 @@
+type Resume {
+  resumeId: String!
+  profileId: String
+  title: String!
+  targetRole: String!
+  notes: String!
+  resumeText: String!
+  status: String!
+  sourceType: String!
+  isPrimary: Boolean!
+  files: [ResumeFile!]!
+  hasUploadedOriginal: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ResumeFile {
+  fileId: String!
+  resumeId: String!
+  originalFilename: String!
+  contentType: String!
+  fileSize: Int!
+  textExtractionStatus: String!
+  uploadedAt: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type ResumeDeletionReceipt {
+  resumeId: String!
+  title: String!
+  deletedAt: String!
+  recordDeleted: Boolean!
+  contentDeleted: Boolean!
+  fileMetadataDeleted: Boolean!
+  uploadedOriginalDeleted: Boolean!
+  hadUploadedOriginal: Boolean!
+  uploadedOriginalCount: Int!
+}
+
+input CreateResumeInput {
+  profileId: String
+  title: String!
+  targetRole: String
+  notes: String
+  resumeText: String
+  status: String
+  isPrimary: Boolean
+}
+
+input UpdateResumeInput {
+  profileId: String
+  title: String
+  targetRole: String
+  notes: String
+  resumeText: String
+  status: String
+  isPrimary: Boolean
+}
+
+extend type Query {
+  resumes(includeArchived: Boolean): [Resume!]!
+  resume(resumeId: String!): Resume
+  primaryResume: Resume
+}
+
+extend type Mutation {
+  createResume(input: CreateResumeInput!): Resume!
+  updateResume(resumeId: String!, input: UpdateResumeInput!): Resume
+  setPrimaryResume(resumeId: String!): Resume
+  archiveResume(resumeId: String!): Resume
+  restoreResume(resumeId: String!): Resume
+  deleteResumeFile(resumeId: String!, fileId: String!): Resume
+  deleteResume(resumeId: String!): ResumeDeletionReceipt
+}

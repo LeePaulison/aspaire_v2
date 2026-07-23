@@ -76,6 +76,8 @@ Current inherited relational data includes:
 
 Future structured AspAIre domain data should default to PostgreSQL unless there is a clear reason to use document storage.
 
+Uploaded binary files should not be stored in PostgreSQL. For Resume Library uploads, PostgreSQL owns resume metadata, `resume_files` upload metadata, extracted text, manually entered text, and ownership, while S3 stores uploaded original files.
+
 ---
 
 # Default Reference Data
@@ -217,6 +219,7 @@ Use PostgreSQL for:
 
 * Career profile
 * Resume metadata
+* Uploaded resume file metadata
 * Saved jobs
 * Application tracking
 * User preferences
@@ -229,3 +232,38 @@ Consider MongoDB for:
 * Research artifacts with flexible nested structure
 
 Document-storage use should be intentional, not accidental.
+
+---
+
+# Uploaded File Metadata
+
+Uploaded resume originals are stored in S3.
+
+PostgreSQL should store the application-owned `resume_files` metadata needed to authorize, display, analyze, and clean up uploaded files, including:
+
+* Owning `user_id`
+* Resume ID
+* S3 object key
+* Original filename
+* Sanitized filename where useful
+* Content type
+* File size
+* Upload timestamp
+* Extraction status
+* Extracted text or accepted text snapshot
+
+S3 keys should be scoped by user and resume:
+
+```text
+users/{userId}/resumes/{resumeId}/{safeFilename}
+```
+
+Signed download URLs must be generated only after the application verifies that the current authenticated user owns the associated resume and resume file metadata rows.
+
+When a resume with an uploaded original is deleted, the application should be able to confirm user-facing deletion status for:
+
+* Resume metadata
+* Uploaded original file
+* Extracted or accepted text
+
+The user-facing confirmation should avoid exposing S3 bucket names, object keys, regions, or signed URLs. If a durable deletion event is added later, it should store only non-sensitive metadata or redacted/hash references needed for troubleshooting.

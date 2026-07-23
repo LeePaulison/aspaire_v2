@@ -81,6 +81,7 @@ Decision statuses:
 | ASP-0017 | Accepted | 2026-07-22 | JWT issuer and audience are explicit environment-defined service identifiers |
 | ASP-0018 | Accepted | 2026-07-22 | Email/password authentication is disabled by default for the MVP |
 | ASP-0019 | Accepted | 2026-07-23 | Default AI reference data is managed by an idempotent seed script |
+| ASP-0020 | Accepted | 2026-07-23 | Uploaded resume originals are stored in S3 and metadata remains application-owned |
 
 ---
 
@@ -761,6 +762,63 @@ Keeping this functionality in the web workspace preserves the architecture rule 
 * Model descriptions should stay concise, user-facing, and cost-aware where cost materially affects model choice.
 * The AI server should continue consuming these values through GraphQL and must not seed or own the data directly.
 * The seed command writes to the configured `DATABASE_URL`, so developers must verify the target environment before running it.
+
+---
+
+# ASP-0020: Uploaded Resume Originals Are Stored in S3 and Metadata Remains Application-Owned
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-23
+
+## Context
+
+Phase 3 introduces the Resume Library. Resume records may begin with manually entered text, but the product needs a storage strategy for uploaded resume originals such as PDF, DOCX, or plain text files.
+
+The archived AspAIre codebase included an S3-based proof of concept using an `aspaire-resumes` bucket, direct server-side `PutObject` uploads from a Next route, and short-lived signed `GetObject` URLs. That implementation proved the basic service fit, but it did not establish the ownership, authorization, key naming, validation, and metadata boundaries needed for the current architecture.
+
+Resume files contain sensitive user-owned career data. The storage boundary must preserve the rule that the Next.js application owns product data and authorization.
+
+## Decision
+
+AspAIre will use S3 for uploaded resume original files.
+
+PostgreSQL will remain the source of truth for resume ownership, metadata, extracted text, manually entered text, lifecycle state, and relationships to other domains.
+
+S3 object keys should be user- and resume-scoped:
+
+```text
+users/{userId}/resumes/{resumeId}/{safeFilename}
+```
+
+The web application must verify authentication and ownership before uploading files, generating signed download URLs, deleting uploaded files, or exposing file metadata.
+
+The application should not accept `userId` from the client for resume ownership. Ownership must be derived from the authenticated GraphQL or route-handler context.
+
+The bucket name and AWS configuration should come from environment variables, not hardcoded source values.
+
+## Rationale
+
+S3 is a mature fit for private uploaded documents and avoids storing large binary files in PostgreSQL. Keeping metadata and extracted text in PostgreSQL preserves queryability, authorization, and integration with resume analysis, saved jobs, application tracking, and AI workflows.
+
+User-scoped object keys make operational inspection and cleanup easier while reducing the risk of accidental cross-user access. Authorization must still come from application-owned metadata checks, not from object key obscurity.
+
+Short-lived signed URLs allow private file access without making the bucket public.
+
+## Consequences
+
+* Phase 3 should model uploaded file metadata in PostgreSQL.
+* Resume upload and download routes must require authentication.
+* Download/signed URL routes must verify that the requested resume belongs to the current user before signing an S3 object URL.
+* Resume delete/archive behavior must define whether S3 objects are deleted immediately, retained, or cleaned up asynchronously.
+* File upload validation should include a MIME/type allowlist, size limit, sanitized filename, and safe object key generation.
+* Manually entered resume text may be stored directly in PostgreSQL.
+* Extracted text from uploaded files should be stored in PostgreSQL for analysis and search workflows.
+* S3 credentials, bucket names, and region values must be documented as environment variables without recording secret values.
 
 ---
 

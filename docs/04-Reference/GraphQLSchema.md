@@ -30,6 +30,8 @@ Current files:
 * `preferences.graphql`
 * `aiModels.graphql`
 * `aiAgents.graphql`
+* `careerProfile.graphql`
+* `resume.graphql`
 * `reasoningLevels.graphql`
 * `verbosityLevels.graphql`
 
@@ -158,6 +160,87 @@ Purpose:
 
 ---
 
+# Career Profile Schema
+
+Types:
+
+* `CareerProfile`
+* `CareerExperience`
+* `CareerEducation`
+* `CareerSkill`
+* `CareerProfilePreferences`
+
+Inputs:
+
+* `UpdateCareerProfileSummaryInput`
+* `UpsertCareerExperienceInput`
+* `UpsertCareerEducationInput`
+* `UpsertCareerSkillInput`
+* `UpdateCareerPreferencesInput`
+
+Queries:
+
+* `careerProfile: CareerProfile`
+
+Mutations:
+
+* `createCareerProfile: CareerProfile!`
+* `updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!`
+* `upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!`
+* `deleteCareerExperience(experienceId: String!): CareerProfile!`
+* `upsertCareerEducation(input: UpsertCareerEducationInput!): CareerProfile!`
+* `deleteCareerEducation(educationId: String!): CareerProfile!`
+* `upsertCareerSkill(input: UpsertCareerSkillInput!): CareerProfile!`
+* `deleteCareerSkill(skillId: String!): CareerProfile!`
+* `updateCareerPreferences(input: UpdateCareerPreferencesInput!): CareerProfile!`
+
+Purpose:
+
+* Create, read, and update one authenticated user's career profile.
+* Manage profile summary, experience, education, skills, and job/location preferences.
+* Preserve user ownership by deriving `userId` from GraphQL context rather than client input.
+
+---
+
+# Resume Schema
+
+Types:
+
+* `Resume`
+* `ResumeFile`
+* `ResumeDeletionReceipt`
+
+Inputs:
+
+* `CreateResumeInput`
+* `UpdateResumeInput`
+
+Queries:
+
+* `resumes(includeArchived: Boolean): [Resume!]!`
+* `resume(resumeId: String!): Resume`
+* `primaryResume: Resume`
+
+Mutations:
+
+* `createResume(input: CreateResumeInput!): Resume!`
+* `updateResume(resumeId: String!, input: UpdateResumeInput!): Resume`
+* `setPrimaryResume(resumeId: String!): Resume`
+* `archiveResume(resumeId: String!): Resume`
+* `restoreResume(resumeId: String!): Resume`
+* `deleteResumeFile(resumeId: String!, fileId: String!): Resume`
+* `deleteResume(resumeId: String!): ResumeDeletionReceipt`
+
+Purpose:
+
+* Create, read, update, archive, restore, and delete authenticated user resume records.
+* Delete individual uploaded-original files while returning the updated resume.
+* Store manual resume text plus metadata for future analysis workflows.
+* Expose non-sensitive uploaded-original metadata through `Resume.files` while keeping storage keys private.
+* Preserve user ownership by deriving `userId` from GraphQL context rather than client input.
+
+---
+
 # Reasoning Levels Schema
 
 Types:
@@ -206,6 +289,8 @@ Current resolver modules:
 * `reasoningLevels.js`
 * `verbosityLevel.js`
 * `conversations.js`
+* `careerProfile.js`
+* `resumes.js`
 
 ---
 

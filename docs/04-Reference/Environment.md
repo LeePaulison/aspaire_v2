@@ -54,6 +54,26 @@ Email/password authentication is disabled for the MVP unless `ENABLE_EMAIL_PASSW
 | `MONGODB_URI` | MongoDB connection for conversation document data |
 | `MONGODB_DATABASE` | MongoDB database selected by the web app; defaults to `aspaire` |
 
+## Resume File Storage
+
+Required when uploaded resume originals are enabled.
+
+| Variable | Purpose |
+| --- | --- |
+| `AWS_REGION` | AWS region for the resume file bucket |
+| `AWS_ACCESS_KEY_ID` | Access key for S3 resume file operations |
+| `AWS_SECRET_ACCESS_KEY` | Secret key for S3 resume file operations |
+| `S3_RESUME_BUCKET` | Private bucket used for uploaded resume originals |
+
+The existing AspAIre resume bucket is expected to be configured through `S3_RESUME_BUCKET`; do not hardcode bucket names in source.
+
+Optional upload support values:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `AWS_SESSION_TOKEN` | Session token when using temporary AWS credentials | empty |
+| `RESUME_UPLOAD_MAX_BYTES` | Maximum uploaded resume original size | `5242880` |
+
 ## Optional Data and Tooling
 
 | Variable | Purpose |

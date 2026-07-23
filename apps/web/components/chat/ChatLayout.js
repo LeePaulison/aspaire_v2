@@ -47,7 +47,7 @@ export default function ChatLayout({ conversations }) {
     {
       id: crypto.randomUUID(),
       role: "assistant",
-      content: "Welcome to Saigely.",
+      content: "Welcome to AspAIre.",
     },
   ]);
   const [chatStatus, setChatStatus] = useState("connecting");
@@ -124,10 +124,10 @@ export default function ChatLayout({ conversations }) {
       ? `${preview.slice(0, 60)}${preview.length > 60 ? "…" : ""}`
       : "";
 
-    document.title = label ? `${label} — sAIgely` : "New conversation — sAIgely";
+    document.title = label ? `${label} — AspAIre` : "New conversation — AspAIre";
 
     return () => {
-      document.title = "sAIgely — AI chat";
+      document.title = "AspAIre — Career workspace";
     };
   }, [activeConversationId, storedConversations]);
 
@@ -146,7 +146,7 @@ export default function ChatLayout({ conversations }) {
       {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: "Welcome to Saigely.",
+        content: "Welcome to AspAIre.",
       },
     ]);
   }

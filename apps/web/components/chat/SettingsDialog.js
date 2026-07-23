@@ -82,7 +82,7 @@ const SettingsDialogForm = ({ open, onOpenChange, preferenceData }) => {
           <Dialog.Title className="DialogTitle">Settings</Dialog.Title>
 
           <Dialog.Description className="DialogDescription">
-            Customize your Saigely experience.
+            Customize your AspAIre experience.
           </Dialog.Description>
 
           <ScrollArea.Root className="DialogScrollArea">

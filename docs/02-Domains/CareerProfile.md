@@ -16,9 +16,9 @@ The profile should help the user describe who they are professionally, what they
 
 ## Current State
 
-The Career Profile domain is planned but not yet implemented.
+The Career Profile foundation slice is implemented.
 
-No production database schema, repository, GraphQL operations, or UI workflow currently exists for this domain.
+Current implementation includes PostgreSQL schema, repository access, GraphQL operations, and a protected profile editing UI.
 
 ## Roadmap Phase
 
@@ -79,6 +79,8 @@ Initial capabilities should include:
 * Record career goals
 * Record job preferences
 * Record location and work-mode preferences
+
+The foundation UI supports Markdown-formatted text in narrative fields. Users edit Markdown in plain textareas, and saved content is rendered with the shared Markdown renderer.
 
 Later capabilities may include:
 
@@ -283,34 +285,33 @@ If profile sharing is introduced later, it should be designed as an explicit fea
 
 The Career Profile domain should expose focused GraphQL operations rather than a single unstructured profile blob.
 
-Initial query direction:
+Implemented query:
 
 * `careerProfile`
 
-Initial mutation direction:
+Implemented foundation mutations:
 
 * `createCareerProfile`
-* `updateCareerProfile`
-* `upsertCareerProfileSummary`
-* `addCareerExperience`
-* `updateCareerExperience`
+* `updateCareerProfileSummary`
+* `upsertCareerExperience`
 * `deleteCareerExperience`
-* `reorderCareerExperience`
-* `addCareerEducation`
-* `updateCareerEducation`
+* `upsertCareerEducation`
 * `deleteCareerEducation`
-* `addCareerSkill`
-* `updateCareerSkill`
+* `upsertCareerSkill`
 * `deleteCareerSkill`
+* `updateCareerPreferences`
+
+Deferred mutation candidates include:
+
+* `reorderCareerExperience`
+* `reorderCareerEducation`
+* `reorderCareerSkill`
 * `addCareerProject`
 * `updateCareerProject`
 * `deleteCareerProject`
 * `addCareerCertification`
 * `updateCareerCertification`
 * `deleteCareerCertification`
-* `updateCareerPreferences`
-
-The final operation names should follow the conventions present in the implemented GraphQL schema at the time of development.
 
 Resolvers should validate authentication first, then delegate persistence to a career profile repository.
 
@@ -347,6 +348,14 @@ Expected views:
 * Edit projects
 * Edit certifications
 * Edit preferences
+
+The current foundation route is:
+
+```text
+/career-profile
+```
+
+It supports progressive editing of summary, experience, education, skills, and job/location preferences.
 
 The UI should be practical and work-focused. It should prioritize scanning, editing, completeness, and reuse rather than a marketing-style profile page.
 
@@ -456,7 +465,7 @@ The domain should expose reusable context without becoming tightly coupled to ev
 
 The first implementation slice should be intentionally small and complete.
 
-Recommended scope:
+Implemented foundation scope:
 
 * One profile per authenticated user
 * Top-level profile fields
@@ -468,9 +477,10 @@ Recommended scope:
 * Repository
 * GraphQL query and mutations
 * Profile overview and edit UI
-* Basic tests for authorization, persistence, and validation
 
-Projects and certifications may be included in the first slice if the implementation remains manageable. Otherwise, they can follow as a second profile refinement slice.
+Projects and certifications are deferred to a profile refinement slice.
+
+Focused automated tests for Career Profile authorization, persistence, and validation should be added as the slice hardens.
 
 ---
 
@@ -500,4 +510,3 @@ The Career Profile domain is complete for its foundation phase when:
 * Structured profile context can be retrieved for future AI workflows
 * Tests cover the important authorization and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-

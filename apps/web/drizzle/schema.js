@@ -1,13 +1,13 @@
 // drizzle/schema.js
 
-export * from "./auth-schema";
-export * from "./aiAgents";
-export * from "./aiModels";
-export * from "./applicationEvents";
-export * from "./careerProfiles";
-export * from "./preferences";
-export * from "./reasoningLevels";
-export * from "./resumeAnalyses";
-export * from "./resumes";
-export * from "./savedJobs";
-export * from "./verbosityLevels";
+export * from "./auth-schema.ts";
+export * from "./aiAgents.js";
+export * from "./aiModels.js";
+export * from "./applicationEvents.js";
+export * from "./careerProfiles.js";
+export * from "./preferences.js";
+export * from "./reasoningLevels.js";
+export * from "./resumeAnalyses.js";
+export * from "./resumes.js";
+export * from "./savedJobs.js";
+export * from "./verbosityLevels.js";

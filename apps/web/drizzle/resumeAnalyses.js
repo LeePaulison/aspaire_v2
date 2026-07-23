@@ -8,10 +8,10 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth-schema";
-import { careerProfiles } from "./careerProfiles";
-import { resumes } from "./resumes";
-import { savedJobs } from "./savedJobs";
+import { user } from "./auth-schema.ts";
+import { careerProfiles } from "./careerProfiles.js";
+import { resumes } from "./resumes.js";
+import { savedJobs } from "./savedJobs.js";
 
 export const resumeAnalyses = pgTable(
   "resume_analyses",

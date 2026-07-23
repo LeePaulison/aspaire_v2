@@ -16,9 +16,13 @@ The resume library should make resumes durable product data, not temporary uploa
 
 ## Current State
 
-The Resume Library domain is planned but not yet implemented.
+The Resume Library text-first foundation slice is implemented.
 
-No production resume schema, repository, GraphQL operations, file handling workflow, parsing workflow, or resume library UI currently exists for this domain.
+The current implementation includes a production resume schema, separate uploaded-file metadata schema, repository, GraphQL operations, authenticated Resume Library UI for manual resume records, and a first upload path for attaching original resume files to existing resume records.
+
+The storage boundary for uploaded resume originals is decided: uploaded originals should be stored in S3, while application-owned metadata, extracted text, and manually entered text remain in PostgreSQL.
+
+Text parsing, structured section extraction, download links, and true version history are not yet implemented.
 
 ## Roadmap Phase
 
@@ -80,10 +84,11 @@ Initial capabilities should include:
 * Archive or delete a resume
 * Track when a resume was created and last updated
 * Preserve enough content for future analysis
+* Receive clear confirmation when a resume record, stored content, file metadata, and uploaded originals are deleted
+* Upload an original PDF, DOCX, or plain text resume file to an existing resume record
 
 Later capabilities may include:
 
-* Upload PDF, DOCX, or plain text resume files
 * Extract structured resume sections
 * Generate a resume from career profile data
 * Duplicate a resume as a new version
@@ -174,13 +179,28 @@ Initial statuses may include:
 
 Only one resume may be primary at a time for a user.
 
+## Deletion Receipt
+
+A deletion receipt is a user-facing confirmation that a resume deletion completed across the relevant AspAIre storage surfaces.
+
+For resumes with uploaded originals, the receipt should show:
+
+* Resume title or original filename
+* Resume library record deletion status
+* Uploaded original file deletion status
+* Extracted text or stored content deletion status
+* Deletion timestamp
+* A non-sensitive receipt identifier if useful for support or troubleshooting
+
+The receipt should not expose S3 bucket names, object keys, AWS region, signed URLs, or internal infrastructure details.
+
 ---
 
 # Data Model Direction
 
 Resume Library data should default to PostgreSQL through Drizzle for user-owned metadata, structured content, relationships, and analysis links.
 
-Large uploaded files should use a documented file storage strategy rather than being stored directly in PostgreSQL. If file upload is deferred, the first implementation can store resume text and metadata only.
+Large uploaded files should use S3 rather than being stored directly in PostgreSQL. If file upload is deferred, the first implementation can store resume text and metadata only.
 
 Expected table direction:
 
@@ -200,6 +220,12 @@ Each table should include:
 
 The first implementation should avoid overbuilding version control. A clear duplicate-as-new-version workflow may be enough until real user behavior proves deeper history is needed.
 
+Uploaded resume file metadata lives in `resume_files` and should include the S3 object key, original filename, content type, size, upload timestamp, extraction status, owning user relationship, and parent resume relationship. S3 object keys should be scoped as:
+
+```text
+users/{userId}/resumes/{resumeId}/{safeFilename}
+```
+
 ---
 
 # Authorization Rules
@@ -213,8 +239,11 @@ Resolvers and repositories must:
 * Prevent users from accessing another user's resume content, metadata, files, or extracted text
 * Avoid accepting `userId` from client input where it can be derived from the authenticated context
 * Enforce ownership before linking resumes to analysis results, saved jobs, or applications
+* Enforce ownership before generating signed URLs for uploaded resume originals
 
 Resume content may include sensitive personal information and should be treated with the same care as profile data.
+
+Deletion confirmation should reassure the user that the resume is no longer available in AspAIre without exposing storage internals.
 
 ---
 
@@ -236,11 +265,12 @@ Initial mutation direction:
 * `archiveResume`
 * `restoreResume`
 * `setPrimaryResume`
+* `deleteResumeFile`
 * `duplicateResume`
 * `updateResumeContent`
 * `updateResumeSections`
 
-If file upload is included in the first slice, upload mechanics should be designed separately because GraphQL file upload support has security and operational trade-offs. A signed upload URL or route-handler-based upload flow may be preferable.
+Upload mechanics are implemented through an authenticated Next.js route handler rather than GraphQL multipart upload. `POST /api/resumes/:resumeId/files` validates authentication, resume ownership, active resume status, file type, file size, object key generation, and S3 storage before persisting `resume_files` metadata.
 
 Resolvers should validate authentication first, then delegate persistence to a resume repository.
 
@@ -259,6 +289,7 @@ Expected repository responsibilities include:
 * Update resume text and structured sections
 * Mark a resume as primary while clearing prior primary state
 * Archive, restore, or delete resumes
+* Delete individual uploaded originals from S3 and `resume_files`
 * Duplicate a resume where supported
 * Return domain-shaped objects suitable for GraphQL resolvers
 
@@ -286,10 +317,14 @@ Useful interface patterns include:
 * Status filters
 * Last-updated metadata
 * Clear actions for edit, duplicate, archive, and analyze
+* Clear deletion confirmation for resume records, individual uploaded originals, and extracted text
 * Empty state for users without resumes
 * Preview of resume text or extracted sections
+* Uploaded original metadata list showing filename, size, upload date, and extraction status
 
 The UI should keep document management calm and efficient. It should not hide core actions behind AI-first flows.
+
+When a user deletes a resume, the UI should present a deletion receipt rather than exposing the user's underlying storage bucket or object key.
 
 ---
 
@@ -329,6 +364,8 @@ Recommended rules:
 * Empty resume content should be allowed only for drafts
 * Only one primary resume should exist per user
 * Archived resumes should not be selected for new applications by default
+* Uploaded resume originals should use an allowlist for PDF, DOCX, and plain text unless the product explicitly supports more types
+* Uploaded resume originals should have a documented maximum file size
 
 Validation should be shared where practical between GraphQL inputs, upload route handlers, and UI forms.
 
@@ -363,6 +400,8 @@ Initial implementation should include focused tests for:
 * Archive and delete behavior
 * Resume content validation
 * File validation if upload support is included
+* Deletion receipt behavior for records with uploaded originals
+* Individual uploaded-original deletion behavior
 * UI behavior for empty, draft, active, and archived states where practical
 
 Testing should prioritize authorization and data integrity because resume content is private and reused by later workflows.
@@ -392,13 +431,14 @@ Recommended scope:
 
 * Resume list and detail
 * Manual resume creation with title, notes, status, and text content
+* Upload PDF, DOCX, or plain text original resume files
 * Primary resume selection
-* Archive or delete behavior
+* Archive, resume delete, and individual uploaded-original delete behavior
 * Repository
 * GraphQL query and mutations
-* Basic tests for authorization, persistence, and primary-resume behavior
+* Basic tests for authorization, persistence, primary-resume behavior, upload validation, and storage cleanup
 
-File uploads, structured parsing, and true version history may follow once the text-first library is stable.
+Structured parsing and true version history may follow once the text-first and original-file library is stable.
 
 ---
 
@@ -407,12 +447,15 @@ File uploads, structured parsing, and true version history may follow once the t
 These questions should be resolved before or during implementation:
 
 * Should the first version support file upload, text entry, or both?
-* What file storage provider should be used for uploaded resumes?
 * Should resume versioning be explicit in the first slice?
 * Should users be allowed to store multiple active resumes without one marked primary?
 * Should structured extraction happen automatically or only when the user requests it?
 * What resume content should be sent to AI workflows by default?
 * Should archived resumes remain available for historical applications?
+
+Resolved storage question:
+
+* Uploaded resume originals use S3 with PostgreSQL metadata and application-owned authorization.
 
 ---
 
@@ -425,7 +468,7 @@ The Resume Library domain is complete for its foundation phase when:
 * GraphQL operations enforce authentication and ownership
 * Users can identify a primary resume
 * The UI supports empty, draft, active, and archived resume states
+* Uploaded originals can be attached to resumes and removed individually
 * Stored resumes can be referenced by future analysis and application workflows
 * Tests cover important authorization and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-

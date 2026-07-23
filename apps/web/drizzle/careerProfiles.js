@@ -10,7 +10,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth-schema";
+import { user } from "./auth-schema.ts";
 
 export const careerProfiles = pgTable(
   "career_profiles",

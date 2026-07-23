@@ -127,12 +127,33 @@ Current examples include:
 * `graphql/conversation`
 * `graphql/preference`
 * `graphql/ai`
+* `graphql/careerProfile`
 
 Client-side requests use `authRequest`, which posts to `/api/graphql`.
 
 Server-side authenticated requests can use `serverAuthRequest`.
 
 Future domains should follow the same pattern: colocate query and mutation helper functions under a domain folder and keep GraphQL schema and resolver implementation separate from UI components.
+
+---
+
+# Career Profile UI
+
+The Career Profile foundation route lives at:
+
+```text
+apps/web/app/(protected)/career-profile/page.js
+```
+
+The main client component lives at:
+
+```text
+apps/web/components/career-profile/CareerProfileClient.js
+```
+
+The UI is protected by the shared authenticated route group and uses GraphQL helpers to load and persist user-owned profile data.
+
+Narrative profile fields accept Markdown text in editable textareas and render saved content through the shared Markdown renderer. This keeps profile context readable while preserving plain text entry and storage.
 
 ---
 
@@ -177,4 +198,3 @@ Examples include:
 * Current chat-focused protected route
 
 During Phase 1 Platform Baseline, AspAIre should decide which inherited UI should remain as AI Workspace foundation and which should be renamed, moved, or replaced.
-
