@@ -161,7 +161,7 @@ export function createWebSocketConnectionHandler({
             authenticationToken = parsedMessage.payload.token;
             authenticationState = "authenticated";
             clearTimeout(authenticationTimeout);
-            logger.info("WebSocket authenticated", { connectionId, userId });
+            logger.info("WebSocket authenticated", { connectionId });
             sendJson({ type: "authenticated" });
           } catch (error) {
             authenticationState = "rejected";
