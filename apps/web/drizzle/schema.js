@@ -1,6 +1,6 @@
 // drizzle/schema.js
 
-export * from "../auth-schema";
+export * from "./auth-schema";
 export * from "./aiAgents";
 export * from "./aiModels";
 export * from "./applicationEvents";

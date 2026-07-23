@@ -24,7 +24,7 @@ The web application uses Better Auth with:
 
 Runtime configuration lives primarily in `apps/web/lib/auth.js`.
 
-Auth database schema lives in `apps/web/auth-schema.ts`.
+Auth database schema lives in `apps/web/drizzle/auth-schema.ts`.
 
 The auth API route is:
 
@@ -100,20 +100,20 @@ Resolvers must enforce authorization using this context before reading or mutati
 
 ---
 
-# Current JWT Defaults
+# Current JWT Claims
 
-The inherited JWT defaults still use Saigely names:
+AspAIre defines JWT issuer and audience through environment variables:
 
 ```text
-issuer: saigely-next
-audience: saigely-websocket
+JWT_ISSUER=aspaire-web
+JWT_AUDIENCE=aspaire-ai-server
 algorithm: RS256
 expiration: 5m
 ```
 
-The AI server can also read issuer and audience from environment variables.
+The recommended issuer identifies the web application as the token issuer. The recommended audience identifies the AI server as the intended verifier/consumer.
 
-Renaming issuer or audience to AspAIre values is a coordinated change across:
+Changing issuer or audience is a coordinated change across:
 
 * Better Auth JWT configuration
 * GraphQL bearer-token verification
@@ -154,10 +154,8 @@ Authentication-sensitive implementation should preserve:
 
 AspAIre should review:
 
-* Whether to rename JWT issuer and audience
 * Whether email/password auth remains enabled
 * Which OAuth providers are required for the initial product
 * OAuth app callback URLs for AspAIre environments
 * Better Auth secret and key material setup
 * Deployment exposure of `/api/auth/jwks`
-

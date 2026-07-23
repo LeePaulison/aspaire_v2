@@ -7,6 +7,8 @@ import { authClient } from "@/lib/auth/auth-client";
 export default function LoginPage() {
   const { data: session } = authClient.useSession();
   const router = useRouter();
+  const githubEnabled = process.env.NEXT_PUBLIC_ENABLE_GITHUB_AUTH === "true";
+  const googleEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH !== "false";
 
   async function handleLogin({ provider }) {
     await authClient.signIn.social({
@@ -43,24 +45,28 @@ export default function LoginPage() {
             <li>Multiple AI models</li>
             <li>Configurable reasoning, verbosity & temperature</li>
             <li>Markdown & code support</li>
-            <li>Secure Github & Google authentication</li>
+            <li>Secure OAuth authentication</li>
           </ul>
         </div>
 
         <div className="flex flex-col gap-3">
-          <button
-            onClick={() => handleLogin({ provider: "github" })}
-            className="rounded-md border border-ring px-4 py-3 hover:bg-surface cursor-pointer"
-          >
-            Continue with GitHub
-          </button>
+          {githubEnabled ? (
+            <button
+              onClick={() => handleLogin({ provider: "github" })}
+              className="rounded-md border border-ring px-4 py-3 hover:bg-surface cursor-pointer"
+            >
+              Continue with GitHub
+            </button>
+          ) : null}
 
-          <button
-            onClick={() => handleLogin({ provider: "google" })}
-            className="rounded-md border border-ring px-4 py-3 hover:bg-surface cursor-pointer"
-          >
-            Continue with Google
-          </button>
+          {googleEnabled ? (
+            <button
+              onClick={() => handleLogin({ provider: "google" })}
+              className="rounded-md border border-ring px-4 py-3 hover:bg-surface cursor-pointer"
+            >
+              Continue with Google
+            </button>
+          ) : null}
         </div>
 
         <aside className="mt-6 rounded-lg border border-ring/35 bg-surface p-4 text-xs text-muted-foreground">
@@ -69,18 +75,20 @@ export default function LoginPage() {
           </h2>
 
           <ul className="mt-3 space-y-3">
-            <li>
-              <span className="font-medium text-foreground">GitHub:</span>{" "}
-              read-only access to your basic profile and email addresses
-              (<code>read:user</code> and <code>user:email</code>). Saigely does
-              not request access to repositories, source code, organizations,
-              issues, or pull requests.
-            </li>
+            {githubEnabled ? (
+              <li>
+                <span className="font-medium text-foreground">GitHub:</span>{" "}
+                read-only access to your basic profile and email addresses
+                (<code>read:user</code> and <code>user:email</code>). AspAIre does
+                not request access to repositories, source code, organizations,
+                issues, or pull requests.
+              </li>
+            ) : null}
             <li>
               <span className="font-medium text-foreground">Google:</span>{" "}
               your basic account identity, including name, profile photo, and
               primary email address (<code>openid</code>, <code>profile</code>,
-              and <code>email</code>). Saigely does not request access to Gmail,
+              and <code>email</code>). AspAIre does not request access to Gmail,
               Drive, Calendar, contacts, or other Google services.
             </li>
           </ul>

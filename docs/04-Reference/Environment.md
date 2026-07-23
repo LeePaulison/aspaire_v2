@@ -4,7 +4,7 @@
 
 ## Purpose
 
-This document lists the environment variables currently used by the inherited AspAIre workspace.
+This document lists the environment variables currently used by the AspAIre workspace.
 
 It records names, ownership, and purpose. It must not contain secret values.
 
@@ -14,23 +14,22 @@ It records names, ownership, and purpose. It must not contain secret values.
 
 Defined by `apps/web/.env.example`.
 
-## Authentication
+## Required Authentication
 
 | Variable | Purpose |
 | --- | --- |
 | `BETTER_AUTH_SECRET` | Better Auth secret material |
 | `BETTER_AUTH_URL` | Canonical application URL used by Better Auth |
 | `NEXT_PUBLIC_AUTH_URL` | Browser-visible application URL |
+| `JWT_ISSUER` | JWT issuer used by Better Auth and GraphQL bearer-token verification; recommended value is `aspaire-web` |
+| `JWT_AUDIENCE` | JWT audience used by Better Auth and GraphQL bearer-token verification; recommended value is `aspaire-ai-server` |
+| `ENABLE_EMAIL_PASSWORD_AUTH` | Server-side flag for Better Auth email/password login; default MVP value is `false` |
 
-## WebSocket and Server Integration
+## Required WebSocket Integration
 
 | Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_WS_SERVER` | Browser-visible WebSocket URL for the AI server |
-| `NEXT_PUBLIC_WS_SERVER_PORT` | Inherited variable; review whether still active |
-| `NEXT_PUBLIC_API_URL` | Inherited legacy API URL variable; review whether still active |
-| `AUTH_SERVER_URL` | Inherited server URL variable; review whether still active |
-| `SERVER_URL` | Server URL used by inherited configuration/comments |
 
 ## OAuth
 
@@ -38,17 +37,28 @@ Defined by `apps/web/.env.example`.
 | --- | --- |
 | `GITHUB_CLIENT_ID` | GitHub OAuth client ID |
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth client secret |
+| `NEXT_PUBLIC_ENABLE_GITHUB_AUTH` | Browser-visible flag for showing GitHub sign-in; defaults should be `false` for the MVP |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` | Browser-visible flag for showing Google sign-in; defaults should be `true` for the MVP |
 
-## Data
+Google OAuth is required for the MVP sign-in path. GitHub OAuth is optional.
+
+Email/password authentication is disabled for the MVP unless `ENABLE_EMAIL_PASSWORD_AUTH=true`.
+
+## Required Data
 
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Neon PostgreSQL connection used by Drizzle |
-| `DATABASE_URL_UNPOOLED` | Unpooled PostgreSQL connection for tooling or special cases |
 | `MONGODB_URI` | MongoDB connection for conversation document data |
 | `MONGODB_DATABASE` | MongoDB database selected by the web app; defaults to `aspaire` |
+
+## Optional Data and Tooling
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL_UNPOOLED` | Unpooled PostgreSQL connection for migrations, maintenance, or tooling that should not use pooled connections |
 
 ## GraphQL Limits
 
@@ -92,8 +102,8 @@ Defined by `apps/ai-server/.env.example`.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `JWT_ISSUER` | Expected JWT issuer | Defaults to `CLIENT_ORIGIN` in AI server config |
-| `JWT_AUDIENCE` | Expected JWT audience | Defaults to `CLIENT_ORIGIN` in AI server config |
+| `JWT_ISSUER` | Expected JWT issuer | Required; use `aspaire-web` |
+| `JWT_AUDIENCE` | Expected JWT audience | Required; use `aspaire-ai-server` |
 | `JWT_ALGORITHMS` | Allowed JWT algorithms | `RS256` |
 
 ## Limits and Timeouts
@@ -122,7 +132,7 @@ These values must be kept consistent across services:
 | AI `CLIENT_ORIGIN` | Must exactly match the browser web origin |
 | AI `API_ORIGIN` | Must point to the deployed web application origin |
 | AI `JWKS_URL` | Must reach the web application's public JWKS |
-| Web JWT issuer/audience | Must match AI server `JWT_ISSUER` and `JWT_AUDIENCE` when explicit values are used |
+| Web JWT issuer/audience | Must match AI server `JWT_ISSUER=aspaire-web` and `JWT_AUDIENCE=aspaire-ai-server` |
 
 ---
 
@@ -130,10 +140,21 @@ These values must be kept consistent across services:
 
 AspAIre should review:
 
-* Legacy variables that may no longer be active
 * AspAIre production origin
 * AspAIre AI server origin
-* Whether JWT issuer and audience should be renamed from inherited values
+
+---
+
+# Removed Web Legacy Variables
+
+The following inherited web variables are not used by current application code and should not be included in `apps/web/.env.example`:
+
+| Variable | Replacement or reason |
+| --- | --- |
+| `NEXT_PUBLIC_WS_SERVER_PORT` | Use full `NEXT_PUBLIC_WS_SERVER` URL instead |
+| `NEXT_PUBLIC_API_URL` | Current frontend GraphQL calls use local app routes and server helpers |
+| `AUTH_SERVER_URL` | Current auth flow uses Better Auth app URLs |
+| `SERVER_URL` | Current web-to-AI integration uses `NEXT_PUBLIC_WS_SERVER`; AI server origins live in `apps/ai-server/.env.example` |
 
 ---
 
@@ -163,3 +184,12 @@ Use these local callback URLs when creating development OAuth clients:
 | Google | `http://localhost:3000/api/auth/callback/google` |
 
 Production OAuth apps should use the same callback paths on the production AspAIre web origin.
+
+OAuth providers are registered only when both server-side credentials for that provider exist. The login page separately uses public flags to decide which provider buttons to show:
+
+```text
+NEXT_PUBLIC_ENABLE_GITHUB_AUTH=false
+NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true
+```
+
+GitHub OAuth is optional for the MVP. Google OAuth is the preferred MVP sign-in provider.

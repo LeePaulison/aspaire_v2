@@ -77,6 +77,9 @@ Decision statuses:
 | ASP-0013 | Accepted | 2026-07-22 | Reference documents define implementation-aligned technical inventories |
 | ASP-0014 | Accepted | 2026-07-22 | AspAIre MVP is defined as a focused profile-resume-job-analysis-tracking workflow |
 | ASP-0015 | Accepted | 2026-07-22 | Conversation documents are scoped by domain and domain object ID |
+| ASP-0016 | Accepted | 2026-07-22 | Google OAuth is the MVP sign-in provider and GitHub OAuth is optional |
+| ASP-0017 | Accepted | 2026-07-22 | JWT issuer and audience are explicit environment-defined service identifiers |
+| ASP-0018 | Accepted | 2026-07-22 | Email/password authentication is disabled by default for the MVP |
 
 ---
 
@@ -579,6 +582,124 @@ Keeping messages unchanged preserves compatibility with inherited conversations 
 * MongoDB indexes should support `userId`, `domain`, `domainId`, and `updatedAt` lookups.
 * Domain-specific product slices can attach conversations to their own records without changing the message schema.
 * If future workflows need mixed-domain conversations, the project should revisit this decision before adding message-level domain fields.
+
+---
+
+# ASP-0016: Google OAuth Is the MVP Sign-In Provider and GitHub OAuth Is Optional
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre uses Better Auth for authentication and inherited OAuth support for GitHub and Google. GitHub OAuth setup creates friction because callback URI changes require additional credential work. Google OAuth is sufficient for the MVP sign-in path.
+
+## Decision
+
+Google OAuth will be the primary MVP sign-in provider.
+
+GitHub OAuth will remain supported by the codebase but optional. OAuth providers are registered only when their server-side client ID and client secret are both present. The login UI uses public feature flags to decide which provider buttons to show.
+
+## Rationale
+
+This keeps MVP authentication simple while preserving the ability to re-enable GitHub later. Conditional provider registration prevents missing optional credentials from breaking local development or deployment.
+
+## Consequences
+
+* Local MVP setup only requires Google OAuth credentials.
+* GitHub OAuth credentials can be omitted.
+* GitHub sign-in should remain hidden unless explicitly enabled.
+* Environment documentation should distinguish server-side provider credentials from browser-visible login button flags.
+
+---
+
+# ASP-0017: JWT Issuer and Audience Are Explicit Environment-Defined Service Identifiers
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre inherited Saigely JWT issuer and audience values. The web application issues short-lived JWTs through Better Auth, GraphQL verifies bearer tokens from the AI server, and the AI server verifies browser-provided tokens before accepting WebSocket chat traffic.
+
+These values must match across services. Hardcoded claim values make environment transitions harder and risk retaining inherited product names.
+
+## Decision
+
+JWT issuer and audience will be required environment variables in both services.
+
+Recommended MVP values:
+
+```text
+JWT_ISSUER=aspaire-web
+JWT_AUDIENCE=aspaire-ai-server
+```
+
+Runtime code should read these values from environment variables rather than hardcoding them.
+
+## Rationale
+
+Environment-defined service identifiers make the authentication contract explicit and coordinated across web and AI server deployments.
+
+Using stable service names instead of origins avoids changing JWT claims for every deployment URL while still clearly identifying the issuer and intended audience.
+
+## Consequences
+
+* Web and AI server environments must define matching `JWT_ISSUER` and `JWT_AUDIENCE` values.
+* Changing either value requires a coordinated deployment.
+* Missing values should fail fast rather than silently falling back to inherited names.
+* Documentation and examples should use `aspaire-web` and `aspaire-ai-server` for the MVP.
+
+---
+
+# ASP-0018: Email/Password Authentication Is Disabled by Default for the MVP
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-22
+
+## Context
+
+AspAIre's MVP sign-in path is Google OAuth. GitHub OAuth remains optional, and the current login UI does not provide an email/password flow.
+
+Leaving email/password authentication enabled without a supported UI, password reset flow, verification policy, and account-management experience would create an unused authentication surface.
+
+## Decision
+
+Email/password authentication will be disabled by default for the MVP.
+
+It may be enabled explicitly with:
+
+```text
+ENABLE_EMAIL_PASSWORD_AUTH=true
+```
+
+## Rationale
+
+OAuth-only MVP authentication reduces setup and security scope while preserving a straightforward user sign-in path.
+
+Keeping email/password behind an environment flag allows future development without removing Better Auth support entirely.
+
+## Consequences
+
+* MVP local setup should use Google OAuth.
+* Email/password routes should not be treated as an active user-facing feature unless explicitly enabled.
+* Enabling email/password later should include UI, validation, password reset/recovery, and documentation work.
+* Auth documentation should make the default disabled state clear.
 
 ---
 

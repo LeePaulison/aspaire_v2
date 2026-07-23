@@ -69,8 +69,8 @@ Browser
 Default JWT claims expected by both projects:
 
 ```text
-issuer:   saigely-next
-audience: saigely-websocket
+issuer:   aspaire-web
+audience: aspaire-ai-server
 algorithm: RS256
 ```
 
@@ -158,8 +158,6 @@ http://localhost:3000/api/auth/callback/github
 http://localhost:3000/api/auth/callback/google
 ```
 
-`NEXT_PUBLIC_API_URL` exists for a legacy request helper but is not part of the active chat, authentication, or server-rendered GraphQL path.
-
 ### Gateway environment
 
 Configure the OpenAI WebSocket Gateway separately:
@@ -172,8 +170,8 @@ API_ORIGIN=http://localhost:3000
 CLIENT_ORIGIN=http://localhost:3000
 CORS_ORIGIN=http://localhost:3000
 JWKS_URL=http://localhost:3000/api/auth/jwks
-JWT_ISSUER=saigely-next
-JWT_AUDIENCE=saigely-websocket
+JWT_ISSUER=aspaire-web
+JWT_AUDIENCE=aspaire-ai-server
 ```
 
 `API_ORIGIN` and `JWKS_URL` must be reachable from the gateway. In a hosted environment they cannot point to `localhost`; they must use the deployed Next.js origin. `CLIENT_ORIGIN` identifies the browser origin allowed to connect.
@@ -210,8 +208,8 @@ The Fly-hosted gateway must use matching origins and authentication settings:
 API_ORIGIN=https://saigely.vercel.app
 CLIENT_ORIGIN=https://saigely.vercel.app
 JWKS_URL=https://saigely.vercel.app/api/auth/jwks
-JWT_ISSUER=saigely-next
-JWT_AUDIENCE=saigely-websocket
+JWT_ISSUER=aspaire-web
+JWT_AUDIENCE=aspaire-ai-server
 ```
 
 The Vercel JWKS endpoint must be publicly reachable by Fly. Vercel Preview Deployment Protection blocks that request, so the public Production origin is used for the current integration.

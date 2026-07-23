@@ -71,8 +71,8 @@ Production integration relationships:
 API_ORIGIN=https://saigely.vercel.app
 CLIENT_ORIGIN=https://saigely.vercel.app
 JWKS_URL=https://saigely.vercel.app/api/auth/jwks
-JWT_ISSUER=saigely-next
-JWT_AUDIENCE=saigely-websocket
+JWT_ISSUER=aspaire-web
+JWT_AUDIENCE=aspaire-ai-server
 ```
 
 Changing an origin, JWKS URL, issuer, audience, OAuth callback, or public WebSocket URL is a coordinated change. Update both services as needed and verify authentication before considering it complete.

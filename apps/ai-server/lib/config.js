@@ -53,8 +53,8 @@ export function getServerConfiguration() {
       trimTrailingSlash(process.env.CORS_ORIGIN) ||
       clientOrigin ||
       "http://localhost:3000",
-    jwtIssuer: process.env.JWT_ISSUER || clientOrigin,
-    jwtAudience: process.env.JWT_AUDIENCE || clientOrigin,
+    jwtIssuer: requireValue("JWT_ISSUER", process.env.JWT_ISSUER),
+    jwtAudience: requireValue("JWT_AUDIENCE", process.env.JWT_AUDIENCE),
     jwtAlgorithms: jwtAlgorithms(process.env.JWT_ALGORITHMS),
     jwksUrl: resolveJwksUrl(apiOrigin),
     host: process.env.HOST || "0.0.0.0",

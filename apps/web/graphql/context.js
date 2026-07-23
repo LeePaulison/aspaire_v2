@@ -8,6 +8,16 @@ import { auth } from "@/lib/auth";
 
 let jwks;
 
+function requireEnvironmentValue(name) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} is not defined.`);
+  }
+
+  return value;
+}
+
 async function getJwtUser(requestHeaders) {
   const authorization = requestHeaders.get("authorization");
 
@@ -27,8 +37,8 @@ async function getJwtUser(requestHeaders) {
   );
 
   const { payload } = await jwtVerify(authorization.slice(7), jwks, {
-    issuer: process.env.JWT_ISSUER || "saigely-next",
-    audience: process.env.JWT_AUDIENCE || "saigely-websocket",
+    issuer: requireEnvironmentValue("JWT_ISSUER"),
+    audience: requireEnvironmentValue("JWT_AUDIENCE"),
     algorithms: ["RS256"],
   });
 

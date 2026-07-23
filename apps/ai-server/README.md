@@ -47,8 +47,8 @@ On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
 | `OPENAI_API_KEY` | Yes | OpenAI API key used by the gateway. |
 | `API_ORIGIN` | Yes | Origin hosting `/api/graphql`. |
 | `CLIENT_ORIGIN` | Yes | Exact browser origin allowed to open WebSocket connections. |
-| `JWT_ISSUER` | Yes | Expected JWT `iss` claim. Defaults to `CLIENT_ORIGIN` for compatibility. |
-| `JWT_AUDIENCE` | Yes | Expected JWT `aud` claim. Defaults to `CLIENT_ORIGIN` for compatibility. |
+| `JWT_ISSUER` | Yes | Expected JWT `iss` claim. Use `aspaire-web` for the AspAIre MVP. |
+| `JWT_AUDIENCE` | Yes | Expected JWT `aud` claim. Use `aspaire-ai-server` for the AspAIre MVP. |
 | `JWT_ALGORITHMS` | No | Comma-separated JWT algorithm allowlist. Defaults to `RS256`; supported values are `RS256`, `ES256`, and `EdDSA`. |
 | `JWKS_URL` | Yes | Full JWKS URL or its origin. An origin resolves to `/api/auth/jwks`. |
 | `CORS_ORIGIN` | No | HTTP CORS origin. Defaults to `CLIENT_ORIGIN`. |

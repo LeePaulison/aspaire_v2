@@ -28,8 +28,8 @@ The AI server must access data through GraphQL, not direct database connections.
 PostgreSQL schema definitions live in:
 
 ```text
-apps/web/auth-schema.ts
 apps/web/drizzle/*.js
+apps/web/drizzle/*.ts
 ```
 
 The schema barrel file is:
@@ -40,7 +40,7 @@ apps/web/drizzle/schema.js
 
 Current exported schema modules include:
 
-* Better Auth schema from `auth-schema.ts`
+* Better Auth schema from `drizzle/auth-schema.ts`
 * `ai_agents`
 * `ai_models`
 * `application_events`
@@ -60,7 +60,7 @@ Current exported schema modules include:
 
 # Better Auth Tables
 
-Defined in `apps/web/auth-schema.ts`.
+Defined in `apps/web/drizzle/auth-schema.ts`.
 
 ## `user`
 

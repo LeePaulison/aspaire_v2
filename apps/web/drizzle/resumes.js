@@ -7,7 +7,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { user } from "../auth-schema";
+import { user } from "./auth-schema";
 import { careerProfiles } from "./careerProfiles";
 
 export const resumes = pgTable(

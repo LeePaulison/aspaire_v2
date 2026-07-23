@@ -41,3 +41,4 @@ Thumbs.db
 *.pem
 *.key
 *.crt
+/client_secret_*.apps.googleusercontent.com.json

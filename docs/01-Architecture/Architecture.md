@@ -212,12 +212,12 @@ The web application accepts two authentication modes for GraphQL context:
 
 The AI server verifies the same class of bearer JWT against the web application's JWKS before accepting authenticated WebSocket messages.
 
-Current inherited JWT defaults still use Saigely identifiers:
+Current AspAIre JWT values are environment-defined service identifiers:
 
-* Issuer: `saigely-next`
-* Audience: `saigely-websocket`
+* Issuer: `aspaire-web`
+* Audience: `aspaire-ai-server`
 
-These identifiers should be reviewed during AspAIre platform baseline work and either intentionally retained for compatibility or renamed in a coordinated application and gateway change.
+These identifiers must remain coordinated between the web application and AI server.
 
 ---
 

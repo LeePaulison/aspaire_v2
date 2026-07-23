@@ -43,11 +43,19 @@ Drizzle schema files live in:
 apps/web/drizzle
 ```
 
-The Better Auth schema lives in:
+The Better Auth schema lives with the other Drizzle schema files:
 
 ```text
-apps/web/auth-schema.ts
+apps/web/drizzle/auth-schema.ts
 ```
+
+Drizzle Kit configuration lives in:
+
+```text
+apps/web/drizzle.config.js
+```
+
+`drizzle-kit push` directly applies schema changes to the configured database. Treat it as a manual, destructive-capable operation and review the target database before running it.
 
 ---
 

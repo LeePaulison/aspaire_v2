@@ -7,6 +7,8 @@ function withRequiredEnvironment(t) {
   const original = { ...process.env };
   process.env.API_ORIGIN = "https://api.example.test";
   process.env.CLIENT_ORIGIN = "https://client.example.test";
+  process.env.JWT_ISSUER = "aspaire-web";
+  process.env.JWT_AUDIENCE = "aspaire-ai-server";
   t.after(() => {
     for (const key of Object.keys(process.env)) {
       if (!(key in original)) delete process.env[key];
