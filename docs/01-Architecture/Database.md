@@ -78,6 +78,50 @@ Future structured AspAIre domain data should default to PostgreSQL unless there 
 
 ---
 
+# Default Reference Data
+
+AspAIre requires default AI reference rows before the chat workspace and preference controls are fully usable.
+
+The default reference data includes:
+
+* AI models
+* AI agents
+* Reasoning levels
+* Verbosity levels
+
+The default AI model rows currently include:
+
+* GPT-5.6 Sol
+* GPT-5.6 Terra
+* GPT-5.6 Luna
+* GPT-5.5
+* GPT-5.1
+* GPT-5 Mini
+* GPT-4.1
+* GPT-4.1 Mini
+
+Model descriptions should remain concise, user-facing, and cost-aware when a model is materially more expensive than nearby alternatives.
+
+Create or refresh these rows with:
+
+```text
+npm run seed:defaults
+```
+
+The root script delegates to the web workspace script:
+
+```text
+apps/web/scripts/createDefaultAiData.js
+```
+
+The seed command is idempotent. It uses upsert behavior so rerunning it updates known default records rather than inserting duplicates.
+
+Run this command after initial schema setup, local database resets, or intentional changes to the default AI model, agent, reasoning, or verbosity definitions.
+
+Because the script writes to PostgreSQL through `DATABASE_URL`, confirm the target environment before running it.
+
+---
+
 # MongoDB
 
 MongoDB is accessed through the MongoDB Node driver.

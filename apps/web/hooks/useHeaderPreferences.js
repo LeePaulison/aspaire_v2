@@ -18,6 +18,8 @@ export const useHeaderPreferences = () => {
   const savePreferences = async (input) => {
     const updatedPreferences = await updatePreferences(input);
 
+    console.log('Preferences: ', updatedPreferences)
+
     setPreferences(updatedPreferences);
 
     return updatedPreferences;
@@ -32,6 +34,11 @@ export const useHeaderPreferences = () => {
           getReasoningLevels(),
           getVerbosityLevels(),
         ]);
+
+      console.log('aiAgents: ', aiAgents)
+      console.log('aiModels: ', aiModels)
+      console.log('reasoningLevels: ', reasoningLevels)
+      console.log('verbosityLevels: ', verbosityLevels)
 
       setAiAgents(aiAgents);
       setAiModels(aiModels);

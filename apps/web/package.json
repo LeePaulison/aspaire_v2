@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "seed:defaults": "node scripts/createDefaultAiData.js",
     "test": "node --test"
   },
   "dependencies": {

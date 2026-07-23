@@ -80,6 +80,7 @@ Decision statuses:
 | ASP-0016 | Accepted | 2026-07-22 | Google OAuth is the MVP sign-in provider and GitHub OAuth is optional |
 | ASP-0017 | Accepted | 2026-07-22 | JWT issuer and audience are explicit environment-defined service identifiers |
 | ASP-0018 | Accepted | 2026-07-22 | Email/password authentication is disabled by default for the MVP |
+| ASP-0019 | Accepted | 2026-07-23 | Default AI reference data is managed by an idempotent seed script |
 
 ---
 
@@ -700,6 +701,66 @@ Keeping email/password behind an environment flag allows future development with
 * Email/password routes should not be treated as an active user-facing feature unless explicitly enabled.
 * Enabling email/password later should include UI, validation, password reset/recovery, and documentation work.
 * Auth documentation should make the default disabled state clear.
+
+---
+
+# ASP-0019: Default AI Reference Data Is Managed by an Idempotent Seed Script
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-23
+
+## Context
+
+AspAIre depends on baseline AI reference data for the chat workspace and user preferences. The relevant records include AI models, AI agents, reasoning levels, and verbosity levels.
+
+These records are application-owned relational data, but they are closer to configurable reference data than user-created domain records. Local development and new database setup need a repeatable way to create or refresh them without manually editing tables.
+
+The default AI model catalog should balance current frontier capability with practical cost control for a career workspace. GPT-5.6 models are available for current frontier quality, but GPT-5.5 remains a strong prior-frontier option that may be a better value for many workflows.
+
+## Decision
+
+AspAIre will manage default AI reference data through an idempotent npm seed command:
+
+```text
+npm run seed:defaults
+```
+
+The command runs the web workspace seed script and creates or updates:
+
+* Default AI models
+* Default AI agents
+* Default reasoning levels
+* Default verbosity levels
+
+The default model seed should include:
+
+* GPT-5.6 Sol as the highest capability and highest cost option
+* GPT-5.6 Terra as a balanced current GPT-5.6 option
+* GPT-5.6 Luna as the cost-effective GPT-5.6 option
+* GPT-5.5 as a strong prior-frontier value option
+* GPT-5.1 and GPT-5 Mini as stable fallback and cost-conscious options
+* GPT-4.1 and GPT-4.1 Mini for non-reasoning compatibility
+
+Seed behavior should use upsert semantics so the command can be rerun safely during local setup, baseline repair, and controlled reference-data updates.
+
+## Rationale
+
+An explicit seed command makes database baseline setup predictable and keeps required AI options aligned with the application code. Idempotent behavior avoids duplicate records and lets developers refresh reference data after schema pushes, database resets, or default prompt/model changes.
+
+Keeping this functionality in the web workspace preserves the architecture rule that the Next.js application owns business data and persistence.
+
+## Consequences
+
+* New local databases should run `npm run seed:defaults` after schema setup.
+* Changes to default AI models, agents, reasoning levels, or verbosity levels should update the seed source and related documentation.
+* Model descriptions should stay concise, user-facing, and cost-aware where cost materially affects model choice.
+* The AI server should continue consuming these values through GraphQL and must not seed or own the data directly.
+* The seed command writes to the configured `DATABASE_URL`, so developers must verify the target environment before running it.
 
 ---
 

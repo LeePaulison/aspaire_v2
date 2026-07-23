@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useLayoutEffect, useRef, useState } from "react";
+import { useHydrated } from "@/hooks/useHydrated";
 import { PaperPlaneIcon, FilePlusIcon } from "@radix-ui/react-icons";
 
 import { useChatPreferencesSelection } from "@/hooks/useChatPreferencesSelection";
@@ -55,7 +56,9 @@ export default function ChatComposer({ onSendMessage, status = "connecting" }) {
     saveAgentSelection,
   } = useChatPreferencesSelection();
 
-  const selectionDisabled = !preferences || savingSelection;
+  const hydrated = useHydrated();
+
+  const selectionDisabled = hydrated && (!preferences || savingSelection);
   const statusDisplay = STATUS_DISPLAY[status] ?? STATUS_DISPLAY.connecting;
   const sendDisabled =
     (!message.trim() && !attachments.length) ||

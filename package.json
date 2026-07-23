@@ -15,6 +15,7 @@
     "start:web": "npm --workspace @aspaire/web run start",
     "start:ai": "npm --workspace @aspaire/ai-server run start",
     "lint": "npm --workspace @aspaire/web run lint",
+    "seed:defaults": "npm --workspace @aspaire/web run seed:defaults",
     "test": "npm --workspaces run test",
     "test:web": "npm --workspace @aspaire/web run test",
     "test:ai": "npm --workspace @aspaire/ai-server run test"
