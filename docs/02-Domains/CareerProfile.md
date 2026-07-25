@@ -10,6 +10,8 @@ It is the first product domain because it creates reusable career context for la
 
 The profile should help the user describe who they are professionally, what they have done, what they can do, and what they are looking for next.
 
+In first-run setup, Career Profile is the primary path for users who do not have a resume. For users who do have a resume, the profile may begin as a reviewed draft generated from imported resume content rather than as a blank manual form.
+
 ---
 
 # Domain Status
@@ -54,8 +56,10 @@ The external AI server may use career profile context for AI execution, but it m
 The Career Profile should:
 
 * Give the user one reliable place to maintain their career context
+* Provide a manual first-run path for users without a resume
 * Capture structured information that can power later product workflows
 * Support both quick onboarding and deeper profile refinement over time
+* Support reviewed profile drafting from resume content when available
 * Provide AI workflows with better context than a single resume upload
 * Reduce repeated data entry across resumes, applications, interviews, and research
 
@@ -68,6 +72,8 @@ The profile should feel useful even before every field is complete.
 Initial capabilities should include:
 
 * Create a career profile
+* Start setup manually when the user does not have a resume
+* Review and edit a draft profile generated from imported resume content
 * View the current profile
 * Edit profile sections independently
 * Save professional summary information
@@ -393,6 +399,8 @@ Potential later AI features include:
 
 AI-generated changes should be reviewable before they become profile data.
 
+Resume-derived profile drafts should be treated as suggestions, not truth. The user should review and accept the draft before it becomes the durable Career Profile record.
+
 ---
 
 # Validation Rules
@@ -496,6 +504,7 @@ These questions should be resolved before or during implementation:
 * Should resume parsing be allowed to populate profile drafts before the resume library exists?
 * Should projects and certifications ship in the first slice or a follow-up refinement slice?
 * What profile context should be sent to AI workflows by default?
+* Which profile fields are safe and useful to prefill from an imported resume during first-run setup?
 
 ---
 

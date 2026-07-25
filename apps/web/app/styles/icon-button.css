@@ -1,0 +1,36 @@
+.IconButtonTooltipWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.IconButtonTooltip {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  z-index: 60;
+  transform: translateX(-50%) translateY(0.25rem);
+  width: max-content;
+  max-width: 16rem;
+  pointer-events: none;
+  opacity: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  box-shadow:
+    0 12px 32px rgb(0 0 0 / 28%),
+    0 3px 10px rgb(0 0 0 / 12%);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  white-space: nowrap;
+}
+
+.IconButtonTooltipWrap:hover .IconButtonTooltip,
+.IconButtonTooltipWrap:focus-within .IconButtonTooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

@@ -1,0 +1,83 @@
+.ScrollAreaRoot {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  --scrollbar-size: 10px;
+  --scrollbar-padding: 2px;
+  --scrollbar-track-radius: calc(
+    ((var(--scrollbar-size) - (var(--scrollbar-padding) * 2)) / 2) +
+      var(--scrollbar-padding)
+  );
+}
+
+.ScrollAreaViewport {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.ScrollAreaViewport > div:first-child {
+  display: block !important;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ScrollAreaScrollbar {
+  display: flex;
+
+  /* ensures no selection */
+  user-select: none;
+
+  /* disable browser handling of all panning and zooming gestures on touch devices */
+  touch-action: none;
+
+  padding: var(--scrollbar-padding);
+  background: var(--color-surface-secondary);
+  transition: background-color 160ms ease-out;
+}
+
+.ScrollAreaScrollbar:hover {
+  background: var(--color-surface-tertiary);
+}
+
+.ScrollAreaScrollbar[data-orientation="vertical"] {
+  width: var(--scrollbar-size);
+  border-radius: var(--scrollbar-track-radius) 0 0
+    var(--scrollbar-track-radius);
+}
+
+.ScrollAreaScrollbar[data-orientation="horizontal"] {
+  flex-direction: column;
+  height: var(--scrollbar-size);
+}
+
+.ScrollAreaThumb {
+  flex: 1;
+  background: var(--color-mist-400);
+  border-radius: var(--scrollbar-size);
+  position: relative;
+  transition: background-color 160ms ease-out;
+}
+
+.ScrollAreaThumb:hover {
+  background: var(--color-mist-500);
+}
+
+/* increase target size for touch devices
+   https://www.w3.org/WAI/WCAG21/Understanding/target-size.html */
+.ScrollAreaThumb::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.ScrollAreaCorner {
+  background: var(--color-surface-secondary);
+}

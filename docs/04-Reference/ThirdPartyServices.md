@@ -125,7 +125,9 @@ users/{userId}/resumes/{resumeId}/{safeFilename}
 
 The bucket must remain private. Browser access should use short-lived signed URLs generated only after the application verifies authenticated ownership.
 
-The current first upload slice sends the file to an authenticated Next.js route handler, which uploads the original object to S3 server-side and then persists `resume_files` metadata. Browser code never receives AWS credentials, bucket names, object keys, or signed URLs.
+The upload slice sends the file to an authenticated Next.js route handler, which uploads the original object to S3 server-side and then persists `resume_files` metadata. Browser code never receives AWS credentials, bucket names, object keys, or signed URLs.
+
+The web app also performs plain text extraction from uploaded PDF, DOCX, and TXT originals during the upload request. Extraction runs in the application server with local parsing libraries; it does not send resume contents to S3 beyond the original object upload and does not call an AI provider.
 
 Resume deletion attempts to delete every associated uploaded original from S3 before deleting the PostgreSQL resume record and cascading file metadata. The deletion receipt reports whether uploaded-original cleanup completed without exposing storage internals.
 

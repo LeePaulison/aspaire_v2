@@ -82,6 +82,7 @@ Decision statuses:
 | ASP-0018 | Accepted | 2026-07-22 | Email/password authentication is disabled by default for the MVP |
 | ASP-0019 | Accepted | 2026-07-23 | Default AI reference data is managed by an idempotent seed script |
 | ASP-0020 | Accepted | 2026-07-23 | Uploaded resume originals are stored in S3 and metadata remains application-owned |
+| ASP-0021 | Accepted | 2026-07-24 | First-run entry is resume-led with guided routing and secondary AI Workspace access |
 
 ---
 
@@ -819,6 +820,70 @@ Short-lived signed URLs allow private file access without making the bucket publ
 * Manually entered resume text may be stored directly in PostgreSQL.
 * Extracted text from uploaded files should be stored in PostgreSQL for analysis and search workflows.
 * S3 credentials, bucket names, and region values must be documented as environment variables without recording secret values.
+
+---
+
+# ASP-0021: First-Run Entry Is Resume-Led with Guided Routing and Secondary AI Workspace Access
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-24
+
+## Context
+
+AspAIre's MVP is a connected profile-resume-job-analysis-tracking workflow. New users, however, may arrive with different immediate intents, such as improving a resume, analyzing a job, tracking applications, or exploring with AI.
+
+Starting users in an empty AI chat surface would make AspAIre feel like a generic chatbot and would require users to invent their own workflow. Starting users with a blank career profile form would also create friction because many users already have a resume that can provide richer initial career context.
+
+The resume is usually the fastest available source of real career information. It can seed a resume record and support a reviewed career profile draft, while still preserving the profile as the durable representation of the user's professional identity.
+
+## Decision
+
+First-run entry will use a guided start flow led by the question:
+
+```text
+Do you have a resume?
+```
+
+The primary path is:
+
+```text
+Yes -> Resume input
+```
+
+The main alternate path is:
+
+```text
+No -> Career profile setup
+```
+
+The start flow may also expose secondary intent routes for analyzing a job, tracking applications, opening the AI Workspace, or skipping setup.
+
+`Skip for now` should land on Home or Dashboard, not AI Workspace. Home should provide clear empty-state actions to add a resume, build a career profile, save a job, run fit analysis, track applications, or open AI Workspace.
+
+AI Workspace should remain available as one-click navigation for exploratory or cross-domain work, but it should not be the default destination after login and should not replace domain workflows. Domain pages own structured records and durable workflow state. AI Workspace supports broad career assistance and may suggest domain actions, but user-controlled domain workflows remain the primary way to create or mutate durable product data.
+
+## Rationale
+
+A resume-led start respects how many users actually begin a job search: they already have a resume, but they need help organizing, improving, and applying it. This path gathers useful context quickly and avoids asking users to re-enter information that can be inferred from an existing document.
+
+Guided routing lets the product meet different user intents without presenting every path as equally important. Keeping AI Workspace one click away preserves flexibility for open-ended career questions while maintaining AspAIre's identity as a career operating system rather than a blank chatbot.
+
+Sending skipped setup to Home keeps the user inside the career workspace and makes the next useful actions visible.
+
+## Consequences
+
+* First-run UX should prioritize resume input over a blank career profile form.
+* Resume import may support generating a career profile draft, but AI-generated or extracted profile data must be reviewable before becoming durable profile truth.
+* Users without resumes should have a dignified manual profile setup path.
+* Job analysis and application tracking can be available as alternate starts, but they should request missing resume or profile context when needed.
+* Home or Dashboard becomes the neutral landing place for skipped setup and, eventually, returning users.
+* AI Workspace should be present in navigation as a secondary but accessible surface.
+* Domain workflows should remain the primary owners of durable profile, resume, job, analysis, and application records.
 
 ---
 

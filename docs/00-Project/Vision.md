@@ -58,6 +58,24 @@ The core experience is a connected workflow:
 
 The experience should feel like a single career workspace, not separate feature islands.
 
+## Entry Experience
+
+AspAIre should start new users with guided routing rather than an empty AI chat surface.
+
+The first-run entry should lead with:
+
+```text
+Do you have a resume?
+```
+
+The recommended path is resume-first because an existing resume is often the fastest source of useful career context. A resume can seed the Resume Library and support a reviewed career profile draft.
+
+Users without a resume should be routed to manual Career Profile setup. Users with other immediate intents should still have paths to analyze a job, track applications, or open AI Workspace, but those alternatives should not compete visually with the resume-first path.
+
+If a user skips setup, they should land on Home or Dashboard with productive empty-state actions, not in AI Workspace by default.
+
+AI Workspace should remain available as one-click access for exploratory or cross-domain career work. It should support the broader workspace without becoming the default front door or replacing structured domain workflows.
+
 ---
 
 # Experience Principles

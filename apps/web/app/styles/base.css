@@ -1,0 +1,45 @@
+body {
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+.ChatComposerSelect {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  padding: 0.5rem;
+  color: var(--color-foreground);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.ChatComposerSelect:hover:not(:disabled) {
+  background: var(--color-surface-secondary);
+}
+
+.ChatComposerSelect:focus-visible {
+  border-color: var(--color-ring);
+}
+
+.ChatComposerSelect:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ChatComposerSelect option,
+.ChatComposerSelect optgroup {
+  background: var(--color-surface);
+  color: var(--color-foreground);
+}

@@ -359,7 +359,7 @@ Stores uploaded resume original file metadata. S3 stores the binary file; Postgr
 | `content_type` | text | Required uploaded original MIME type |
 | `file_size` | integer | Required uploaded original size in bytes |
 | `storage_key` | text | Required private S3 object key, never exposed through GraphQL |
-| `text_extraction_status` | text | Required, defaults `pending` |
+| `text_extraction_status` | text | Required, defaults `pending`; expected values are `pending`, `completed`, `failed` |
 | `uploaded_at` | timestamp with timezone | Required, defaults now |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |

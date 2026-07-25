@@ -153,5 +153,5 @@ export async function uploadResumeOriginal(resumeId, file) {
     throw new Error(result.error || "Resume file upload failed.");
   }
 
-  return result.resume;
+  return result;
 }

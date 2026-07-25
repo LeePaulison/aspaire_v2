@@ -20,6 +20,22 @@ The objective is to provide a cohesive workflow that combines job discovery, car
 
 ---
 
+# Product Entry Principle
+
+AspAIre should start users in the career workflow, not in an empty AI chat surface.
+
+First-run setup should be guided by a resume-led start flow. The lead question is:
+
+```text
+Do you have a resume?
+```
+
+Users with a resume should begin with Resume Input. Users without a resume should begin with Career Profile setup. Users who skip setup should land on Home or Dashboard with clear next actions.
+
+AI Workspace should remain one click away for exploratory or cross-domain career work, but it is secondary to domain workflows that create durable profile, resume, job, analysis, and application records.
+
+---
+
 # Platform Philosophy
 
 The platform follows several guiding principles.
@@ -219,6 +235,7 @@ This approach ensures that the project remains understandable, maintainable, and
 docs/
 ├── 00-Project/
 │   ├── Foundations.md
+│   ├── ProductBrief.md
 │   ├── Vision.md
 │   ├── Roadmap.md
 │   └── Decisions.md

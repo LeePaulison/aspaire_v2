@@ -8,6 +8,8 @@ The AI Workspace domain provides a general AI-assisted surface for career resear
 
 It should let users work with AI across their career context without turning AI into a disconnected chatbot. The workspace should use profile, resume, saved job, application, and preference context when appropriate and with clear user control.
 
+AI Workspace should remain available as one-click access for exploratory or cross-domain career work, but it should not be the default first-run destination. New users should be guided toward resume input or career profile setup first so AI assistance has durable context to use.
+
 ---
 
 # Domain Status
@@ -55,11 +57,14 @@ AI Workspace should:
 * Provide practical career assistance across domains
 * Reuse accumulated career context where appropriate
 * Support drafting, research, analysis, planning, and coaching
+* Offer one-click access for open-ended career work
 * Keep AI output reviewable and user-controlled
 * Avoid duplicating domain-specific workflows better handled elsewhere
 * Preserve useful conversations or outputs as application data
 
 AI Workspace should be a flexible surface, not the owner of every AI feature.
+
+It should be secondary to structured domain workflows in the product hierarchy. Domain pages own durable profile, resume, saved job, analysis, and application records. AI Workspace may suggest or prepare domain actions, but durable record changes should remain explicit and user-controlled.
 
 ---
 
@@ -242,8 +247,11 @@ Useful interface patterns include:
 * Save output action
 * Links to related profile, resume, job, or application records
 * Recoverable streaming failure state
+* Navigation access from Home and global app navigation
 
 The UI should make AI feel connected to the workspace without hiding the user's underlying domain data.
+
+First-run `Skip for now` should not land in AI Workspace by default. It should land on Home or Dashboard, where AI Workspace appears as one available action alongside resume, profile, job, analysis, and application actions.
 
 ---
 
@@ -352,6 +360,7 @@ Advanced agent workflows and long-running research can follow later.
 * Which AI outputs deserve first-class saved artifacts?
 * How should workspace conversations link back to domain records?
 * How much conversation content should be available to future AI workflows?
+* Which AI Workspace actions should be promoted from Home before the user has added resume or profile context?
 
 ---
 
@@ -366,4 +375,3 @@ The AI Workspace domain is complete for its foundation phase when:
 * Useful AI outputs can be saved
 * Tests cover important authorization, context, and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-

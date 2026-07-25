@@ -1,4 +1,11 @@
 import "./globals.css";
+import "./styles/base.css";
+import "./styles/markdown.css";
+import "./styles/dialogs.css";
+import "./styles/scroll-area.css";
+import "./styles/dropdown-menu.css";
+import "./styles/icon-button.css";
+import "./styles/resume.css";
 import { Providers } from "@/providers/Providers";
 
 export const metadata = {

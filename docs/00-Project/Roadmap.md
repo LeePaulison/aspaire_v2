@@ -151,9 +151,13 @@ Users can create and maintain a structured career profile that becomes the prima
 
 # Phase 3: Resume Library
 
+## Status
+
+MVP foundation slice complete. Full SaaS phase remains open.
+
 ## Goal
 
-Allow users to store, manage, and understand multiple resume versions.
+Allow users to store, manage, and reuse resume records and uploaded original files.
 
 ## Outcomes
 
@@ -164,19 +168,24 @@ Allow users to store, manage, and understand multiple resume versions.
 * GraphQL/API operations implemented
 * Resume list and detail UI implemented
 * Resume parsing strategy documented
-* Resume metadata and versioning supported
+* Resume metadata and uploaded-original lifecycle supported
 
 ## Core Capabilities
 
 * Store multiple resumes
-* Track resume versions
-* Capture resume text and structured sections
+* Capture resume text
+* Upload PDF, DOCX, and plain text originals
+* Extract plain resume text from supported uploaded originals
 * Associate resumes with career profile context
 * Preserve analysis history for future phases
 
 ## Exit Criteria
 
 Users can maintain a usable resume library that supports later analysis, tailoring, and application workflows.
+
+Completed MVP foundation behavior includes manual resume records, primary resume selection, archive and restore, resume deletion receipts, uploaded-original metadata, individual uploaded-original deletion, private S3 storage boundaries, and server-side text extraction that does not overwrite manually entered resume text.
+
+The broader SaaS Resume Library phase still includes deeper resume versioning, structured section extraction, download links, richer resume comparison, resume-to-profile workflows, and AI-assisted resume improvement. Those remain future work and should not be treated as complete because the MVP foundation slice is complete.
 
 ---
 

@@ -40,6 +40,39 @@ function createDeleteQuery(onDelete) {
   };
 }
 
+function createInsertQuery(onInsert) {
+  return {
+    values(value) {
+      onInsert(value);
+      return {
+        returning() {
+          return Promise.resolve([
+            {
+              ...value,
+              uploadedAt: new Date("2026-07-23T19:00:00.000Z"),
+              createdAt: new Date("2026-07-23T19:00:00.000Z"),
+              updatedAt: new Date("2026-07-23T19:00:00.000Z"),
+            },
+          ]);
+        },
+      };
+    },
+  };
+}
+
+function createUpdateQuery(onUpdate) {
+  return {
+    set(value) {
+      onUpdate(value);
+      return {
+        where() {
+          return Promise.resolve();
+        },
+      };
+    },
+  };
+}
+
 test("resume deletion removes uploaded originals from storage before deleting metadata", async () => {
   const deletedStorageKeys = [];
   let deletedRecord = false;
@@ -165,4 +198,94 @@ test("resume file deletion removes one uploaded original and metadata row", asyn
   assert.equal(deletedFileMetadata, true);
   assert.equal(updatedResume.resumeId, "resume-1");
   assert.deepEqual(updatedResume.files, []);
+});
+
+test("resume file creation applies extracted text to an empty resume", async () => {
+  let insertedFile = null;
+  let resumeUpdate = null;
+  const resumeRow = {
+    resumeId: "resume-1",
+    userId: "user-1",
+    title: "Resume",
+    resumeText: "",
+    sourceType: "manual",
+    status: "draft",
+    files: [],
+  };
+  const selectResults = [[resumeRow], []];
+  const repository = createResumeRepository({
+    database: {
+      select() {
+        return new SelectQuery(selectResults.shift() ?? []);
+      },
+      insert() {
+        return createInsertQuery((value) => {
+          insertedFile = value;
+        });
+      },
+      update() {
+        return createUpdateQuery((value) => {
+          resumeUpdate = value;
+        });
+      },
+    },
+  });
+
+  const file = await repository.createResumeFile("user-1", "resume-1", {
+    fileId: "file-1",
+    originalFilename: "resume.txt",
+    contentType: "text/plain",
+    fileSize: 100,
+    storageKey: "users/user-1/resumes/resume-1/file-1-resume.txt",
+    textExtractionStatus: "completed",
+    extractedText: "Parsed resume text",
+  });
+
+  assert.equal(file.fileId, "file-1");
+  assert.equal(insertedFile.textExtractionStatus, "completed");
+  assert.equal(resumeUpdate.resumeText, "Parsed resume text");
+  assert.equal(resumeUpdate.sourceType, "upload");
+  assert.equal(resumeUpdate.status, "active");
+});
+
+test("resume file creation does not overwrite manually entered resume text", async () => {
+  let resumeUpdate = null;
+  const resumeRow = {
+    resumeId: "resume-1",
+    userId: "user-1",
+    title: "Resume",
+    resumeText: "Manual resume text",
+    sourceType: "manual",
+    status: "active",
+    files: [],
+  };
+  const selectResults = [[resumeRow], []];
+  const repository = createResumeRepository({
+    database: {
+      select() {
+        return new SelectQuery(selectResults.shift() ?? []);
+      },
+      insert() {
+        return createInsertQuery(() => {});
+      },
+      update() {
+        return createUpdateQuery((value) => {
+          resumeUpdate = value;
+        });
+      },
+    },
+  });
+
+  await repository.createResumeFile("user-1", "resume-1", {
+    fileId: "file-1",
+    originalFilename: "resume.txt",
+    contentType: "text/plain",
+    fileSize: 100,
+    storageKey: "users/user-1/resumes/resume-1/file-1-resume.txt",
+    textExtractionStatus: "completed",
+    extractedText: "Parsed resume text",
+  });
+
+  assert.equal("resumeText" in resumeUpdate, false);
+  assert.equal("sourceType" in resumeUpdate, false);
 });

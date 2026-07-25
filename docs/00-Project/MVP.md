@@ -48,14 +48,50 @@ The MVP should also be useful to the developer as the first real user.
 The MVP should deliver one complete workflow:
 
 1. The user signs in.
-2. The user creates a career profile.
-3. The user adds resume content.
-4. The user saves a job opportunity.
-5. The user runs an AI-assisted fit analysis.
-6. The user reviews actionable recommendations.
-7. The user tracks the opportunity status and next action.
+2. The user is guided through a first-run start flow.
+3. The user adds resume content or, if they do not have a resume, creates a career profile manually.
+4. The user reviews or creates durable career profile context.
+5. The user saves a job opportunity.
+6. The user runs an AI-assisted fit analysis.
+7. The user reviews actionable recommendations.
+8. The user tracks the opportunity status and next action.
 
 This workflow intentionally compresses several roadmap phases into one thin vertical product slice.
+
+---
+
+# First-Run Flow
+
+The MVP should use a guided start flow after sign-in rather than sending new users directly to AI Workspace.
+
+The lead question should be:
+
+```text
+Do you have a resume?
+```
+
+Primary path:
+
+```text
+Yes -> Resume Input -> Profile Draft Review -> Next Task
+```
+
+Main alternate path:
+
+```text
+No -> Career Profile Setup -> Resume Later -> Next Task
+```
+
+Secondary routes may include:
+
+* Analyze a job
+* Track applications
+* Open AI Workspace
+* Skip for now
+
+`Skip for now` should land on Home or Dashboard, not AI Workspace. The skipped state should show useful empty-state actions such as adding a resume, building a career profile, saving a job, running fit analysis, tracking applications, and opening AI Workspace.
+
+AI Workspace should be reachable with one click, but it should be secondary to domain workflows. Domain pages own durable profile, resume, job, analysis, and application records. AI Workspace supports open-ended career work and can suggest domain actions, but it should not become the default product starting point.
 
 ---
 
@@ -241,6 +277,10 @@ Exit criteria:
 
 ## Slice 3: Resume Library Text MVP
 
+Status:
+
+Complete for the foundation slice.
+
 Goal:
 
 Store resume content that can be used in analysis.
@@ -252,12 +292,16 @@ Deliverables:
 * Resume GraphQL operations
 * Resume list, detail, create, and edit UI
 * Resume text storage
+* Uploaded original file attachment and deletion
+* Plain text extraction from PDF, DOCX, and TXT originals
 * Tests for ownership and persistence
 * Updated domain and reference docs
 
 Exit criteria:
 
 * An authenticated user can maintain at least one resume record with full resume text.
+* Uploaded originals can be attached to resume records and removed without exposing storage internals.
+* Extracted upload text can populate empty or upload-sourced resumes without overwriting manually entered resume text.
 
 ## Slice 4: Saved Jobs MVP
 
@@ -386,12 +430,14 @@ The MVP should feel quiet, useful, and work-focused.
 Important UX principles:
 
 * Build the actual workspace, not a marketing landing page
+* Start first-run users with resume-led guided routing
 * Prioritize fast data entry and editing
 * Support partial progress
 * Make empty states productive
 * Keep analysis results specific and actionable
 * Keep status and next action visible
 * Avoid requiring perfect data before the user receives value
+* Keep AI Workspace accessible without making it the default front door
 
 ---
 
@@ -417,8 +463,8 @@ UI tests may be added where form behavior or workflow risk justifies them.
 The MVP is complete when a real user can:
 
 * Sign in
-* Create a career profile
 * Add resume text
+* Create or review a career profile
 * Save a job posting
 * Run resume-to-job fit analysis using profile context
 * Review actionable recommendations

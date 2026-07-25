@@ -10,19 +10,23 @@ It gives users a reliable place to maintain multiple resume versions, preserve e
 
 The resume library should make resumes durable product data, not temporary uploads used by a single AI interaction.
 
+For first-run users, Resume Library is the preferred starting point when the user already has a resume. An imported or pasted resume is the fastest way for AspAIre to collect useful career context and may support a reviewed career profile draft.
+
 ---
 
 # Domain Status
 
 ## Current State
 
-The Resume Library text-first foundation slice is implemented.
+The Resume Library MVP foundation slice is complete. The broader SaaS Resume Library domain remains open for deeper product capabilities.
 
-The current implementation includes a production resume schema, separate uploaded-file metadata schema, repository, GraphQL operations, authenticated Resume Library UI for manual resume records, and a first upload path for attaching original resume files to existing resume records.
+The current implementation includes a production resume schema, separate uploaded-file metadata schema, repository, GraphQL operations, authenticated Resume Library UI for manual resume records, and an upload path for attaching original resume files to existing resume records.
 
 The storage boundary for uploaded resume originals is decided: uploaded originals should be stored in S3, while application-owned metadata, extracted text, and manually entered text remain in PostgreSQL.
 
-Text parsing, structured section extraction, download links, and true version history are not yet implemented.
+Resume text extraction is implemented for uploaded PDF, DOCX, and plain text originals. Extracted text may populate the stored `resume_text` field when the resume has no manually entered text or already uses uploaded text as its source.
+
+Structured section extraction, download links, true version history, richer resume comparison, resume-to-profile review workflows, and AI-assisted resume improvement are not yet implemented. They belong to the broader SaaS Resume Library phase or later resume-focused refinement slices.
 
 ## Roadmap Phase
 
@@ -60,6 +64,7 @@ The external AI server may parse, summarize, or analyze resume content when requ
 The Resume Library should:
 
 * Let users maintain more than one resume version
+* Provide the primary first-run path for users who already have a resume
 * Preserve resume content for reuse across the job search
 * Support upload, manual entry, or imported text depending on implementation scope
 * Make resume versions easy to compare, label, and select
@@ -75,6 +80,7 @@ The library should feel like a practical document workspace, not a generic file 
 Initial capabilities should include:
 
 * Add a resume
+* Start first-run setup by adding or uploading a resume
 * View resume list
 * View resume detail
 * Rename or retitle a resume
@@ -86,6 +92,7 @@ Initial capabilities should include:
 * Preserve enough content for future analysis
 * Receive clear confirmation when a resume record, stored content, file metadata, and uploaded originals are deleted
 * Upload an original PDF, DOCX, or plain text resume file to an existing resume record
+* Extract plain resume text from uploaded PDF, DOCX, or TXT originals without overwriting manually entered resume text
 
 Later capabilities may include:
 
@@ -96,6 +103,7 @@ Later capabilities may include:
 * Attach resumes to applications
 * Track resume usage across saved jobs and applications
 * AI-assisted resume cleanup and tailoring
+* AI-assisted career profile drafting from imported resume content
 
 ---
 
@@ -272,6 +280,8 @@ Initial mutation direction:
 
 Upload mechanics are implemented through an authenticated Next.js route handler rather than GraphQL multipart upload. `POST /api/resumes/:resumeId/files` validates authentication, resume ownership, active resume status, file type, file size, object key generation, and S3 storage before persisting `resume_files` metadata.
 
+The upload route performs server-side text extraction for supported files. Extraction status is stored on the `resume_files` row as `pending`, `completed`, or `failed`. A completed extraction updates `resumes.resume_text` only when the resume has no existing text or already uses uploaded text as its source. Manual resume text is not overwritten by uploading an original file.
+
 Resolvers should validate authentication first, then delegate persistence to a resume repository.
 
 ---
@@ -293,13 +303,19 @@ Expected repository responsibilities include:
 * Duplicate a resume where supported
 * Return domain-shaped objects suitable for GraphQL resolvers
 
-The repository should not execute AI parsing or analysis. It may persist parsed results that have already been accepted by an application workflow.
+The repository should not execute AI parsing or analysis. It may persist plain extracted text and parsed results that have already been accepted by an application workflow.
 
 ---
 
 # UI Direction
 
 The initial Resume Library UI should make stored resumes easy to scan and manage.
+
+Resume input should be the lead first-run destination for users who answer yes to:
+
+```text
+Do you have a resume?
+```
 
 Expected views:
 
@@ -321,6 +337,7 @@ Useful interface patterns include:
 * Empty state for users without resumes
 * Preview of resume text or extracted sections
 * Uploaded original metadata list showing filename, size, upload date, and extraction status
+* First-run resume input state with clear alternate paths for users without a resume or users who want to skip setup
 
 The UI should keep document management calm and efficient. It should not hide core actions behind AI-first flows.
 
@@ -339,8 +356,11 @@ Initial AI-adjacent uses include:
 * Preparing resume content for later resume analysis
 * Helping users clean up formatting or wording
 
+Plain text extraction from uploaded files is a server-side library operation in the web app, not an AI workflow.
+
 Potential later AI features include:
 
+* Drafting a career profile from imported resume content for user review
 * Drafting a resume from the career profile
 * Tailoring a resume toward a saved job
 * Suggesting stronger bullet wording
@@ -348,6 +368,8 @@ Potential later AI features include:
 * Comparing resume versions
 
 AI-generated changes should be reviewable before they overwrite stored resume content.
+
+Profile drafts generated from resume content must be reviewable before they become durable Career Profile data.
 
 ---
 
@@ -402,6 +424,7 @@ Initial implementation should include focused tests for:
 * File validation if upload support is included
 * Deletion receipt behavior for records with uploaded originals
 * Individual uploaded-original deletion behavior
+* Resume text extraction status and manual-text non-overwrite behavior
 * UI behavior for empty, draft, active, and archived states where practical
 
 Testing should prioritize authorization and data integrity because resume content is private and reused by later workflows.
@@ -432,13 +455,14 @@ Recommended scope:
 * Resume list and detail
 * Manual resume creation with title, notes, status, and text content
 * Upload PDF, DOCX, or plain text original resume files
+* Plain text extraction from uploaded originals into empty or upload-sourced resumes
 * Primary resume selection
 * Archive, resume delete, and individual uploaded-original delete behavior
 * Repository
 * GraphQL query and mutations
 * Basic tests for authorization, persistence, primary-resume behavior, upload validation, and storage cleanup
 
-Structured parsing and true version history may follow once the text-first and original-file library is stable.
+Structured parsing, AI resume analysis, and true version history may follow once the text-first and original-file library is stable.
 
 ---
 
@@ -452,6 +476,7 @@ These questions should be resolved before or during implementation:
 * Should structured extraction happen automatically or only when the user requests it?
 * What resume content should be sent to AI workflows by default?
 * Should archived resumes remain available for historical applications?
+* What fields should a resume-derived profile draft prefill during first-run setup?
 
 Resolved storage question:
 
@@ -470,5 +495,6 @@ The Resume Library domain is complete for its foundation phase when:
 * The UI supports empty, draft, active, and archived resume states
 * Uploaded originals can be attached to resumes and removed individually
 * Stored resumes can be referenced by future analysis and application workflows
+* Uploaded PDF, DOCX, and TXT originals can produce stored resume text without overwriting manual text
 * Tests cover important authorization and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation

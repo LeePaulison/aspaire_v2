@@ -85,16 +85,20 @@ export function createResumeRepository({
   deleteStoredOriginal = deleteResumeOriginal,
 } = {}) {
   async function clearPrimary(userId, exceptResumeId) {
-    const conditions = [eq(resumes.userId, userId), eq(resumes.isPrimary, true)];
+    let whereClause = and(eq(resumes.userId, userId), eq(resumes.isPrimary, true));
 
     if (exceptResumeId) {
-      conditions.push(ne(resumes.resumeId, exceptResumeId));
+      whereClause = and(
+        eq(resumes.userId, userId),
+        eq(resumes.isPrimary, true),
+        ne(resumes.resumeId, exceptResumeId),
+      );
     }
 
     await database
       .update(resumes)
       .set({ isPrimary: false, updatedAt: new Date() })
-      .where(and(...conditions));
+      .where(whereClause);
   }
 
   async function getResumeById(userId, resumeId) {
@@ -148,16 +152,16 @@ export function createResumeRepository({
 
   return {
     async listResumes(userId, { includeArchived = true } = {}) {
-      const conditions = [eq(resumes.userId, userId)];
+      let whereClause = eq(resumes.userId, userId);
 
       if (!includeArchived) {
-        conditions.push(ne(resumes.status, "archived"));
+        whereClause = and(eq(resumes.userId, userId), ne(resumes.status, "archived"));
       }
 
       const rows = await database
         .select()
         .from(resumes)
-        .where(and(...conditions))
+        .where(whereClause)
         .orderBy(desc(resumes.isPrimary), desc(resumes.updatedAt));
 
       return attachFilesToResumes(userId, rows);
@@ -292,6 +296,8 @@ export function createResumeRepository({
       }
 
       const fileId = normalizeText(input.fileId) || createId();
+      const extractedText = normalizeText(input.extractedText);
+      validateResumeText(extractedText);
 
       const [file] = await database
         .insert(resumeFiles)
@@ -307,9 +313,20 @@ export function createResumeRepository({
         })
         .returning();
 
+      const shouldApplyExtractedText =
+        extractedText && (!existing.resumeText || existing.sourceType === "upload");
+      const resumeUpdate = shouldApplyExtractedText
+        ? {
+            resumeText: extractedText,
+            sourceType: "upload",
+            status: existing.status === "draft" ? "active" : existing.status,
+            updatedAt: new Date(),
+          }
+        : { updatedAt: new Date() };
+
       await database
         .update(resumes)
-        .set({ sourceType: "upload", updatedAt: new Date() })
+        .set(resumeUpdate)
         .where(and(eq(resumes.userId, userId), eq(resumes.resumeId, resumeId)));
 
       return shapeResumeFile(file);
@@ -419,12 +436,15 @@ export function createResumeRepository({
         .from(resumeFiles)
         .where(and(eq(resumeFiles.userId, userId), eq(resumeFiles.resumeId, resumeId)));
       const uploadedOriginalCount = files.length;
-      const storageDeleteResults = await Promise.allSettled(
-        files.map((file) => deleteStoredOriginal(file.storageKey)),
-      );
-      const uploadedOriginalDeleted = storageDeleteResults.every(
-        (result) => result.status === "fulfilled",
-      );
+      let uploadedOriginalDeleted = true;
+
+      for (const file of files) {
+        try {
+          await deleteStoredOriginal(file.storageKey);
+        } catch {
+          uploadedOriginalDeleted = false;
+        }
+      }
 
       await database
         .delete(resumes)

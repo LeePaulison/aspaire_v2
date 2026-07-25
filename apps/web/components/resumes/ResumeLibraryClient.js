@@ -1,22 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  ArchiveIcon,
-  CheckIcon,
-  Cross2Icon,
-  FileTextIcon,
-  Pencil1Icon,
-  PlusIcon,
-  RotateCounterClockwiseIcon,
-  StarFilledIcon,
-  StarIcon,
-  TrashIcon,
-  UploadIcon,
-} from "@radix-ui/react-icons";
+import { FileTextIcon, PlusIcon, StarFilledIcon } from "@radix-ui/react-icons";
 import { ScrollArea } from "radix-ui";
 
-import { MarkdownRenderer } from "@/components/markdown/MarkdownRenderer";
 import { AppDialog } from "@/components/ui/AppDialog";
 import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { IconButton } from "@/components/ui/IconButton";
@@ -31,56 +18,17 @@ import {
   uploadResumeOriginal,
 } from "@/graphql/resume/resume";
 
-const emptyResume = {
-  title: "",
-  targetRole: "",
-  notes: "",
-  resumeText: "",
-  status: "draft",
-  isPrimary: false,
-};
-
-function getFormValue(formData, key) {
-  return String(formData.get(key) ?? "");
-}
-
-function formatDate(value) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (!Number.isFinite(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
-
-function formatFileSize(bytes) {
-  if (!Number.isFinite(bytes) || bytes <= 0) {
-    return "";
-  }
-
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
-function formatFileCount(count) {
-  return `${count} ${count === 1 ? "file" : "files"}`;
-}
+import { MarkdownPreview } from "./MarkdownPreview";
+import { ResumeFileUpload } from "./ResumeFileUpload";
+import { ResumeFilesList } from "./ResumeFilesList";
+import { ResumeForm } from "./ResumeForm";
+import {
+  FileDeletionReceipt,
+  ResumeDeletionReceipt,
+  ResumeParsingReceipt,
+} from "./ResumeReceipts";
+import { ResumeToolbar } from "./ResumeToolbar";
+import { emptyResume, formatDate, getFormValue } from "./resumeUtils";
 
 function StatusLine({ status, error }) {
   if (error) {
@@ -94,277 +42,137 @@ function StatusLine({ status, error }) {
   return null;
 }
 
-function Field({ label, children }) {
-  return (
-    <label className="flex flex-col gap-2 text-sm font-medium">
-      <span>{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function Input(props) {
-  return (
-    <input
-      className="rounded-md border border-border bg-surface-secondary px-3 py-2 text-sm outline-none focus:border-ring"
-      {...props}
-    />
-  );
-}
-
-function Select(props) {
-  return (
-    <select
-      className="rounded-md border border-border bg-surface-secondary px-3 py-2 text-sm outline-none focus:border-ring"
-      {...props}
-    />
-  );
-}
-
-function Textarea(props) {
-  return (
-    <textarea
-      className="min-h-28 rounded-md border border-border bg-surface-secondary px-3 py-2 text-sm leading-6 outline-none focus:border-ring"
-      {...props}
-    />
-  );
-}
-
-function MarkdownPreview({ content, emptyText }) {
-  if (!content?.trim()) {
-    return (
-      <p className="rounded-md border border-border bg-surface p-4 text-sm text-foreground-muted">
-        {emptyText}
-      </p>
-    );
-  }
-
-  return (
-    <div className="message-bubble rounded-md border border-border bg-surface p-4 text-sm">
-      <MarkdownRenderer content={content} />
-    </div>
-  );
-}
-
-function ResumeForm({ resume, busy, onSubmit, onCancel }) {
-  const isArchived = resume.status === "archived";
-
-  return (
-    <form
-      className="grid gap-4 rounded-md border border-border bg-surface p-4"
-      onSubmit={onSubmit}
-    >
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Title">
-          <Input
-            name="title"
-            defaultValue={resume.title}
-            placeholder="Product manager resume"
-            required
-          />
-        </Field>
-        <Field label="Target role">
-          <Input
-            name="targetRole"
-            defaultValue={resume.targetRole}
-            placeholder="Senior Product Manager"
-          />
-        </Field>
-        <Field label="Status">
-          <Select name="status" defaultValue={resume.status}>
-            <option value="draft">Draft</option>
-            <option value="active">Active</option>
-            {isArchived ? <option value="archived">Archived</option> : null}
-          </Select>
-        </Field>
-        <label className="flex items-center gap-2 self-end text-sm">
-          <input
-            name="isPrimary"
-            type="checkbox"
-            defaultChecked={resume.isPrimary}
-          />
-          Primary resume
-        </label>
-      </div>
-      <Field label="Notes">
-        <Textarea
-          name="notes"
-          defaultValue={resume.notes}
-          placeholder="Positioning notes, audience, or when to use this version."
-        />
-      </Field>
-      <Field label="Resume text">
-        <Textarea
-          name="resumeText"
-          defaultValue={resume.resumeText}
-          className="min-h-80 rounded-md border border-border bg-surface-secondary px-3 py-2 font-mono text-sm leading-6 outline-none focus:border-ring"
-          placeholder="Paste the full resume text here."
-        />
-      </Field>
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <CheckIcon />
-          Save resume
-        </button>
-        {onCancel ? (
-          <IconButton label="Cancel" onClick={onCancel} disabled={busy}>
-            <Cross2Icon />
-          </IconButton>
-        ) : null}
-      </div>
-    </form>
-  );
-}
-
-function ResumeFileUpload({ resume, busy, onUpload }) {
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const file = formData.get("file");
-
-    if (!(file instanceof File) || file.size === 0) {
-      return;
-    }
-
-    const uploaded = await onUpload(resume.resumeId, file);
-
-    if (uploaded) {
-      form.reset();
-    }
-  }
-
-  return (
-    <form
-      className="grid gap-4"
-      onSubmit={handleSubmit}
-    >
-      <label className="grid gap-2 text-sm font-medium">
-        <span>Original resume file</span>
-        <input
-          name="file"
-          type="file"
-          accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-          disabled={busy}
-          className="min-w-0 flex-1 rounded-md border border-border bg-surface-secondary px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-surface file:px-3 file:py-1 file:text-sm file:text-foreground hover:file:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-60"
-        />
-      </label>
-      <p className="text-xs leading-5 text-foreground-muted">
-        Accepted formats: PDF, DOCX, or TXT. Text extraction will follow in a later slice.
-      </p>
-      <div className="flex justify-end gap-2">
-        <button
-          type="submit"
-          disabled={busy}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <UploadIcon />
-          Upload
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function ResumeFilesList({ busy, files, onDelete, readOnly = false }) {
-  if (!files?.length) {
-    return (
-      <p className="rounded-md border border-border bg-surface p-4 text-sm text-foreground-muted">
-        No uploaded original stored yet.
-      </p>
-    );
-  }
-
+function ResumeList({ resumes, selectedId, onSelect }) {
   return (
     <div className="grid gap-2">
-      {files.map((file) => (
-        <div
-          key={file.fileId}
-          className="flex flex-col justify-between gap-2 rounded-md border border-border bg-surface p-3 text-sm sm:flex-row sm:items-center"
+      {resumes.map((resume) => (
+        <button
+          key={resume.resumeId}
+          type="button"
+          onClick={() => onSelect(resume.resumeId)}
+          className={`w-full rounded-md border p-3 text-left transition-colors ${
+            selectedId === resume.resumeId
+              ? "border-primary bg-surface-secondary"
+              : "border-border bg-surface hover:bg-surface-secondary"
+          }`}
         >
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{file.originalFilename}</p>
-            <p className="mt-1 text-xs text-foreground-muted">
-              {formatFileSize(file.fileSize)} / Uploaded {formatDate(file.uploadedAt)}
-            </p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <FileTextIcon className="shrink-0" />
+                <h2 className="truncate text-sm font-semibold">{resume.title}</h2>
+              </div>
+              {resume.targetRole ? (
+                <p className="mt-1 truncate text-xs text-foreground-muted">
+                  {resume.targetRole}
+                </p>
+              ) : null}
+            </div>
+            {resume.isPrimary ? (
+              <StarFilledIcon className="shrink-0 text-primary" />
+            ) : null}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-fit rounded-md border border-border px-2 py-1 text-xs capitalize text-foreground-muted">
-              Extraction {file.textExtractionStatus}
-            </span>
-            <IconButton
-              label={
-                readOnly
-                  ? "Restore resume to delete file"
-                  : "Delete uploaded original"
-              }
-              onClick={() => onDelete(file)}
-              disabled={busy || readOnly}
-            >
-              <TrashIcon />
-            </IconButton>
+          <div className="mt-3 flex items-center gap-2 text-xs text-foreground-muted">
+            <span className="capitalize">{resume.status}</span>
+            <span aria-hidden="true">/</span>
+            <span>{formatDate(resume.updatedAt)}</span>
           </div>
-        </div>
+        </button>
       ))}
     </div>
   );
 }
 
-function ResumeToolbar({
-  resume,
-  busy,
-  onArchive,
-  onDelete,
-  onEdit,
-  onRestore,
-  onSetPrimary,
-  onUpload,
-}) {
-  const isArchived = resume.status === "archived";
-
+function EmptyState({ busy, onCreate }) {
   return (
-    <div
-      role="toolbar"
-      aria-label="Resume actions"
-      className="flex w-fit flex-wrap gap-1 rounded-md border border-border bg-surface p-1"
-    >
-      <IconButton
-        label={isArchived ? "Restore resume to edit" : "Edit resume"}
-        onClick={onEdit}
-        disabled={busy || isArchived}
+    <div className="mt-12 max-w-xl">
+      <h2 className="text-2xl font-semibold">No resumes yet</h2>
+      <p className="mt-3 text-sm leading-6 text-foreground-muted">
+        Add a resume to start building the profile-resume-job loop for the MVP.
+      </p>
+      <button
+        type="button"
+        onClick={onCreate}
+        disabled={busy}
+        className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <Pencil1Icon />
-      </IconButton>
-      {!resume.isPrimary && !isArchived ? (
-        <IconButton label="Set primary" onClick={onSetPrimary} disabled={busy}>
-          <StarIcon />
-        </IconButton>
-      ) : null}
-      <IconButton
-        label={isArchived ? "Restore resume to upload" : "Upload original"}
-        onClick={onUpload}
-        disabled={busy || isArchived}
-      >
-        <UploadIcon />
-      </IconButton>
-      {isArchived ? (
-        <IconButton label="Restore resume" onClick={onRestore} disabled={busy}>
-          <RotateCounterClockwiseIcon />
-        </IconButton>
-      ) : (
-        <IconButton label="Archive resume" onClick={onArchive} disabled={busy}>
-          <ArchiveIcon />
-        </IconButton>
-      )}
-      <IconButton label="Delete resume" onClick={onDelete} disabled={busy}>
-        <TrashIcon />
-      </IconButton>
+        <PlusIcon />
+        Add resume
+      </button>
     </div>
   );
+}
+
+function getResumeInputFromForm(formData) {
+  return {
+    title: getFormValue(formData, "title"),
+    targetRole: getFormValue(formData, "targetRole"),
+    notes: getFormValue(formData, "notes"),
+    resumeText: getFormValue(formData, "resumeText"),
+    status: getFormValue(formData, "status"),
+    isPrimary: formData.get("isPrimary") === "on",
+  };
+}
+
+function sortResumes(resumesToSort) {
+  return [...resumesToSort].sort((left, right) => {
+    if (left.isPrimary && !right.isPrimary) {
+      return -1;
+    }
+
+    if (!left.isPrimary && right.isPrimary) {
+      return 1;
+    }
+
+    return new Date(right.updatedAt) - new Date(left.updatedAt);
+  });
+}
+
+function getLatestFile(resume) {
+  return resume?.files?.[0] ?? null;
+}
+
+function buildParsingReceipt(previousResume, updatedResume, parsing) {
+  const latestFile = getLatestFile(updatedResume);
+
+  if (!latestFile) {
+    return null;
+  }
+
+  const hadStoredText = Boolean(previousResume?.resumeText?.trim());
+  const previousText = previousResume?.resumeText ?? "";
+  const updatedText = updatedResume.resumeText ?? "";
+  const textChanged = previousText !== updatedText;
+  const parsingStatus = parsing?.status ?? latestFile.textExtractionStatus;
+  const parsingCompleted = parsingStatus === "completed";
+  const parsingFailed = parsingStatus === "failed";
+  let message = "The original file was uploaded.";
+  let textStatus = "Unchanged";
+
+  if (parsingCompleted && (parsing?.textApplied || textChanged)) {
+    message = "Text was parsed from the upload and added to this resume.";
+    textStatus = "Updated from upload";
+  } else if (parsingCompleted && hadStoredText) {
+    message =
+      "Text was parsed from the upload, but your existing manual resume text was preserved.";
+    textStatus = "Manual text preserved";
+  } else if (parsingCompleted) {
+    message =
+      "Text parsing completed, but no new stored resume text was needed.";
+    textStatus = "Unchanged";
+  } else if (parsingFailed) {
+    message =
+      "The original file was uploaded, but text parsing did not produce resume text.";
+    textStatus = "Unchanged";
+  }
+
+  return {
+    filename: parsing?.filename ?? latestFile.originalFilename,
+    parsingStatus: parsingCompleted ? "Completed" : "Failed",
+    textStatus,
+    message,
+    error: parsingFailed ? parsing?.error : "",
+  };
 }
 
 export function ResumeLibraryClient({ initialResumes }) {
@@ -381,11 +189,16 @@ export function ResumeLibraryClient({ initialResumes }) {
   const [pendingFileDeletion, setPendingFileDeletion] = useState(null);
   const [fileDeleteError, setFileDeleteError] = useState("");
   const [fileDeletionReceipt, setFileDeletionReceipt] = useState(null);
-  const [uploadResume, setUploadResume] = useState(null);
+  const [parsingReceipt, setParsingReceipt] = useState(null);
+  const [uploadResumeId, setUploadResumeId] = useState(null);
 
   const selectedResume = useMemo(
     () => resumes.find((resume) => resume.resumeId === selectedId) ?? null,
     [resumes, selectedId],
+  );
+  const uploadResume = useMemo(
+    () => resumes.find((resume) => resume.resumeId === uploadResumeId) ?? null,
+    [resumes, uploadResumeId],
   );
 
   async function runAction(action, successMessage) {
@@ -394,6 +207,7 @@ export function ResumeLibraryClient({ initialResumes }) {
     setStatus("");
     setDeletionReceipt(null);
     setFileDeletionReceipt(null);
+    setParsingReceipt(null);
 
     try {
       const result = await action();
@@ -407,43 +221,46 @@ export function ResumeLibraryClient({ initialResumes }) {
     }
   }
 
+  function selectResume(resumeId) {
+    setSelectedId(resumeId);
+    setCreating(false);
+    setEditingResume(null);
+  }
+
   function replaceResume(updatedResume) {
     if (!updatedResume) {
       return;
     }
 
     setResumes((current) => {
-      const withoutUpdated = current.filter(
+      let nextResumes = current.filter(
         (resume) => resume.resumeId !== updatedResume.resumeId,
       );
-      const normalized = updatedResume.isPrimary
-        ? withoutUpdated.map((resume) => ({ ...resume, isPrimary: false }))
-        : withoutUpdated;
 
-      return [updatedResume, ...normalized].sort((left, right) => {
-        if (left.isPrimary !== right.isPrimary) {
-          return left.isPrimary ? -1 : 1;
-        }
+      if (updatedResume.isPrimary) {
+        nextResumes = nextResumes.map((resume) => ({
+          ...resume,
+          isPrimary: false,
+        }));
+      }
 
-        return new Date(right.updatedAt) - new Date(left.updatedAt);
-      });
+      nextResumes.unshift(updatedResume);
+      return sortResumes(nextResumes);
     });
     setSelectedId(updatedResume.resumeId);
+  }
+
+  function beginCreate() {
+    setCreating(true);
+    setEditingResume(null);
   }
 
   async function handleCreateSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const input = getResumeInputFromForm(formData);
     const createdResume = await runAction(
-      () =>
-        createResume({
-          title: getFormValue(formData, "title"),
-          targetRole: getFormValue(formData, "targetRole"),
-          notes: getFormValue(formData, "notes"),
-          resumeText: getFormValue(formData, "resumeText"),
-          status: getFormValue(formData, "status"),
-          isPrimary: formData.get("isPrimary") === "on",
-        }),
+      () => createResume(input),
       "Resume created.",
     );
 
@@ -456,16 +273,9 @@ export function ResumeLibraryClient({ initialResumes }) {
   async function handleUpdateSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const input = getResumeInputFromForm(formData);
     const updatedResume = await runAction(
-      () =>
-        updateResume(editingResume.resumeId, {
-          title: getFormValue(formData, "title"),
-          targetRole: getFormValue(formData, "targetRole"),
-          notes: getFormValue(formData, "notes"),
-          resumeText: getFormValue(formData, "resumeText"),
-          status: getFormValue(formData, "status"),
-          isPrimary: formData.get("isPrimary") === "on",
-        }),
+      () => updateResume(editingResume.resumeId, input),
       "Resume saved.",
     );
 
@@ -501,20 +311,29 @@ export function ResumeLibraryClient({ initialResumes }) {
   }
 
   async function handleUpload(resumeId, file) {
-    const updatedResume = await runAction(
+    const previousResume =
+      resumes.find((resume) => resume.resumeId === resumeId) ?? null;
+    const uploadResult = await runAction(
       () => uploadResumeOriginal(resumeId, file),
       "Resume original uploaded.",
     );
+    const updatedResume = uploadResult?.resume ?? null;
     replaceResume(updatedResume);
     if (updatedResume) {
-      setUploadResume(null);
+      setEditingResume((current) =>
+        current?.resumeId === updatedResume.resumeId ? updatedResume : current,
+      );
+      setParsingReceipt(
+        buildParsingReceipt(previousResume, updatedResume, uploadResult?.parsing),
+      );
+      setUploadResumeId(null);
     }
     return updatedResume;
   }
 
   async function handleDelete(resumeId) {
     if (busy) {
-      return;
+      return false;
     }
 
     const receipt = await runAction(
@@ -522,25 +341,25 @@ export function ResumeLibraryClient({ initialResumes }) {
       "Resume deleted.",
     );
 
-    if (receipt) {
-      setResumes((current) =>
-        current.filter((resume) => resume.resumeId !== resumeId),
-      );
-      setSelectedId((currentId) => {
-        if (currentId !== resumeId) {
-          return currentId;
-        }
-
-        return resumes.find((resume) => resume.resumeId !== resumeId)?.resumeId ?? null;
-      });
-      setEditingResume(null);
-      setPendingDeletion(null);
-      setDeleteError("");
-      setDeletionReceipt(receipt);
-      return true;
+    if (!receipt) {
+      return false;
     }
 
-    return false;
+    const remainingResumes = resumes.filter(
+      (resume) => resume.resumeId !== resumeId,
+    );
+
+    setResumes(remainingResumes);
+
+    if (selectedId === resumeId) {
+      setSelectedId(remainingResumes[0]?.resumeId ?? null);
+    }
+
+    setEditingResume(null);
+    setPendingDeletion(null);
+    setDeleteError("");
+    setDeletionReceipt(receipt);
+    return true;
   }
 
   async function handleDeleteFile(resumeId, fileId) {
@@ -550,20 +369,20 @@ export function ResumeLibraryClient({ initialResumes }) {
       "Uploaded original deleted.",
     );
 
-    if (updatedResume) {
-      replaceResume(updatedResume);
-      setPendingFileDeletion(null);
-      setFileDeleteError("");
-      setFileDeletionReceipt({
-        filename: file?.originalFilename || "Uploaded original",
-        deletedAt: new Date().toISOString(),
-        uploadedOriginalDeleted: true,
-        fileMetadataDeleted: true,
-      });
-      return true;
+    if (!updatedResume) {
+      return false;
     }
 
-    return false;
+    replaceResume(updatedResume);
+    setPendingFileDeletion(null);
+    setFileDeleteError("");
+    setFileDeletionReceipt({
+      filename: file?.originalFilename || "Uploaded original",
+      deletedAt: new Date().toISOString(),
+      uploadedOriginalDeleted: true,
+      fileMetadataDeleted: true,
+    });
+    return true;
   }
 
   function requestDeletion(resume) {
@@ -585,7 +404,7 @@ export function ResumeLibraryClient({ initialResumes }) {
 
   function handleUploadDialogChange(open) {
     if (!open && !busy) {
-      setUploadResume(null);
+      setUploadResumeId(null);
     }
   }
 
@@ -639,132 +458,23 @@ export function ResumeLibraryClient({ initialResumes }) {
                   Store text-first resume versions for future analysis.
                 </p>
               </div>
-              <IconButton
-                label="Add resume"
-                onClick={() => {
-                  setCreating(true);
-                  setEditingResume(null);
-                }}
-                disabled={busy}
-              >
+              <IconButton label="Add resume" onClick={beginCreate} disabled={busy}>
                 <PlusIcon />
               </IconButton>
             </div>
 
-            <div className="grid gap-2">
-              {resumes.map((resume) => (
-                <button
-                  key={resume.resumeId}
-                  type="button"
-                  onClick={() => {
-                    setSelectedId(resume.resumeId);
-                    setCreating(false);
-                    setEditingResume(null);
-                  }}
-                  className={`w-full rounded-md border p-3 text-left transition-colors ${
-                    selectedId === resume.resumeId
-                      ? "border-primary bg-surface-secondary"
-                      : "border-border bg-surface hover:bg-surface-secondary"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <FileTextIcon className="shrink-0" />
-                        <h2 className="truncate text-sm font-semibold">
-                          {resume.title}
-                        </h2>
-                      </div>
-                      {resume.targetRole ? (
-                        <p className="mt-1 truncate text-xs text-foreground-muted">
-                          {resume.targetRole}
-                        </p>
-                      ) : null}
-                    </div>
-                    {resume.isPrimary ? (
-                      <StarFilledIcon className="shrink-0 text-primary" />
-                    ) : null}
-                  </div>
-                  <div className="mt-3 flex items-center gap-2 text-xs text-foreground-muted">
-                    <span className="capitalize">{resume.status}</span>
-                    <span aria-hidden="true">/</span>
-                    <span>{formatDate(resume.updatedAt)}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <ResumeList
+              resumes={resumes}
+              selectedId={selectedId}
+              onSelect={selectResume}
+            />
           </aside>
 
           <section className="min-w-0">
             <StatusLine status={status} error={error} />
-
-            {deletionReceipt ? (
-              <div className="mt-4 rounded-md border border-border bg-surface p-4 text-sm">
-                <h2 className="font-semibold">Deletion receipt</h2>
-                <p className="mt-2 text-foreground-muted">
-                  {deletionReceipt.title} was removed from the library.
-                </p>
-                <dl className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <div>
-                    <dt className="text-foreground-muted">Record</dt>
-                    <dd>{deletionReceipt.recordDeleted ? "Deleted" : "Pending"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-foreground-muted">Stored text</dt>
-                    <dd>{deletionReceipt.contentDeleted ? "Deleted" : "Pending"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-foreground-muted">Uploaded original</dt>
-                    <dd>
-                      {!deletionReceipt.hadUploadedOriginal
-                        ? "None stored"
-                        : deletionReceipt.uploadedOriginalDeleted
-                          ? `${formatFileCount(
-                              deletionReceipt.uploadedOriginalCount,
-                            )} deleted`
-                          : "Storage cleanup incomplete"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-foreground-muted">File metadata</dt>
-                    <dd>
-                      {deletionReceipt.fileMetadataDeleted ? "Deleted" : "Pending"}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            ) : null}
-
-            {fileDeletionReceipt ? (
-              <div className="mt-4 rounded-md border border-border bg-surface p-4 text-sm">
-                <h2 className="font-semibold">File deletion receipt</h2>
-                <p className="mt-2 text-foreground-muted">
-                  {fileDeletionReceipt.filename} was removed from this resume.
-                </p>
-                <dl className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <div>
-                    <dt className="text-foreground-muted">Uploaded original</dt>
-                    <dd>
-                      {fileDeletionReceipt.uploadedOriginalDeleted
-                        ? "Deleted"
-                        : "Pending"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-foreground-muted">File metadata</dt>
-                    <dd>
-                      {fileDeletionReceipt.fileMetadataDeleted
-                        ? "Deleted"
-                        : "Pending"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-foreground-muted">Deleted</dt>
-                    <dd>{formatDate(fileDeletionReceipt.deletedAt)}</dd>
-                  </div>
-                </dl>
-              </div>
-            ) : null}
+            <ResumeDeletionReceipt receipt={deletionReceipt} />
+            <FileDeletionReceipt receipt={fileDeletionReceipt} />
+            <ResumeParsingReceipt receipt={parsingReceipt} />
 
             {creating ? (
               <div className="mt-4">
@@ -809,7 +519,7 @@ export function ResumeLibraryClient({ initialResumes }) {
                     busy={busy}
                     onEdit={() => setEditingResume(selectedResume)}
                     onSetPrimary={() => handleSetPrimary(selectedResume.resumeId)}
-                    onUpload={() => setUploadResume(selectedResume)}
+                    onUpload={() => setUploadResumeId(selectedResume.resumeId)}
                     onArchive={() => handleArchive(selectedResume.resumeId)}
                     onRestore={() => handleRestore(selectedResume.resumeId)}
                     onDelete={() => requestDeletion(selectedResume)}
@@ -818,10 +528,12 @@ export function ResumeLibraryClient({ initialResumes }) {
 
                 {editingResume ? (
                   <ResumeForm
+                    key={`${editingResume.resumeId}-${editingResume.updatedAt}`}
                     resume={editingResume}
                     busy={busy}
                     onSubmit={handleUpdateSubmit}
                     onCancel={() => setEditingResume(null)}
+                    onUpload={() => setUploadResumeId(editingResume.resumeId)}
                   />
                 ) : (
                   <>
@@ -858,22 +570,7 @@ export function ResumeLibraryClient({ initialResumes }) {
             ) : null}
 
             {!creating && !selectedResume ? (
-              <div className="mt-12 max-w-xl">
-                <h2 className="text-2xl font-semibold">No resumes yet</h2>
-                <p className="mt-3 text-sm leading-6 text-foreground-muted">
-                  Add a resume to start building the profile-resume-job loop for
-                  the MVP.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setCreating(true)}
-                  disabled={busy}
-                  className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <PlusIcon />
-                  Add resume
-                </button>
-              </div>
+              <EmptyState busy={busy} onCreate={beginCreate} />
             ) : null}
           </section>
         </main>

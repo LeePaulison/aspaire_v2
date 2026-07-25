@@ -1,0 +1,280 @@
+.ConfirmationDialogContent {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 51;
+  width: min(calc(100vw - 2rem), 28rem);
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  padding: 1.5rem;
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 28%),
+    0 6px 18px rgb(0 0 0 / 14%);
+}
+
+.ConfirmationDialogContent:focus {
+  outline: none;
+}
+
+.AppDialogContent {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 51;
+  width: min(calc(100vw - 2rem), 34rem);
+  max-height: min(calc(100svh - 2rem), 42rem);
+  overflow: auto;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  padding: 1.5rem;
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 28%),
+    0 6px 18px rgb(0 0 0 / 14%);
+  animation: contentShow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.AppDialogContent:focus {
+  outline: none;
+}
+
+.DialogOverlay {
+  position: fixed;
+  inset: 0;
+
+  background: color-mix(in oklch, black 72%, transparent);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  animation: overlayShow 180ms ease;
+}
+
+.DialogContent {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(94vw, 760px);
+  height: min(88svh, 860px);
+  overflow: hidden;
+
+  border-radius: 0.875rem;
+
+  background: var(--color-surface);
+
+  border: 1px solid var(--color-surface-secondary);
+
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 35%),
+    0 8px 24px rgb(0 0 0 / 18%);
+
+  animation: contentShow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.DialogContent:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+.DialogTitle {
+  margin: 0;
+
+  padding: 1.5rem;
+  padding-bottom: 0;
+
+  color: var(--color-foreground);
+
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.DialogDescription {
+  margin: 0.5rem 0 1.5rem;
+
+  padding: 0 1.5rem;
+
+  color: var(--color-foreground-muted);
+
+  line-height: 1.6;
+}
+
+.DialogScrollArea {
+  flex: 1;
+  min-height: 0;
+}
+
+.DialogViewport {
+  height: 100%;
+
+  padding: 0 2rem 0.75rem 1.5rem;
+}
+
+.DialogSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.DialogCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.DialogCard + .DialogCard {
+  margin-top: 1.5rem;
+}
+
+.DialogCardTitle {
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+
+  color: var(--color-foreground);
+
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.DialogField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.DialogLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-foreground);
+}
+
+.DialogInput,
+.DialogSelect,
+.DialogSlider {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface-secondary);
+  padding-block: 0.5rem;
+  padding-inline: 0.5rem;
+  cursor: pointer;
+}
+
+.DialogInput:focus,
+.DialogSelect:focus {
+  border-color: var(--color-ring);
+}
+
+.FieldDescription {
+  font-size: 0.875rem;
+  color: var(--color-foreground-muted);
+  line-height: 1.4;
+}
+
+.DialogFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 -10px 24px rgb(0 0 0 / 8%);
+}
+
+.DialogScrollbar {
+  display: flex;
+
+  user-select: none;
+  touch-action: none;
+
+  width: 12px;
+  padding: 2px;
+
+  background: transparent;
+
+  transition:
+    background-color 160ms ease,
+    opacity 160ms ease;
+
+  opacity: 0.65;
+}
+
+.DialogScrollArea:hover .DialogScrollbar,
+.DialogScrollbar[data-state="visible"] {
+  opacity: 1;
+}
+
+.DialogScrollbar:hover {
+  background: rgb(255 255 255 / 0.04);
+}
+
+.DialogScrollThumb {
+  position: relative;
+  flex: 1;
+
+  border-radius: 999px;
+
+  background: var(--color-surface-tertiary);
+
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.DialogScrollThumb:hover {
+  background: var(--color-mist-500);
+}
+
+.DialogScrollThumb:active {
+  background: var(--color-primary);
+}
+
+.DialogScrollThumb::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.DialogScrollCorner {
+  background: transparent;
+}
+
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
