@@ -20,6 +20,8 @@ What the user has actually done
 
 Career Evidence is the bridge between Career Profile and Resume Library. It helps a resume generate a reviewed profile draft, helps a profile generate editable resume Markdown, and helps the user see what evidence is missing, inconsistent, or underused.
 
+Parsed resume content should never be silently discarded. Content can be classified, moved into `Additional Notes`, marked ambiguous, or left for user review, but the system should not drop extracted text simply because it does not fit a known field.
+
 ---
 
 # Domain Status
@@ -29,6 +31,8 @@ Career Evidence is the bridge between Career Profile and Resume Library. It help
 The Career Evidence domain is planned but not yet implemented.
 
 Some evidence-like data currently lives inside Career Profile sections such as work experience, skills, projects, and achievements. Phase 4 should decide which evidence remains embedded in Career Profile and which proof points need first-class persistence or workflow state.
+
+Phase 4 will use both approaches: evidence may be derived from Career Profile sections, and accepted evidence should also be persisted as first-class records when it needs review state, reuse, linking, or direct management.
 
 ## Roadmap Phase
 
@@ -121,16 +125,15 @@ Expected fields may include:
 * Source
 * Confidence or review status
 
+Career Evidence should support read, update, and delete management directly in Phase 4. Users should not create evidence from a blank standalone inventory screen in the first version. New evidence should enter through resume parsing, profile review, resume generation, or alignment workflows, then become directly manageable after it exists.
+
 Initial evidence types may include:
 
 * Project
-* Achievement
-* Responsibility
+* Work experience
 * Skill evidence
 * Certification
-* Education evidence
-* Leadership example
-* Domain expertise
+* Award
 
 ## Project
 
@@ -221,6 +224,8 @@ Expected table direction:
 
 Phase 4 may also choose to extend existing Career Profile tables before adding every new table. The implementation should avoid over-normalizing until the workflow proves which evidence objects need first-class ownership.
 
+Accepted evidence should be persisted as first-class records. Derived evidence can still be generated from Career Profile sections when useful, but durable evidence records are needed for linking, reuse, review status, and resume-profile alignment history.
+
 Each table should include:
 
 * Stable primary key
@@ -231,6 +236,8 @@ Each table should include:
 * Relationship fields to profile, resume, experience, skill, or project records
 
 Draft content should not become durable profile or resume truth until the user accepts it.
+
+Rejected or unaccepted drafts should not be retained in PostgreSQL by default. They may live only for the active browser session. If persistence is needed for recovery, prefer client-side IndexedDB before introducing server-side draft retention.
 
 ---
 
@@ -330,7 +337,62 @@ Generated resume text should use basic Markdown so it makes visual sense in the 
 ## Education
 ```
 
-Basic format examples, such as an Executive resume format, may be available when the user requests a format direction. A broad resume template picker, template marketplace, or export-ready design system is out of scope for Phase 4 unless explicitly requested.
+The first profile-to-resume flow should support three simple format directions:
+
+* Executive
+* Technical
+* General
+
+These are basic content structures, not templates. A broad resume template picker, template marketplace, or export-ready design system is out of scope for Phase 4 unless explicitly requested.
+
+The app should document the active Markdown structure as user-facing instructions near the editor or review surface.
+
+Recommended Markdown structure:
+
+```markdown
+# Candidate Name
+
+## Summary
+
+Short positioning summary.
+
+## Skills
+
+- Skill or tool
+- Skill or tool
+
+## Experience
+
+### Role Title, Company
+_Start Date - End Date_
+
+- Impact bullet with evidence.
+- Impact bullet with evidence.
+
+## Projects
+
+### Project Name
+
+- Outcome, scope, or contribution.
+
+## Certifications and Awards
+
+- Certification or award, issuer, year.
+
+## Education
+
+- Degree or program, institution, year.
+
+## Additional Notes
+
+Any useful content that does not cleanly fit yet.
+```
+
+This structure should be treated as a starting convention, not a strict schema. Users can edit freely. AI workflows should preserve recognizable headings where possible so later parsing and alignment can work, but the app should not reject user-authored Markdown just because it differs from the suggested structure.
+
+`Additional Notes` is the holding section for inferred, ambiguous, unused, or unknown resume-derived content that should not be discarded.
+
+When parsing or formatting a resume, every meaningful piece of extracted content should appear somewhere in the review draft. If the system cannot confidently place it, it belongs in `Additional Notes`.
 
 ---
 
@@ -350,6 +412,8 @@ Initial AI uses include:
 AI-generated changes should not mutate Career Profile or Resume Library data without explicit user acceptance.
 
 The AI server owns execution. The web application owns context selection, draft persistence, review state, and final data mutation.
+
+Uploaded resume raw extraction should not be stored separately from accepted Markdown in Phase 4. Uploaded resume cards may expose a control to generate Markdown from the uploaded original or extracted text, but accepted `resume_text` remains the durable editable content.
 
 ---
 
@@ -450,13 +514,19 @@ Profile -> Resume Markdown draft
 These questions should be resolved before or during Phase 4 implementation:
 
 * Should career evidence be persisted as first-class records immediately or initially derived from Career Profile sections?
-* Which profile fields should be prefilled from a resume-derived draft?
-* Should uploaded resume raw extraction be stored separately from accepted Markdown?
-* How long should rejected or unaccepted drafts be retained?
-* Should users be able to manage an evidence inventory directly in Phase 4?
-* What evidence categories are needed for the first alignment suggestions?
-* Should the first profile-to-resume flow support format options such as Executive, Technical, or General?
 * What Markdown structure is strict enough to be useful but flexible enough for editing?
+
+Resolved Phase 4 answers:
+
+* Career evidence should be both derived from Career Profile sections and persisted as first-class records where accepted, linked, reused, or reviewed.
+* Resume-derived profile drafts should prefill every profile field that can be reasonably inferred. Unused, unknown, or ambiguous content should go into a new Markdown holding field for review.
+* Uploaded resume raw extraction should not be stored separately from accepted Markdown in Phase 4. Uploaded resume cards can expose a control to generate Markdown.
+* Parsed resume content should never be silently discarded. Ambiguous or unclassified content should be preserved in `Additional Notes` for user review.
+* Rejected or unaccepted drafts should be retained only for the active browser session by default. IndexedDB may be used if recovery is needed.
+* Users should be able to read, update, and delete evidence directly in Phase 4, but not create evidence from a blank standalone inventory screen.
+* First alignment categories are Skills, Projects, Work Experience, and Certificates/Awards.
+* The first profile-to-resume flow should support Executive, Technical, and General format directions as simple Markdown structures.
+* Resume Markdown should use a permissive heading-based structure with Summary, Skills, Experience, Projects, Certifications and Awards, Education, and Additional Notes.
 
 ---
 

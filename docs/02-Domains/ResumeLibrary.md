@@ -107,6 +107,8 @@ Later capabilities may include:
 
 Resume generation and parsed-resume review should produce basic editable Markdown before any template or export system is introduced. Basic examples, such as an Executive resume format, may be used when the user requests a format direction. They should not become a broad template system by default.
 
+Parsed resume content should never be silently discarded. If extracted content cannot be confidently mapped into a structured section, it should be preserved in an editable review area such as `Additional Notes`.
+
 ---
 
 # Core Concepts
@@ -378,6 +380,8 @@ AI-generated changes should be reviewable before they overwrite stored resume co
 Profile drafts generated from resume content must be reviewable before they become durable Career Profile data.
 
 AI-generated resume text should default to basic Markdown. Parsed uploaded resumes may also be transformed into a Markdown draft, but only through a review-and-accept flow.
+
+Parsing and Markdown formatting should preserve every meaningful piece of extracted resume content. The system may reorganize or label content, but it should not drop content without explicit user action.
 
 ---
 
