@@ -22,7 +22,7 @@ No production job search schema, repository, GraphQL operations, external search
 
 ## Roadmap Phase
 
-Job Search belongs to Phase 4: Job Search and Saved Jobs.
+Job Search belongs to Phase 5: Job Search and Saved Jobs.
 
 ## Primary Outcome
 
@@ -413,4 +413,3 @@ The Job Search domain is complete for its foundation phase when:
 * The UI supports job intake without requiring an external provider
 * Tests cover important authorization, validation, and conversion paths
 * Database and GraphQL reference docs are updated to match the implementation
-

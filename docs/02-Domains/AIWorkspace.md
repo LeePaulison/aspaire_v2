@@ -22,7 +22,7 @@ Inherited conversation persistence and streaming patterns should be reviewed bef
 
 ## Roadmap Phase
 
-AI Workspace belongs to Phase 8: AI Workspace and Research.
+AI Workspace belongs to Phase 9: AI Workspace and Research.
 
 ## Primary Outcome
 

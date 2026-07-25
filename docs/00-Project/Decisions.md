@@ -83,6 +83,7 @@ Decision statuses:
 | ASP-0019 | Accepted | 2026-07-23 | Default AI reference data is managed by an idempotent seed script |
 | ASP-0020 | Accepted | 2026-07-23 | Uploaded resume originals are stored in S3 and metadata remains application-owned |
 | ASP-0021 | Accepted | 2026-07-24 | First-run entry is resume-led with guided routing and secondary AI Workspace access |
+| ASP-0022 | Accepted | 2026-07-25 | Career evidence and resume-profile linkage becomes Phase 4 |
 
 ---
 
@@ -347,7 +348,7 @@ Accepted
 
 AspAIre's documentation-first workflow requires stable domain references before implementation begins. The project foundations identify independent product domains that should be built as vertical slices on top of the inherited platform.
 
-The `docs/02-Domains` folder has been created to define these domains before implementation. The domain set includes Career Profile, Resume Library, Resume Analysis, Job Search, Saved Jobs, Application Tracking, AI Workspace, Interview Preparation, Market Research, and User Preferences.
+The `docs/02-Domains` folder has been created to define these domains before implementation. The domain set includes Career Profile, Resume Library, Career Evidence, Resume Analysis, Job Search, Saved Jobs, Application Tracking, AI Workspace, Interview Preparation, Market Research, and User Preferences.
 
 ## Decision
 
@@ -884,6 +885,69 @@ Sending skipped setup to Home keeps the user inside the career workspace and mak
 * Home or Dashboard becomes the neutral landing place for skipped setup and, eventually, returning users.
 * AI Workspace should be present in navigation as a secondary but accessible surface.
 * Domain workflows should remain the primary owners of durable profile, resume, job, analysis, and application records.
+
+---
+
+# ASP-0022: Career Evidence and Resume-Profile Linkage Becomes Phase 4
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-25
+
+## Context
+
+The original roadmap placed Job Search and Saved Jobs immediately after the Resume Library foundation. That sequence moved from durable career context and resumes directly into job opportunity storage.
+
+As the product direction sharpened, a missing product bridge became clear: Career Profile and Resume Library need a bidirectional linkage phase before saved jobs. AspAIre's differentiator depends on comparing what a resume says against what the user has actually done, then surfacing evidence-backed resume and positioning recommendations.
+
+This linkage also supports the first-run flow:
+
+```text
+Do you have a resume?
+
+Yes -> Resume input -> Career Profile draft review
+No -> Career Profile setup -> Resume Markdown draft review
+```
+
+## Decision
+
+AspAIre will insert a new Phase 4:
+
+```text
+Phase 4: Career Evidence and Resume-Profile Linkage
+```
+
+Existing roadmap phases move down by one:
+
+* Job Search and Saved Jobs moves from Phase 4 to Phase 5
+* Resume Analysis and Fit Evaluation moves from Phase 5 to Phase 6
+* Application Tracking moves from Phase 6 to Phase 7
+* Interview Preparation moves from Phase 7 to Phase 8
+* AI Workspace and Research moves from Phase 8 to Phase 9
+* Personalization and Intelligence moves from Phase 9 to Phase 10
+* Polish, Reliability, and Release Readiness moves from Phase 10 to Phase 11
+
+Phase 4 should be treated as a coherent SaaS product package, not only a thin MVP slice. It includes resume-to-profile drafting, profile-to-resume Markdown generation, review-and-accept flows, career evidence surfacing, and resume-profile alignment suggestions.
+
+Resume generation should use basic editable Markdown by default. Broad resume templates remain out of scope unless the user explicitly requests templates or export-ready formatting. Basic format examples, such as an Executive resume format, may be used as simple structure options.
+
+## Rationale
+
+The profile-resume link strengthens the core loop before jobs enter the system. It gives AspAIre a meaningful capability even before saved jobs: helping users transform existing resume material into durable career context and then use that context to improve resume content.
+
+This phase protects the product from rushing into job tracking before the career evidence layer is useful. It also creates the foundation for later fit analysis because Phase 6 can compare target jobs against both the resume and the user's accepted career evidence.
+
+## Consequences
+
+* Roadmap phase numbers after Phase 3 shift down by one.
+* Domain docs that reference roadmap phase numbers must stay aligned with the new sequence.
+* Phase 4 implementation should avoid silent overwrites; generated or parsed content must be reviewable before becoming durable profile or resume data.
+* Saved Jobs remains important, but it follows the profile-resume linkage phase.
+* Resume Analysis should later build on the accepted career evidence and resume-profile alignment work from Phase 4.
 
 ---
 

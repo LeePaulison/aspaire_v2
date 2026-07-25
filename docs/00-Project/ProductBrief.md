@@ -99,6 +99,10 @@ The durable representation of the user's professional identity. It can be built 
 
 The proof layer. Projects, achievements, skills, and outcomes are what let AspAIre recommend stronger resume content and interview talking points.
 
+## Resume-Profile Linkage
+
+The bridge between Resume Library and Career Profile. A resume can generate a reviewed profile draft, and an accepted profile can generate editable resume Markdown. This is the Phase 4 product package.
+
 ## Saved Jobs
 
 Stores opportunities the user wants to evaluate, apply to, or track.
@@ -129,6 +133,23 @@ AspAIre is not:
 * A spreadsheet replacement only
 
 It may eventually support job discovery, automation, and deeper AI workflows, but the center is the user's career context and job-search decision loop.
+
+---
+
+# Resume Formatting Guardrail
+
+AspAIre should not build a broad resume template system until the user explicitly asks for templates or export-ready document formatting.
+
+Generated or parsed resume text should use basic Markdown so the resume makes visual sense in the app:
+
+* Clear section headings
+* Basic role/company/date structure
+* Bullet points for experience, projects, skills, and outcomes
+* Minimal formatting that remains easy to edit
+
+Basic format examples are allowed when they clarify structure, such as an Executive resume format. These should be treated as simple format examples, not a full template marketplace or document design system.
+
+Until a user asks for templates, the product should focus on editable resume content, career evidence, alignment, and review.
 
 ---
 
@@ -178,12 +199,13 @@ MVP slice complete != SaaS phase complete
 | 1 | Platform Baseline | Complete enough for feature work | Ongoing hardening |
 | 2 | Career Profile | Foundation complete | Broader profile intelligence remains open |
 | 3 | Resume Library | Foundation complete | Full Resume Library remains open |
-| 4 | Job Search and Saved Jobs | Not started | Not started |
-| 5 | Resume Analysis and Fit Evaluation | Not started | Not started |
-| 6 | Application Tracking | Not started | Not started |
-| 7 | Interview Preparation | Not started | Not started |
-| 8 | AI Workspace and Research | Inherited chat foundation exists | Career-specific workspace remains open |
-| 9 | Personalization and Intelligence | Not started | Not started |
-| 10 | Polish, Reliability, and Release Readiness | Not started | Not started |
+| 4 | Career Evidence and Resume-Profile Linkage | Not started | Intended as a complete SaaS package |
+| 5 | Job Search and Saved Jobs | Not started | Not started |
+| 6 | Resume Analysis and Fit Evaluation | Not started | Not started |
+| 7 | Application Tracking | Not started | Not started |
+| 8 | Interview Preparation | Not started | Not started |
+| 9 | AI Workspace and Research | Inherited chat foundation exists | Career-specific workspace remains open |
+| 10 | Personalization and Intelligence | Not started | Not started |
+| 11 | Polish, Reliability, and Release Readiness | Not started | Not started |
 
 Use this table as a quick orientation aid, not a detailed task tracker. The roadmap and domain docs remain the source for phase scope.

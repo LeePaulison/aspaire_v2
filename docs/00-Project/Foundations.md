@@ -196,16 +196,19 @@ The application consists of independent business domains that share common platf
 
 1. Career Profile
 2. Resume Library
-3. Resume Analysis
-4. Job Search
-5. Saved Jobs
-6. Application Tracking
-7. AI Workspace
-8. Interview Preparation
-9. Market Research
-10. User Preferences
+3. Career Evidence
+4. Resume Analysis
+5. Job Search
+6. Saved Jobs
+7. Application Tracking
+8. AI Workspace
+9. Interview Preparation
+10. Market Research
+11. User Preferences
 
 Each domain should remain as independent as practical while leveraging the shared platform.
+
+Career Evidence and Resume-Profile Linkage is a cross-domain workflow spanning Career Profile and Resume Library. It is tracked as a roadmap phase because it creates the bridge between durable profile context and editable resume content.
 
 ---
 
@@ -252,6 +255,7 @@ docs/
 ├── 02-Domains/
 │   ├── CareerProfile.md
 │   ├── ResumeLibrary.md
+│   ├── CareerEvidence.md
 │   ├── ResumeAnalysis.md
 │   ├── JobSearch.md
 │   ├── SavedJobs.md

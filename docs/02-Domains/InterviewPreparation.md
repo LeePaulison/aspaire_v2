@@ -20,7 +20,7 @@ No production interview prep schema, repository, GraphQL operations, AI workflow
 
 ## Roadmap Phase
 
-Interview Preparation belongs to Phase 7: Interview Preparation.
+Interview Preparation belongs to Phase 8: Interview Preparation.
 
 ## Primary Outcome
 
@@ -392,4 +392,3 @@ The Interview Preparation domain is complete for its foundation phase when:
 * AI-generated prep material is reviewable and editable
 * Tests cover important authorization, ownership, and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-

@@ -22,7 +22,7 @@ No production saved job schema, repository, GraphQL operations, job detail UI, o
 
 ## Roadmap Phase
 
-Saved Jobs belongs to Phase 4: Job Search and Saved Jobs.
+Saved Jobs belongs to Phase 5: Job Search and Saved Jobs.
 
 ## Primary Outcome
 
@@ -444,4 +444,3 @@ The Saved Jobs domain is complete for its foundation phase when:
 * Duplicate handling is intentional and documented
 * Tests cover important authorization, persistence, and validation paths
 * Database and GraphQL reference docs are updated to match the implementation
-

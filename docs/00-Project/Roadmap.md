@@ -42,7 +42,7 @@ A complete slice may include:
 
 AspAIre becomes more valuable as career context accumulates.
 
-The roadmap should prioritize foundational user data, resume data, saved jobs, and application state before advanced recommendation and automation features.
+The roadmap should prioritize foundational user data, resume data, resume-profile linkage, saved jobs, and application state before advanced recommendation and automation features.
 
 ---
 
@@ -189,7 +189,50 @@ The broader SaaS Resume Library phase still includes deeper resume versioning, s
 
 ---
 
-# Phase 4: Job Search and Saved Jobs
+# Phase 4: Career Evidence and Resume-Profile Linkage
+
+## Goal
+
+Connect Career Profile and Resume Library into a bidirectional, review-first workflow.
+
+This phase should let a resume feed a career profile draft, let a career profile generate resume Markdown, and help users align what their resume says with what they have actually done.
+
+## Outcomes
+
+* Resume-to-profile draft workflow implemented
+* Profile-to-resume Markdown draft workflow implemented
+* Review and acceptance UI implemented for AI-generated or parsed content
+* Career evidence and project proof points made usable for resume guidance
+* Resume-profile consistency checks implemented
+* Basic Markdown resume formatting supported without introducing a full template system
+* Existing resume upload behavior adjusted so parsed Markdown is reviewed before becoming durable resume text where practical
+
+## Core Capabilities
+
+* User answers `Do you have a resume?`
+* `Yes` path: add resume, parse or format it into reviewable Markdown, and generate a Career Profile draft for user review
+* `No` path: build Career Profile first, then generate editable resume Markdown for user review
+* Compare Resume Library content against Career Profile, projects, skills, and outcomes
+* Surface missing, inconsistent, or underused career evidence
+* Save durable profile or resume changes only after explicit user acceptance
+* Use basic Markdown structure for generated or parsed resume text
+
+## Exit Criteria
+
+Users can move in both directions between resume and profile:
+
+```text
+Resume -> Career Profile draft
+Career Profile -> Resume Markdown draft
+```
+
+Users can also review alignment suggestions that compare what the resume says against the accepted career profile, projects, skills, and outcomes.
+
+The phase is complete when the user can create, review, edit, accept, or reject generated profile and resume content without silent overwrites. Basic format examples, such as an Executive resume format, may be supported when requested, but a broad resume template system remains out of scope.
+
+---
+
+# Phase 5: Job Search and Saved Jobs
 
 ## Goal
 
@@ -222,7 +265,7 @@ Users can build a persistent collection of opportunities that can be analyzed, t
 
 ---
 
-# Phase 5: Resume Analysis and Fit Evaluation
+# Phase 6: Resume Analysis and Fit Evaluation
 
 ## Goal
 
@@ -253,7 +296,7 @@ Users can evaluate how well a resume fits a target job and receive specific, act
 
 ---
 
-# Phase 6: Application Tracking
+# Phase 7: Application Tracking
 
 ## Goal
 
@@ -284,7 +327,7 @@ Users can understand the state of their job search and manage applications witho
 
 ---
 
-# Phase 7: Interview Preparation
+# Phase 8: Interview Preparation
 
 ## Goal
 
@@ -314,7 +357,7 @@ Users can prepare for specific interviews with guidance that reflects both the t
 
 ---
 
-# Phase 8: AI Workspace and Research
+# Phase 9: AI Workspace and Research
 
 ## Goal
 
@@ -346,7 +389,7 @@ Users can use AI for broader career work while the system remains connected to A
 
 ---
 
-# Phase 9: Personalization and Intelligence
+# Phase 10: Personalization and Intelligence
 
 ## Goal
 
@@ -376,7 +419,7 @@ AspAIre begins to feel like an intelligent career system rather than a passive d
 
 ---
 
-# Phase 10: Polish, Reliability, and Release Readiness
+# Phase 11: Polish, Reliability, and Release Readiness
 
 ## Goal
 
@@ -416,13 +459,14 @@ The roadmap intentionally sequences durable context before advanced intelligence
 2. Platform baseline
 3. Career profile
 4. Resume library
-5. Saved jobs
-6. Resume and job analysis
-7. Application tracking
-8. Interview preparation
-9. AI workspace and research
-10. Personalization
-11. Release readiness
+5. Career evidence and resume-profile linkage
+6. Saved jobs
+7. Resume and job analysis
+8. Application tracking
+9. Interview preparation
+10. AI workspace and research
+11. Personalization
+12. Release readiness
 
 Later phases may begin exploratory design earlier, but implementation should avoid depending on data or workflows that do not exist yet.
 

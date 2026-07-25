@@ -22,7 +22,7 @@ No production application schema, repository, GraphQL operations, pipeline UI, a
 
 ## Roadmap Phase
 
-Application Tracking belongs to Phase 6: Application Tracking.
+Application Tracking belongs to Phase 7: Application Tracking.
 
 ## Primary Outcome
 
@@ -406,4 +406,3 @@ The Application Tracking domain is complete for its foundation phase when:
 * The UI supports pipeline review and application detail workflows
 * Tests cover important authorization, ownership, and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-

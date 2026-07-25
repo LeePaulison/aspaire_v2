@@ -22,7 +22,7 @@ Current inherited behavior includes theme and AI preference storage. AspAIre-spe
 
 ## Roadmap Phase
 
-User Preferences is an initial product domain and becomes more important during Phase 9: Personalization and Intelligence.
+User Preferences is an initial product domain and becomes more important during Phase 10: Personalization and Intelligence.
 
 ## Primary Outcome
 
@@ -372,4 +372,3 @@ The User Preferences domain is complete for its foundation phase when:
 * Settings UI reflects supported product behavior
 * Tests cover important authorization, validation, and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-

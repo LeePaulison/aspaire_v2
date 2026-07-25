@@ -105,6 +105,8 @@ Later capabilities may include:
 * AI-assisted resume cleanup and tailoring
 * AI-assisted career profile drafting from imported resume content
 
+Resume generation and parsed-resume review should produce basic editable Markdown before any template or export system is introduced. Basic examples, such as an Executive resume format, may be used when the user requests a format direction. They should not become a broad template system by default.
+
 ---
 
 # Core Concepts
@@ -343,6 +345,10 @@ The UI should keep document management calm and efficient. It should not hide co
 
 When a user deletes a resume, the UI should present a deletion receipt rather than exposing the user's underlying storage bucket or object key.
 
+Resume text generation or parsing review should favor a true editable Markdown review surface. Users should accept generated or parsed Markdown before it becomes durable `resume_text`.
+
+The Resume Library should not expose a template picker or template marketplace until templates are explicitly requested. Basic format examples may appear as simple user-selected structure options.
+
 ---
 
 # AI Usage
@@ -370,6 +376,8 @@ Potential later AI features include:
 AI-generated changes should be reviewable before they overwrite stored resume content.
 
 Profile drafts generated from resume content must be reviewable before they become durable Career Profile data.
+
+AI-generated resume text should default to basic Markdown. Parsed uploaded resumes may also be transformed into a Markdown draft, but only through a review-and-accept flow.
 
 ---
 

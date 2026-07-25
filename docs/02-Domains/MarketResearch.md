@@ -20,7 +20,7 @@ No production market research schema, repository, GraphQL operations, AI workflo
 
 ## Roadmap Phase
 
-Market Research belongs to Phase 8: AI Workspace and Research.
+Market Research belongs to Phase 9: AI Workspace and Research.
 
 ## Primary Outcome
 
@@ -366,4 +366,3 @@ The Market Research domain is complete for its foundation phase when:
 * The UI supports topic review, notes, and saved outputs
 * Tests cover important authorization, ownership, and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-

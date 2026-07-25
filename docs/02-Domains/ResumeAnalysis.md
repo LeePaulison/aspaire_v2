@@ -22,7 +22,7 @@ No production analysis schema, repository, GraphQL operations, AI workflow, or a
 
 ## Roadmap Phase
 
-Resume Analysis belongs to Phase 5: Resume Analysis and Fit Evaluation.
+Resume Analysis belongs to Phase 6: Resume Analysis and Fit Evaluation.
 
 ## Primary Outcome
 
@@ -427,4 +427,3 @@ The Resume Analysis domain is complete for its foundation phase when:
 * Failed analysis states are understandable and recoverable
 * Tests cover important authorization, ownership, and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation
-
