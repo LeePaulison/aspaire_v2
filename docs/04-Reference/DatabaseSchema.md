@@ -48,6 +48,8 @@ Current exported schema modules include:
 * `career_profile_experience`
 * `career_profile_education`
 * `career_profile_skills`
+* `career_profile_projects`
+* `career_profile_certifications`
 * `career_profile_preferences`
 * `preferences`
 * `reasoning_levels`
@@ -238,16 +240,20 @@ One durable career profile per authenticated user.
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | text | Primary key |
-| `user_id` | text | Required, references `user.id`, cascade delete, unique |
+| `user_id` | text | Required, references `user.id`, cascade delete |
+| `name` | text | Required, defaults `Default Profile` |
+| `focus` | text | Required, defaults empty |
+| `is_default` | boolean | Required, defaults false; at most one default profile per user |
 | `headline` | text | Required, defaults empty |
 | `summary` | text | Required, defaults empty |
 | `career_goals` | text | Required, defaults empty |
+| `additional_notes` | text | Required, defaults empty; review holding field for ambiguous or unplaced career context |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |
 
 Indexes:
 
-* `career_profiles_user_id_unique` on `user_id`
+* `career_profiles_user_id_default_unique` on `user_id` where `is_default = true`
 * `career_profiles_user_id_idx` on `user_id`
 
 ## `career_profile_experience`
@@ -300,6 +306,45 @@ Stores skill rows for a career profile.
 | `category` | text | Required, defaults `General` |
 | `proficiency` | text | Required, defaults empty |
 | `evidence` | text | Required, defaults empty |
+| `sort_order` | integer | Required, defaults `0` |
+| `created_at` | timestamp with timezone | Required, defaults now |
+| `updated_at` | timestamp with timezone | Required, defaults now |
+
+## `career_profile_projects`
+
+Stores notable projects for a career profile.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | text | Primary key |
+| `profile_id` | text | Required, references `career_profiles.id`, cascade delete |
+| `name` | text | Required |
+| `role` | text | Required, defaults empty |
+| `description` | text | Required, defaults empty |
+| `outcomes` | text | Required, defaults empty |
+| `technologies` | jsonb | Required, defaults empty array |
+| `link` | text | Required, defaults empty |
+| `start_date` | text | Required, defaults empty |
+| `end_date` | text | Required, defaults empty |
+| `sort_order` | integer | Required, defaults `0` |
+| `created_at` | timestamp with timezone | Required, defaults now |
+| `updated_at` | timestamp with timezone | Required, defaults now |
+
+## `career_profile_certifications`
+
+Stores certifications, credentials, awards, and similar career proof points for a career profile.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | text | Primary key |
+| `profile_id` | text | Required, references `career_profiles.id`, cascade delete |
+| `name` | text | Required |
+| `issuer` | text | Required, defaults empty |
+| `issue_date` | text | Required, defaults empty |
+| `expiration_date` | text | Required, defaults empty |
+| `credential_id` | text | Required, defaults empty |
+| `credential_url` | text | Required, defaults empty |
+| `notes` | text | Required, defaults empty |
 | `sort_order` | integer | Required, defaults `0` |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |

@@ -12,13 +12,17 @@ import { ScrollArea } from "radix-ui";
 
 import {
   createCareerProfile,
+  deleteCareerCertification,
   deleteCareerEducation,
   deleteCareerExperience,
+  deleteCareerProject,
   deleteCareerSkill,
   updateCareerPreferences,
   updateCareerProfileSummary,
+  upsertCareerCertification,
   upsertCareerEducation,
   upsertCareerExperience,
+  upsertCareerProject,
   upsertCareerSkill,
 } from "@/graphql/careerProfile/careerProfile";
 import { MarkdownRenderer } from "@/components/markdown/MarkdownRenderer";
@@ -51,6 +55,29 @@ const emptySkill = {
   category: "General",
   proficiency: "",
   evidence: "",
+  sortOrder: 0,
+};
+
+const emptyProject = {
+  name: "",
+  role: "",
+  description: "",
+  outcomes: "",
+  technologies: "",
+  link: "",
+  startDate: "",
+  endDate: "",
+  sortOrder: 0,
+};
+
+const emptyCertification = {
+  name: "",
+  issuer: "",
+  issueDate: "",
+  expirationDate: "",
+  credentialId: "",
+  credentialUrl: "",
+  notes: "",
   sortOrder: 0,
 };
 
@@ -175,6 +202,8 @@ export function CareerProfileClient({ initialProfile }) {
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [editingSkill, setEditingSkill] = useState(null);
+  const [editingProject, setEditingProject] = useState(null);
+  const [editingCertification, setEditingCertification] = useState(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -226,6 +255,7 @@ export function CareerProfileClient({ initialProfile }) {
           headline: getFormValue(formData, "headline"),
           summary: getFormValue(formData, "summary"),
           careerGoals: getFormValue(formData, "careerGoals"),
+          additionalNotes: getFormValue(formData, "additionalNotes"),
         }),
       "Profile summary saved.",
     );
@@ -305,6 +335,62 @@ export function CareerProfileClient({ initialProfile }) {
 
     if (saved) {
       setEditingSkill(null);
+      form.reset();
+    }
+  }
+
+  async function handleProjectSubmit(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const saved = await runAction(
+      () =>
+        upsertCareerProject({
+          projectId: editingProject?.projectId,
+          name: getFormValue(formData, "name"),
+          role: getFormValue(formData, "role"),
+          description: getFormValue(formData, "description"),
+          outcomes: getFormValue(formData, "outcomes"),
+          technologies: getFormValue(formData, "technologies"),
+          link: getFormValue(formData, "link"),
+          startDate: getFormValue(formData, "startDate"),
+          endDate: getFormValue(formData, "endDate"),
+          sortOrder: editingProject?.sortOrder ?? profile.projects.length,
+        }),
+      "Project saved.",
+    );
+
+    if (saved) {
+      setEditingProject(null);
+      form.reset();
+    }
+  }
+
+  async function handleCertificationSubmit(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const saved = await runAction(
+      () =>
+        upsertCareerCertification({
+          certificationId: editingCertification?.certificationId,
+          name: getFormValue(formData, "name"),
+          issuer: getFormValue(formData, "issuer"),
+          issueDate: getFormValue(formData, "issueDate"),
+          expirationDate: getFormValue(formData, "expirationDate"),
+          credentialId: getFormValue(formData, "credentialId"),
+          credentialUrl: getFormValue(formData, "credentialUrl"),
+          notes: getFormValue(formData, "notes"),
+          sortOrder:
+            editingCertification?.sortOrder ?? profile.certifications.length,
+        }),
+      "Certification saved.",
+    );
+
+    if (saved) {
+      setEditingCertification(null);
       form.reset();
     }
   }
@@ -389,6 +475,13 @@ export function CareerProfileClient({ initialProfile }) {
                   placeholder="Roles, responsibilities, growth goals, or direction you want next."
                 />
               </Field>
+              <Field label="Additional notes">
+                <Textarea
+                  name="additionalNotes"
+                  defaultValue={profile.additionalNotes}
+                  placeholder="Resume-derived details, ambiguous evidence, or context that needs review."
+                />
+              </Field>
               <div>
                 <button
                   type="submit"
@@ -408,6 +501,12 @@ export function CareerProfileClient({ initialProfile }) {
               <div>
                 <h3 className="mb-2 text-sm font-semibold">Goals preview</h3>
                 <MarkdownPreview content={profile.careerGoals} />
+              </div>
+              <div>
+                <h3 className="mb-2 text-sm font-semibold">
+                  Additional notes preview
+                </h3>
+                <MarkdownPreview content={profile.additionalNotes} />
               </div>
             </div>
           </Section>
@@ -670,6 +769,217 @@ export function CareerProfileClient({ initialProfile }) {
               <IconButton
                 label="Cancel"
                 onClick={() => setEditingSkill(null)}
+                disabled={busy}
+              >
+                <Cross2Icon />
+              </IconButton>
+            </div>
+          </form>
+        ) : null}
+          </Section>
+
+          <Section
+        title="Projects"
+        action={
+          <IconButton
+            label="Add project"
+            onClick={() => setEditingProject(emptyProject)}
+            disabled={busy}
+          >
+            <PlusIcon />
+          </IconButton>
+        }
+      >
+        <div className="grid gap-3">
+          {profile.projects.map((item) => (
+            <ListItem
+              key={item.projectId}
+              title={item.name}
+              subtitle={[item.role, item.link].filter(Boolean).join(" · ")}
+              detail={[
+                item.description,
+                item.outcomes,
+                achievementMarkdown(item.technologies),
+              ]
+                .filter(Boolean)
+                .join("\n\n")}
+              disabled={busy}
+              onEdit={() =>
+                setEditingProject({
+                  ...item,
+                  technologies: arrayToText(item.technologies),
+                })
+              }
+              onDelete={() =>
+                runAction(
+                  () => deleteCareerProject(item.projectId),
+                  "Project deleted.",
+                )
+              }
+            />
+          ))}
+          {profile.projects.length === 0 ? (
+            <p className="text-sm text-foreground-muted">No projects yet.</p>
+          ) : null}
+        </div>
+
+        {editingProject ? (
+          <form
+            className="mt-4 grid gap-4 rounded-lg border border-border bg-surface p-4"
+            onSubmit={handleProjectSubmit}
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Project name">
+                <Input name="name" defaultValue={editingProject.name} required />
+              </Field>
+              <Field label="Role">
+                <Input name="role" defaultValue={editingProject.role} />
+              </Field>
+              <Field label="Start date">
+                <Input name="startDate" defaultValue={editingProject.startDate} />
+              </Field>
+              <Field label="End date">
+                <Input name="endDate" defaultValue={editingProject.endDate} />
+              </Field>
+              <Field label="Link">
+                <Input name="link" defaultValue={editingProject.link} />
+              </Field>
+            </div>
+            <Field label="Description">
+              <Textarea
+                name="description"
+                defaultValue={editingProject.description}
+              />
+            </Field>
+            <Field label="Outcomes">
+              <Textarea name="outcomes" defaultValue={editingProject.outcomes} />
+            </Field>
+            <Field label="Technologies or skills">
+              <Textarea
+                name="technologies"
+                defaultValue={editingProject.technologies}
+                placeholder="One technology or skill per line"
+              />
+            </Field>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={busy}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <CheckIcon />
+                Save
+              </button>
+              <IconButton
+                label="Cancel"
+                onClick={() => setEditingProject(null)}
+                disabled={busy}
+              >
+                <Cross2Icon />
+              </IconButton>
+            </div>
+          </form>
+        ) : null}
+          </Section>
+
+          <Section
+        title="Certifications and Awards"
+        action={
+          <IconButton
+            label="Add certification"
+            onClick={() => setEditingCertification(emptyCertification)}
+            disabled={busy}
+          >
+            <PlusIcon />
+          </IconButton>
+        }
+      >
+        <div className="grid gap-3">
+          {profile.certifications.map((item) => (
+            <ListItem
+              key={item.certificationId}
+              title={item.name}
+              subtitle={[item.issuer, item.issueDate].filter(Boolean).join(" · ")}
+              detail={item.notes}
+              disabled={busy}
+              onEdit={() => setEditingCertification(item)}
+              onDelete={() =>
+                runAction(
+                  () => deleteCareerCertification(item.certificationId),
+                  "Certification deleted.",
+                )
+              }
+            />
+          ))}
+          {profile.certifications.length === 0 ? (
+            <p className="text-sm text-foreground-muted">
+              No certifications or awards yet.
+            </p>
+          ) : null}
+        </div>
+
+        {editingCertification ? (
+          <form
+            className="mt-4 grid gap-4 rounded-lg border border-border bg-surface p-4"
+            onSubmit={handleCertificationSubmit}
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="Name">
+                <Input
+                  name="name"
+                  defaultValue={editingCertification.name}
+                  required
+                />
+              </Field>
+              <Field label="Issuer">
+                <Input
+                  name="issuer"
+                  defaultValue={editingCertification.issuer}
+                />
+              </Field>
+              <Field label="Issue date">
+                <Input
+                  name="issueDate"
+                  defaultValue={editingCertification.issueDate}
+                />
+              </Field>
+              <Field label="Expiration date">
+                <Input
+                  name="expirationDate"
+                  defaultValue={editingCertification.expirationDate}
+                />
+              </Field>
+              <Field label="Credential ID">
+                <Input
+                  name="credentialId"
+                  defaultValue={editingCertification.credentialId}
+                />
+              </Field>
+              <Field label="Credential URL">
+                <Input
+                  name="credentialUrl"
+                  defaultValue={editingCertification.credentialUrl}
+                />
+              </Field>
+            </div>
+            <Field label="Notes">
+              <Textarea
+                name="notes"
+                defaultValue={editingCertification.notes}
+              />
+            </Field>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={busy}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <CheckIcon />
+                Save
+              </button>
+              <IconButton
+                label="Cancel"
+                onClick={() => setEditingCertification(null)}
                 disabled={busy}
               >
                 <Cross2Icon />

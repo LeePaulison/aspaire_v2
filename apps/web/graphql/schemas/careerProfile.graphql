@@ -1,11 +1,17 @@
 type CareerProfile {
   profileId: String!
+  name: String!
+  focus: String!
+  isDefault: Boolean!
   headline: String!
   summary: String!
   careerGoals: String!
+  additionalNotes: String!
   experience: [CareerExperience!]!
   education: [CareerEducation!]!
   skills: [CareerSkill!]!
+  projects: [CareerProject!]!
+  certifications: [CareerCertification!]!
   preferences: CareerProfilePreferences
 }
 
@@ -42,6 +48,31 @@ type CareerSkill {
   sortOrder: Int!
 }
 
+type CareerProject {
+  projectId: String!
+  name: String!
+  role: String!
+  description: String!
+  outcomes: String!
+  technologies: [String!]!
+  link: String!
+  startDate: String!
+  endDate: String!
+  sortOrder: Int!
+}
+
+type CareerCertification {
+  certificationId: String!
+  name: String!
+  issuer: String!
+  issueDate: String!
+  expirationDate: String!
+  credentialId: String!
+  credentialUrl: String!
+  notes: String!
+  sortOrder: Int!
+}
+
 type CareerProfilePreferences {
   preferenceId: String!
   targetRoles: [String!]!
@@ -52,10 +83,25 @@ type CareerProfilePreferences {
   constraints: String!
 }
 
-input UpdateCareerProfileSummaryInput {
+input CreateCareerProfileInput {
+  name: String
+  focus: String
+  isDefault: Boolean
   headline: String
   summary: String
   careerGoals: String
+  additionalNotes: String
+}
+
+input UpdateCareerProfileSummaryInput {
+  profileId: String
+  name: String
+  focus: String
+  isDefault: Boolean
+  headline: String
+  summary: String
+  careerGoals: String
+  additionalNotes: String
 }
 
 input UpsertCareerExperienceInput {
@@ -91,6 +137,31 @@ input UpsertCareerSkillInput {
   sortOrder: Int
 }
 
+input UpsertCareerProjectInput {
+  projectId: String
+  name: String!
+  role: String!
+  description: String!
+  outcomes: String!
+  technologies: String!
+  link: String!
+  startDate: String!
+  endDate: String!
+  sortOrder: Int
+}
+
+input UpsertCareerCertificationInput {
+  certificationId: String
+  name: String!
+  issuer: String!
+  issueDate: String!
+  expirationDate: String!
+  credentialId: String!
+  credentialUrl: String!
+  notes: String!
+  sortOrder: Int
+}
+
 input UpdateCareerPreferencesInput {
   targetRoles: String!
   targetIndustries: String!
@@ -101,11 +172,12 @@ input UpdateCareerPreferencesInput {
 }
 
 extend type Query {
-  careerProfile: CareerProfile
+  careerProfiles: [CareerProfile!]!
+  careerProfile(profileId: String): CareerProfile
 }
 
 extend type Mutation {
-  createCareerProfile: CareerProfile!
+  createCareerProfile(input: CreateCareerProfileInput): CareerProfile!
   updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!
   upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!
   deleteCareerExperience(experienceId: String!): CareerProfile!
@@ -113,5 +185,9 @@ extend type Mutation {
   deleteCareerEducation(educationId: String!): CareerProfile!
   upsertCareerSkill(input: UpsertCareerSkillInput!): CareerProfile!
   deleteCareerSkill(skillId: String!): CareerProfile!
+  upsertCareerProject(input: UpsertCareerProjectInput!): CareerProfile!
+  deleteCareerProject(projectId: String!): CareerProfile!
+  upsertCareerCertification(input: UpsertCareerCertificationInput!): CareerProfile!
+  deleteCareerCertification(certificationId: String!): CareerProfile!
   updateCareerPreferences(input: UpdateCareerPreferencesInput!): CareerProfile!
 }

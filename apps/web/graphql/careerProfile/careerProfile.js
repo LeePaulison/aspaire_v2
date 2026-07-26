@@ -2,9 +2,13 @@ import { authRequest } from "@/graphql/authRequest";
 
 export const CAREER_PROFILE_FIELDS = `
   profileId
+  name
+  focus
+  isDefault
   headline
   summary
   careerGoals
+  additionalNotes
   experience {
     experienceId
     company
@@ -35,6 +39,29 @@ export const CAREER_PROFILE_FIELDS = `
     evidence
     sortOrder
   }
+  projects {
+    projectId
+    name
+    role
+    description
+    outcomes
+    technologies
+    link
+    startDate
+    endDate
+    sortOrder
+  }
+  certifications {
+    certificationId
+    name
+    issuer
+    issueDate
+    expirationDate
+    credentialId
+    credentialUrl
+    notes
+    sortOrder
+  }
   preferences {
     preferenceId
     targetRoles
@@ -46,15 +73,30 @@ export const CAREER_PROFILE_FIELDS = `
   }
 `;
 
-export async function createCareerProfile() {
+export async function listCareerProfiles() {
   const result = await authRequest({
     query: `
-      mutation CreateCareerProfile {
-        createCareerProfile {
+      query CareerProfiles {
+        careerProfiles {
           ${CAREER_PROFILE_FIELDS}
         }
       }
     `,
+  });
+
+  return result.careerProfiles;
+}
+
+export async function createCareerProfile(input = null) {
+  const result = await authRequest({
+    query: `
+      mutation CreateCareerProfile($input: CreateCareerProfileInput) {
+        createCareerProfile(input: $input) {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+    variables: { input },
   });
 
   return result.createCareerProfile;
@@ -163,6 +205,66 @@ export async function deleteCareerSkill(skillId) {
   });
 
   return result.deleteCareerSkill;
+}
+
+export async function upsertCareerProject(input) {
+  const result = await authRequest({
+    query: `
+      mutation UpsertCareerProject($input: UpsertCareerProjectInput!) {
+        upsertCareerProject(input: $input) {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+    variables: { input },
+  });
+
+  return result.upsertCareerProject;
+}
+
+export async function deleteCareerProject(projectId) {
+  const result = await authRequest({
+    query: `
+      mutation DeleteCareerProject($projectId: String!) {
+        deleteCareerProject(projectId: $projectId) {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+    variables: { projectId },
+  });
+
+  return result.deleteCareerProject;
+}
+
+export async function upsertCareerCertification(input) {
+  const result = await authRequest({
+    query: `
+      mutation UpsertCareerCertification($input: UpsertCareerCertificationInput!) {
+        upsertCareerCertification(input: $input) {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+    variables: { input },
+  });
+
+  return result.upsertCareerCertification;
+}
+
+export async function deleteCareerCertification(certificationId) {
+  const result = await authRequest({
+    query: `
+      mutation DeleteCareerCertification($certificationId: String!) {
+        deleteCareerCertification(certificationId: $certificationId) {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+    variables: { certificationId },
+  });
+
+  return result.deleteCareerCertification;
 }
 
 export async function updateCareerPreferences(input) {

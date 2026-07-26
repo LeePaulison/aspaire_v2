@@ -1,13 +1,18 @@
 import {
+  deleteCareerCertification,
   deleteCareerEducation,
   deleteCareerExperience,
+  deleteCareerProject,
   deleteCareerSkill,
-  ensureCareerProfile,
+  createCareerProfile,
   getCareerProfile,
+  listCareerProfiles,
   updateCareerPreferences,
   updateCareerProfileSummary,
+  upsertCareerCertification,
   upsertCareerEducation,
   upsertCareerExperience,
+  upsertCareerProject,
   upsertCareerSkill,
 } from "@/repositories/careerProfileRepository";
 
@@ -21,20 +26,23 @@ function requireUser(user) {
 
 export const careerProfileResolvers = {
   Query: {
-    careerProfile: async (_, __, { user }) => {
+    careerProfiles: async (_, __, { user }) => {
       const authenticatedUser = requireUser(user);
 
-      return getCareerProfile(authenticatedUser.id);
+      return listCareerProfiles(authenticatedUser.id);
+    },
+    careerProfile: async (_, { profileId } = {}, { user }) => {
+      const authenticatedUser = requireUser(user);
+
+      return getCareerProfile(authenticatedUser.id, profileId);
     },
   },
 
   Mutation: {
-    createCareerProfile: async (_, __, { user }) => {
+    createCareerProfile: async (_, { input } = {}, { user }) => {
       const authenticatedUser = requireUser(user);
 
-      await ensureCareerProfile(authenticatedUser.id);
-
-      return getCareerProfile(authenticatedUser.id);
+      return createCareerProfile(authenticatedUser.id, input ?? {});
     },
     updateCareerProfileSummary: async (_, { input }, { user }) => {
       const authenticatedUser = requireUser(user);
@@ -70,6 +78,26 @@ export const careerProfileResolvers = {
       const authenticatedUser = requireUser(user);
 
       return deleteCareerSkill(authenticatedUser.id, skillId);
+    },
+    upsertCareerProject: async (_, { input }, { user }) => {
+      const authenticatedUser = requireUser(user);
+
+      return upsertCareerProject(authenticatedUser.id, input);
+    },
+    deleteCareerProject: async (_, { projectId }, { user }) => {
+      const authenticatedUser = requireUser(user);
+
+      return deleteCareerProject(authenticatedUser.id, projectId);
+    },
+    upsertCareerCertification: async (_, { input }, { user }) => {
+      const authenticatedUser = requireUser(user);
+
+      return upsertCareerCertification(authenticatedUser.id, input);
+    },
+    deleteCareerCertification: async (_, { certificationId }, { user }) => {
+      const authenticatedUser = requireUser(user);
+
+      return deleteCareerCertification(authenticatedUser.id, certificationId);
     },
     updateCareerPreferences: async (_, { input }, { user }) => {
       const authenticatedUser = requireUser(user);

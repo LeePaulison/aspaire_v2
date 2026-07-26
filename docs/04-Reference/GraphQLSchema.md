@@ -168,6 +168,8 @@ Types:
 * `CareerExperience`
 * `CareerEducation`
 * `CareerSkill`
+* `CareerProject`
+* `CareerCertification`
 * `CareerProfilePreferences`
 
 Inputs:
@@ -176,15 +178,18 @@ Inputs:
 * `UpsertCareerExperienceInput`
 * `UpsertCareerEducationInput`
 * `UpsertCareerSkillInput`
+* `UpsertCareerProjectInput`
+* `UpsertCareerCertificationInput`
 * `UpdateCareerPreferencesInput`
 
 Queries:
 
-* `careerProfile: CareerProfile`
+* `careerProfiles: [CareerProfile!]!`
+* `careerProfile(profileId: String): CareerProfile`
 
 Mutations:
 
-* `createCareerProfile: CareerProfile!`
+* `createCareerProfile(input: CreateCareerProfileInput): CareerProfile!`
 * `updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!`
 * `upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!`
 * `deleteCareerExperience(experienceId: String!): CareerProfile!`
@@ -192,12 +197,17 @@ Mutations:
 * `deleteCareerEducation(educationId: String!): CareerProfile!`
 * `upsertCareerSkill(input: UpsertCareerSkillInput!): CareerProfile!`
 * `deleteCareerSkill(skillId: String!): CareerProfile!`
+* `upsertCareerProject(input: UpsertCareerProjectInput!): CareerProfile!`
+* `deleteCareerProject(projectId: String!): CareerProfile!`
+* `upsertCareerCertification(input: UpsertCareerCertificationInput!): CareerProfile!`
+* `deleteCareerCertification(certificationId: String!): CareerProfile!`
 * `updateCareerPreferences(input: UpdateCareerPreferencesInput!): CareerProfile!`
 
 Purpose:
 
 * Create, read, and update one authenticated user's career profile.
-* Manage profile summary, experience, education, skills, and job/location preferences.
+* Support multiple profile variants per authenticated user while preserving default-profile behavior for existing UI.
+* Manage profile name, focus, default state, summary, additional notes, experience, education, skills, projects, certifications, and job/location preferences.
 * Preserve user ownership by deriving `userId` from GraphQL context rather than client input.
 
 ---
