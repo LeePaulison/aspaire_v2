@@ -190,6 +190,7 @@ Queries:
 Mutations:
 
 * `createCareerProfile(input: CreateCareerProfileInput): CareerProfile!`
+* `deleteCareerProfile(profileId: String!): [CareerProfile!]!`
 * `updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!`
 * `upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!`
 * `deleteCareerExperience(experienceId: String!): CareerProfile!`
@@ -205,9 +206,10 @@ Mutations:
 
 Purpose:
 
-* Create, read, and update one authenticated user's career profile.
-* Support multiple profile variants per authenticated user while preserving default-profile behavior for existing UI.
+* Create, list, read, update, and delete authenticated user career profile variants.
+* Support multiple profile variants per authenticated user while preserving exactly one default profile where profiles exist.
 * Manage profile name, focus, default state, summary, additional notes, experience, education, skills, projects, certifications, and job/location preferences.
+* Expose date-bearing fields as nullable strings backed by PostgreSQL `date` columns.
 * Preserve user ownership by deriving `userId` from GraphQL context rather than client input.
 
 ---

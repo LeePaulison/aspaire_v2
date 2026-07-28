@@ -235,7 +235,7 @@ Defined in `apps/web/drizzle/*.js`.
 
 ## `career_profiles`
 
-One durable career profile per authenticated user.
+Durable career profile variants for authenticated users. A user may have multiple profiles, with at most one marked default.
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -267,8 +267,8 @@ Stores work experience rows for a career profile.
 | `company` | text | Required, defaults empty |
 | `title` | text | Required, defaults empty |
 | `location` | text | Required, defaults empty |
-| `start_date` | text | Required, defaults empty |
-| `end_date` | text | Required, defaults empty |
+| `start_date` | date | Optional |
+| `end_date` | date | Optional |
 | `is_current` | boolean | Required, defaults false |
 | `description` | text | Required, defaults empty |
 | `achievements` | jsonb | Required, defaults empty array |
@@ -287,8 +287,8 @@ Stores education rows for a career profile.
 | `institution` | text | Required, defaults empty |
 | `degree` | text | Required, defaults empty |
 | `field_of_study` | text | Required, defaults empty |
-| `start_date` | text | Required, defaults empty |
-| `end_date` | text | Required, defaults empty |
+| `start_date` | date | Optional |
+| `end_date` | date | Optional |
 | `notes` | text | Required, defaults empty |
 | `sort_order` | integer | Required, defaults `0` |
 | `created_at` | timestamp with timezone | Required, defaults now |
@@ -324,8 +324,8 @@ Stores notable projects for a career profile.
 | `outcomes` | text | Required, defaults empty |
 | `technologies` | jsonb | Required, defaults empty array |
 | `link` | text | Required, defaults empty |
-| `start_date` | text | Required, defaults empty |
-| `end_date` | text | Required, defaults empty |
+| `start_date` | date | Optional |
+| `end_date` | date | Optional |
 | `sort_order` | integer | Required, defaults `0` |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |
@@ -340,8 +340,8 @@ Stores certifications, credentials, awards, and similar career proof points for 
 | `profile_id` | text | Required, references `career_profiles.id`, cascade delete |
 | `name` | text | Required |
 | `issuer` | text | Required, defaults empty |
-| `issue_date` | text | Required, defaults empty |
-| `expiration_date` | text | Required, defaults empty |
+| `issue_date` | date | Optional |
+| `expiration_date` | date | Optional |
 | `credential_id` | text | Required, defaults empty |
 | `credential_url` | text | Required, defaults empty |
 | `notes` | text | Required, defaults empty |

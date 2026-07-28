@@ -127,8 +127,10 @@ Create the durable user career context that future domains and AI workflows can 
 * Career profile data model implemented
 * Profile repository implemented
 * GraphQL/API operations implemented
-* Profile creation and editing UI implemented
-* Basic validation implemented
+* Multi-profile creation, selection, editing, deletion, and defaulting UI implemented
+* Read-only profile display with edit toolbar implemented
+* Projects and certifications supported in profile persistence and UI
+* Nullable date storage, date picker inputs, displayed date ranges, and date-range validation implemented
 * Profile context available to AI workflows
 
 ## Core Capabilities

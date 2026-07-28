@@ -1,6 +1,7 @@
 import { relations, sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -54,8 +55,8 @@ export const careerProfileExperience = pgTable(
     company: text("company").notNull().default(""),
     title: text("title").notNull().default(""),
     location: text("location").notNull().default(""),
-    startDate: text("start_date").notNull().default(""),
-    endDate: text("end_date").notNull().default(""),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
     isCurrent: boolean("is_current").notNull().default(false),
     description: text("description").notNull().default(""),
     achievements: jsonb("achievements").notNull().default([]),
@@ -82,8 +83,8 @@ export const careerProfileEducation = pgTable(
     institution: text("institution").notNull().default(""),
     degree: text("degree").notNull().default(""),
     fieldOfStudy: text("field_of_study").notNull().default(""),
-    startDate: text("start_date").notNull().default(""),
-    endDate: text("end_date").notNull().default(""),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
     notes: text("notes").notNull().default(""),
     sortOrder: integer("sort_order").notNull().default(0),
 
@@ -138,8 +139,8 @@ export const careerProfileProjects = pgTable(
     outcomes: text("outcomes").notNull().default(""),
     technologies: jsonb("technologies").notNull().default([]),
     link: text("link").notNull().default(""),
-    startDate: text("start_date").notNull().default(""),
-    endDate: text("end_date").notNull().default(""),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
     sortOrder: integer("sort_order").notNull().default(0),
 
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -165,8 +166,8 @@ export const careerProfileCertifications = pgTable(
 
     name: text("name").notNull(),
     issuer: text("issuer").notNull().default(""),
-    issueDate: text("issue_date").notNull().default(""),
-    expirationDate: text("expiration_date").notNull().default(""),
+    issueDate: date("issue_date"),
+    expirationDate: date("expiration_date"),
     credentialId: text("credential_id").notNull().default(""),
     credentialUrl: text("credential_url").notNull().default(""),
     notes: text("notes").notNull().default(""),

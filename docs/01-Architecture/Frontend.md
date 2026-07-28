@@ -153,7 +153,11 @@ apps/web/components/career-profile/CareerProfileClient.js
 
 The UI is protected by the shared authenticated route group and uses GraphQL helpers to load and persist user-owned profile data.
 
+The Career Profile page supports multiple profile variants. The left pane lists profiles and supports selection, edit, delete, and new-profile actions. The selected profile detail is display-only with a toolbar for edit, delete, and set-default actions. Editing opens a larger dialog that contains top-level profile fields plus experience, education, skills, projects, certifications, and preferences.
+
 Narrative profile fields accept Markdown text in editable textareas and render saved content through the shared Markdown renderer. This keeps profile context readable while preserving plain text entry and storage.
+
+Date-bearing section forms use native date pickers and React Hook Form with Yup validation for start/end date rules. Read-only profile displays show formatted date ranges when date values are available.
 
 ---
 

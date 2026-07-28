@@ -36,6 +36,16 @@ function normalizeOptionalText(value) {
   return typeof value === "string" ? value.trim() : undefined;
 }
 
+function normalizeDate(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(trimmedValue) ? trimmedValue : null;
+}
+
 function normalizeProfileName(value) {
   return normalizeText(value) || "Default Profile";
 }
@@ -128,17 +138,68 @@ export async function ensureCareerProfile(userId, profileId) {
 }
 
 export async function listCareerProfiles(userId) {
-  return db
+  const profileRows = await db
     .select()
     .from(careerProfiles)
     .where(eq(careerProfiles.userId, userId))
     .orderBy(desc(careerProfiles.isDefault), asc(careerProfiles.name));
+
+  return Promise.all(
+    profileRows.map((profile) => getCareerProfile(userId, profile.profileId)),
+  );
 }
 
 export async function createCareerProfile(userId, input = {}) {
   const profile = await createProfileRecord(userId, input);
 
   return getCareerProfile(userId, profile.profileId);
+}
+
+export async function deleteCareerProfile(userId, profileId) {
+  const profile = await getProfileRecord(userId, profileId);
+
+  if (!profile) {
+    return listCareerProfiles(userId);
+  }
+
+  const profiles = await listCareerProfiles(userId);
+
+  if (profiles.length <= 1) {
+    throw new Error("At least one career profile is required");
+  }
+
+  await db
+    .delete(careerProfiles)
+    .where(
+      and(
+        eq(careerProfiles.userId, userId),
+        eq(careerProfiles.profileId, profileId),
+      ),
+    );
+
+  if (profile.isDefault) {
+    const [nextProfile] = await db
+      .select()
+      .from(careerProfiles)
+      .where(eq(careerProfiles.userId, userId))
+      .orderBy(asc(careerProfiles.createdAt))
+      .limit(1);
+
+    if (nextProfile) {
+      await clearDefaultProfile(userId);
+      await db
+        .update(careerProfiles)
+        .set({ isDefault: true, updatedAt: new Date() })
+        .where(
+          and(
+            eq(careerProfiles.userId, userId),
+            eq(careerProfiles.profileId, nextProfile.profileId),
+          ),
+        );
+    }
+  }
+
+  return listCareerProfiles(userId);
 }
 
 export async function getCareerProfile(userId, profileId) {
@@ -239,13 +300,18 @@ export async function updateCareerProfileSummary(userId, input) {
 }
 
 export async function upsertCareerExperience(userId, input) {
-  const profile = await ensureCareerProfile(userId);
+  const profile = await ensureCareerProfile(userId, input.profileId);
+
+  if (!profile) {
+    return null;
+  }
+
   const values = {
     company: normalizeText(input.company),
     title: normalizeText(input.title),
     location: normalizeText(input.location),
-    startDate: normalizeText(input.startDate),
-    endDate: normalizeText(input.endDate),
+    startDate: normalizeDate(input.startDate),
+    endDate: normalizeDate(input.endDate),
     isCurrent: Boolean(input.isCurrent),
     description: normalizeText(input.description),
     achievements: parseList(input.achievements),
@@ -274,8 +340,12 @@ export async function upsertCareerExperience(userId, input) {
   return getCareerProfile(userId);
 }
 
-export async function deleteCareerExperience(userId, experienceId) {
-  const profile = await ensureCareerProfile(userId);
+export async function deleteCareerExperience(userId, experienceId, profileId) {
+  const profile = await ensureCareerProfile(userId, profileId);
+
+  if (!profile) {
+    return null;
+  }
 
   await db
     .delete(careerProfileExperience)
@@ -290,13 +360,18 @@ export async function deleteCareerExperience(userId, experienceId) {
 }
 
 export async function upsertCareerEducation(userId, input) {
-  const profile = await ensureCareerProfile(userId);
+  const profile = await ensureCareerProfile(userId, input.profileId);
+
+  if (!profile) {
+    return null;
+  }
+
   const values = {
     institution: normalizeText(input.institution),
     degree: normalizeText(input.degree),
     fieldOfStudy: normalizeText(input.fieldOfStudy),
-    startDate: normalizeText(input.startDate),
-    endDate: normalizeText(input.endDate),
+    startDate: normalizeDate(input.startDate),
+    endDate: normalizeDate(input.endDate),
     notes: normalizeText(input.notes),
     sortOrder: Number.isFinite(input.sortOrder) ? input.sortOrder : 0,
     updatedAt: new Date(),
@@ -323,8 +398,12 @@ export async function upsertCareerEducation(userId, input) {
   return getCareerProfile(userId);
 }
 
-export async function deleteCareerEducation(userId, educationId) {
-  const profile = await ensureCareerProfile(userId);
+export async function deleteCareerEducation(userId, educationId, profileId) {
+  const profile = await ensureCareerProfile(userId, profileId);
+
+  if (!profile) {
+    return null;
+  }
 
   await db
     .delete(careerProfileEducation)
@@ -339,7 +418,12 @@ export async function deleteCareerEducation(userId, educationId) {
 }
 
 export async function upsertCareerSkill(userId, input) {
-  const profile = await ensureCareerProfile(userId);
+  const profile = await ensureCareerProfile(userId, input.profileId);
+
+  if (!profile) {
+    return null;
+  }
+
   const name = normalizeText(input.name);
 
   if (!name) {
@@ -376,8 +460,12 @@ export async function upsertCareerSkill(userId, input) {
   return getCareerProfile(userId);
 }
 
-export async function deleteCareerSkill(userId, skillId) {
-  const profile = await ensureCareerProfile(userId);
+export async function deleteCareerSkill(userId, skillId, profileId) {
+  const profile = await ensureCareerProfile(userId, profileId);
+
+  if (!profile) {
+    return null;
+  }
 
   await db
     .delete(careerProfileSkills)
@@ -392,7 +480,12 @@ export async function deleteCareerSkill(userId, skillId) {
 }
 
 export async function upsertCareerProject(userId, input) {
-  const profile = await ensureCareerProfile(userId);
+  const profile = await ensureCareerProfile(userId, input.profileId);
+
+  if (!profile) {
+    return null;
+  }
+
   const name = normalizeText(input.name);
 
   if (!name) {
@@ -406,8 +499,8 @@ export async function upsertCareerProject(userId, input) {
     outcomes: normalizeText(input.outcomes),
     technologies: parseList(input.technologies),
     link: normalizeText(input.link),
-    startDate: normalizeText(input.startDate),
-    endDate: normalizeText(input.endDate),
+    startDate: normalizeDate(input.startDate),
+    endDate: normalizeDate(input.endDate),
     sortOrder: Number.isFinite(input.sortOrder) ? input.sortOrder : 0,
     updatedAt: new Date(),
   };
@@ -433,8 +526,12 @@ export async function upsertCareerProject(userId, input) {
   return getCareerProfile(userId);
 }
 
-export async function deleteCareerProject(userId, projectId) {
-  const profile = await ensureCareerProfile(userId);
+export async function deleteCareerProject(userId, projectId, profileId) {
+  const profile = await ensureCareerProfile(userId, profileId);
+
+  if (!profile) {
+    return null;
+  }
 
   await db
     .delete(careerProfileProjects)
@@ -449,7 +546,12 @@ export async function deleteCareerProject(userId, projectId) {
 }
 
 export async function upsertCareerCertification(userId, input) {
-  const profile = await ensureCareerProfile(userId);
+  const profile = await ensureCareerProfile(userId, input.profileId);
+
+  if (!profile) {
+    return null;
+  }
+
   const name = normalizeText(input.name);
 
   if (!name) {
@@ -459,8 +561,8 @@ export async function upsertCareerCertification(userId, input) {
   const values = {
     name,
     issuer: normalizeText(input.issuer),
-    issueDate: normalizeText(input.issueDate),
-    expirationDate: normalizeText(input.expirationDate),
+    issueDate: normalizeDate(input.issueDate),
+    expirationDate: normalizeDate(input.expirationDate),
     credentialId: normalizeText(input.credentialId),
     credentialUrl: normalizeText(input.credentialUrl),
     notes: normalizeText(input.notes),
@@ -489,8 +591,12 @@ export async function upsertCareerCertification(userId, input) {
   return getCareerProfile(userId);
 }
 
-export async function deleteCareerCertification(userId, certificationId) {
-  const profile = await ensureCareerProfile(userId);
+export async function deleteCareerCertification(userId, certificationId, profileId) {
+  const profile = await ensureCareerProfile(userId, profileId);
+
+  if (!profile) {
+    return null;
+  }
 
   await db
     .delete(careerProfileCertifications)
@@ -505,7 +611,12 @@ export async function deleteCareerCertification(userId, certificationId) {
 }
 
 export async function updateCareerPreferences(userId, input) {
-  const profile = await ensureCareerProfile(userId);
+  const profile = await ensureCareerProfile(userId, input.profileId);
+
+  if (!profile) {
+    return null;
+  }
+
   const values = {
     targetRoles: parseList(input.targetRoles),
     targetIndustries: parseList(input.targetIndustries),

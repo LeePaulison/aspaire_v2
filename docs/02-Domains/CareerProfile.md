@@ -20,7 +20,7 @@ In first-run setup, Career Profile is the primary path for users who do not have
 
 The Career Profile foundation slice is implemented.
 
-Current implementation includes PostgreSQL schema, repository access, GraphQL operations, and a protected profile editing UI.
+Current implementation includes PostgreSQL schema, repository access, GraphQL operations, and a protected multi-profile UI.
 
 ## Roadmap Phase
 
@@ -69,13 +69,14 @@ The profile should feel useful even before every field is complete.
 
 # User Capabilities
 
-Initial capabilities should include:
+Implemented capabilities include:
 
-* Create a career profile
+* Create multiple focused career profile variants
+* Select, edit, delete, and set a default career profile
 * Start setup manually when the user does not have a resume
 * Review and edit a draft profile generated from imported resume content
-* View the current profile
-* Edit profile sections independently
+* View the selected profile in a read-only display
+* Edit profile sections in a large review dialog
 * Save professional summary information
 * Add and manage work experience
 * Add and manage education
@@ -128,8 +129,8 @@ Expected fields include:
 * Title
 * Location
 * Work mode
-* Start date
-* End date
+* Start date as an optional date
+* End date as an optional date
 * Current-role flag
 * Description
 * Responsibilities
@@ -147,8 +148,8 @@ Expected fields include:
 * Institution
 * Degree or program
 * Field of study
-* Start date
-* End date
+* Start date as an optional date
+* End date as an optional date
 * Completion status
 * Notes
 
@@ -179,8 +180,8 @@ Expected fields include:
 * Outcomes
 * Technologies or skills used
 * Link
-* Start date
-* End date
+* Start date as an optional date
+* End date as an optional date
 
 Projects should be available as reusable evidence for resumes, interview preparation, and AI-assisted career storytelling.
 
@@ -192,8 +193,8 @@ Expected fields include:
 
 * Name
 * Issuer
-* Issue date
-* Expiration date
+* Issue date as an optional date
+* Expiration date as an optional date
 * Credential ID
 * Credential URL
 * Notes
@@ -248,7 +249,7 @@ Expected fields include:
 
 Career Profile data should default to PostgreSQL through Drizzle because it is structured, relational, user-owned application data.
 
-The initial schema should favor clarity over premature normalization. Profile sections can begin as focused relational tables tied to the owning user and profile. Highly variable narrative content can be stored as text fields or JSON only where that reduces unnecessary schema churn.
+The schema favors clarity over premature normalization. Profile sections are focused relational tables tied to the owning profile. Highly variable narrative content can be stored as text fields or JSON only where that reduces unnecessary schema churn.
 
 Expected table direction:
 
@@ -263,12 +264,12 @@ Expected table direction:
 Each table should include:
 
 * Stable primary key
-* Owning `user_id`
+* Owning profile reference
 * Timestamps
 * Soft ordering where the user controls list order
 * Enough denormalized display fields to support straightforward UI rendering
 
-Future schema design should decide whether the profile is one-to-one with the user or whether multiple profile variants are needed. The initial assumption is one active career profile per user.
+AspAIre supports multiple career profile variants per authenticated user. Exactly one profile can be marked default. Profile variants prevent one durable profile from becoming bloated by unrelated professional identities or resume directions.
 
 ---
 
@@ -291,13 +292,15 @@ If profile sharing is introduced later, it should be designed as an explicit fea
 
 The Career Profile domain should expose focused GraphQL operations rather than a single unstructured profile blob.
 
-Implemented query:
+Implemented queries:
 
+* `careerProfiles`
 * `careerProfile`
 
 Implemented foundation mutations:
 
 * `createCareerProfile`
+* `deleteCareerProfile`
 * `updateCareerProfileSummary`
 * `upsertCareerExperience`
 * `deleteCareerExperience`
@@ -305,6 +308,10 @@ Implemented foundation mutations:
 * `deleteCareerEducation`
 * `upsertCareerSkill`
 * `deleteCareerSkill`
+* `upsertCareerProject`
+* `deleteCareerProject`
+* `upsertCareerCertification`
+* `deleteCareerCertification`
 * `updateCareerPreferences`
 
 Deferred mutation candidates include:
@@ -312,12 +319,8 @@ Deferred mutation candidates include:
 * `reorderCareerExperience`
 * `reorderCareerEducation`
 * `reorderCareerSkill`
-* `addCareerProject`
-* `updateCareerProject`
-* `deleteCareerProject`
-* `addCareerCertification`
-* `updateCareerCertification`
-* `deleteCareerCertification`
+* `reorderCareerProject`
+* `reorderCareerCertification`
 
 Resolvers should validate authentication first, then delegate persistence to a career profile repository.
 
@@ -330,7 +333,9 @@ The repository should own all persistence behavior for the domain.
 Expected repository responsibilities include:
 
 * Fetch the authenticated user's full profile
+* List the authenticated user's profile variants
 * Create the initial profile
+* Delete non-final profiles and preserve a default profile
 * Update top-level profile fields
 * Add, update, delete, and reorder profile sections
 * Enforce user scoping at the query layer
@@ -344,16 +349,14 @@ The repository should not prepare AI prompts. AI context preparation should live
 
 The initial Career Profile UI should support progressive completion.
 
-Expected views:
+Implemented views:
 
 * Profile overview
-* Edit summary
-* Edit experience
-* Edit education
-* Edit skills
-* Edit projects
-* Edit certifications
-* Edit preferences
+* Profile variant selection
+* New profile form
+* Display-only selected profile detail
+* Toolbar actions for edit, delete, and set default
+* Edit dialog covering profile summary, experience, education, skills, projects, certifications, and preferences
 
 The current foundation route is:
 
@@ -361,18 +364,19 @@ The current foundation route is:
 /career-profile
 ```
 
-It supports progressive editing of summary, experience, education, skills, and job/location preferences.
+It supports progressive editing of summary, experience, education, skills, projects, certifications, and job/location preferences. The selected profile page is read-only; durable edits happen through explicit form submissions in the edit dialog.
 
 The UI should be practical and work-focused. It should prioritize scanning, editing, completeness, and reuse rather than a marketing-style profile page.
 
 Useful interface patterns include:
 
 * Section-based editing
-* Inline add and edit actions
+* Dialog-based add and edit actions
 * Empty states for incomplete sections
 * Clear saved and unsaved states
 * Lightweight validation feedback
 * Reorder controls for list sections
+* Date pickers and displayed date ranges for date-bearing sections
 
 The profile should not require a long all-at-once form before the user can save progress.
 
@@ -410,14 +414,16 @@ Initial validation should protect data quality without making profile creation b
 Recommended rules:
 
 * Text fields should have reasonable length limits
-* Dates should allow month-level precision where appropriate
+* Date-bearing fields should use nullable `date` storage
+* Date pickers should submit ISO `YYYY-MM-DD` values or blank values
 * End date should not precede start date
 * Current-role entries should not require an end date
+* Certification expiration date should not precede issue date
 * URLs should be validated when present
 * Skill names should not be blank
 * List item ordering should be numeric and user-scoped
 
-Validation should be shared where practical between GraphQL inputs and UI forms.
+Validation should be shared where practical between GraphQL inputs and UI forms. The current UI uses React Hook Form with Yup schemas for date-bearing Career Profile section validation.
 
 ---
 
@@ -444,6 +450,7 @@ Initial implementation should include focused tests for:
 * Repository user scoping
 * Resolver authentication checks
 * Creating and updating profile data
+* Multiple profile selection, defaulting, and deletion behavior
 * Adding, editing, deleting, and reordering list sections
 * Validation of dates, URLs, and required fields
 * UI behavior for empty, partial, and populated profiles where practical
@@ -475,18 +482,19 @@ The first implementation slice should be intentionally small and complete.
 
 Implemented foundation scope:
 
-* One profile per authenticated user
+* Multiple profile variants per authenticated user
+* Default profile selection
 * Top-level profile fields
 * Work experience
 * Education
 * Skills
+* Projects
+* Certifications and awards
 * Career goals
 * Job and location preferences
 * Repository
 * GraphQL query and mutations
-* Profile overview and edit UI
-
-Projects and certifications are deferred to a profile refinement slice.
+* Profile selection, read-only overview, toolbar, and edit dialog UI
 
 Focused automated tests for Career Profile authorization, persistence, and validation should be added as the slice hardens.
 
@@ -496,13 +504,11 @@ Focused automated tests for Career Profile authorization, persistence, and valid
 
 These questions should be resolved before or during implementation:
 
-* Should users have one career profile or multiple profile variants?
 * Which fields are required during first-run onboarding?
 * Should compensation expectations be captured in the first version?
 * Should work authorization be captured now or deferred?
 * Should skills be free-form initially, normalized immediately, or normalized later?
 * Should resume parsing be allowed to populate profile drafts before the resume library exists?
-* Should projects and certifications ship in the first slice or a follow-up refinement slice?
 * What profile context should be sent to AI workflows by default?
 * Which profile fields are safe and useful to prefill from an imported resume during first-run setup?
 
@@ -512,10 +518,11 @@ These questions should be resolved before or during implementation:
 
 The Career Profile domain is complete for its foundation phase when:
 
-* Authenticated users can create and edit their career profile
+* Authenticated users can create, select, edit, delete, and default career profiles
 * Profile data persists in application-owned storage
 * GraphQL operations enforce authentication and ownership
 * The UI supports partial and complete profiles
+* Date-bearing sections validate start/end ranges before submission
 * Structured profile context can be retrieved for future AI workflows
 * Tests cover the important authorization and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation

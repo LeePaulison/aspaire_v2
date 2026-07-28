@@ -102,6 +102,21 @@ export async function createCareerProfile(input = null) {
   return result.createCareerProfile;
 }
 
+export async function deleteCareerProfile(profileId) {
+  const result = await authRequest({
+    query: `
+      mutation DeleteCareerProfile($profileId: String!) {
+        deleteCareerProfile(profileId: $profileId) {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+    variables: { profileId },
+  });
+
+  return result.deleteCareerProfile;
+}
+
 export async function updateCareerProfileSummary(input) {
   const result = await authRequest({
     query: `
@@ -132,16 +147,16 @@ export async function upsertCareerExperience(input) {
   return result.upsertCareerExperience;
 }
 
-export async function deleteCareerExperience(experienceId) {
+export async function deleteCareerExperience(experienceId, profileId = null) {
   const result = await authRequest({
     query: `
-      mutation DeleteCareerExperience($experienceId: String!) {
-        deleteCareerExperience(experienceId: $experienceId) {
+      mutation DeleteCareerExperience($experienceId: String!, $profileId: String) {
+        deleteCareerExperience(experienceId: $experienceId, profileId: $profileId) {
           ${CAREER_PROFILE_FIELDS}
         }
       }
     `,
-    variables: { experienceId },
+    variables: { experienceId, profileId },
   });
 
   return result.deleteCareerExperience;
@@ -162,16 +177,16 @@ export async function upsertCareerEducation(input) {
   return result.upsertCareerEducation;
 }
 
-export async function deleteCareerEducation(educationId) {
+export async function deleteCareerEducation(educationId, profileId = null) {
   const result = await authRequest({
     query: `
-      mutation DeleteCareerEducation($educationId: String!) {
-        deleteCareerEducation(educationId: $educationId) {
+      mutation DeleteCareerEducation($educationId: String!, $profileId: String) {
+        deleteCareerEducation(educationId: $educationId, profileId: $profileId) {
           ${CAREER_PROFILE_FIELDS}
         }
       }
     `,
-    variables: { educationId },
+    variables: { educationId, profileId },
   });
 
   return result.deleteCareerEducation;
@@ -192,16 +207,16 @@ export async function upsertCareerSkill(input) {
   return result.upsertCareerSkill;
 }
 
-export async function deleteCareerSkill(skillId) {
+export async function deleteCareerSkill(skillId, profileId = null) {
   const result = await authRequest({
     query: `
-      mutation DeleteCareerSkill($skillId: String!) {
-        deleteCareerSkill(skillId: $skillId) {
+      mutation DeleteCareerSkill($skillId: String!, $profileId: String) {
+        deleteCareerSkill(skillId: $skillId, profileId: $profileId) {
           ${CAREER_PROFILE_FIELDS}
         }
       }
     `,
-    variables: { skillId },
+    variables: { skillId, profileId },
   });
 
   return result.deleteCareerSkill;
@@ -222,16 +237,16 @@ export async function upsertCareerProject(input) {
   return result.upsertCareerProject;
 }
 
-export async function deleteCareerProject(projectId) {
+export async function deleteCareerProject(projectId, profileId = null) {
   const result = await authRequest({
     query: `
-      mutation DeleteCareerProject($projectId: String!) {
-        deleteCareerProject(projectId: $projectId) {
+      mutation DeleteCareerProject($projectId: String!, $profileId: String) {
+        deleteCareerProject(projectId: $projectId, profileId: $profileId) {
           ${CAREER_PROFILE_FIELDS}
         }
       }
     `,
-    variables: { projectId },
+    variables: { projectId, profileId },
   });
 
   return result.deleteCareerProject;
@@ -252,16 +267,16 @@ export async function upsertCareerCertification(input) {
   return result.upsertCareerCertification;
 }
 
-export async function deleteCareerCertification(certificationId) {
+export async function deleteCareerCertification(certificationId, profileId = null) {
   const result = await authRequest({
     query: `
-      mutation DeleteCareerCertification($certificationId: String!) {
-        deleteCareerCertification(certificationId: $certificationId) {
+      mutation DeleteCareerCertification($certificationId: String!, $profileId: String) {
+        deleteCareerCertification(certificationId: $certificationId, profileId: $profileId) {
           ${CAREER_PROFILE_FIELDS}
         }
       }
     `,
-    variables: { certificationId },
+    variables: { certificationId, profileId },
   });
 
   return result.deleteCareerCertification;

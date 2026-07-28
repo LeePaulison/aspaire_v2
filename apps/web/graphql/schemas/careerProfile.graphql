@@ -20,8 +20,8 @@ type CareerExperience {
   company: String!
   title: String!
   location: String!
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
   isCurrent: Boolean!
   description: String!
   achievements: [String!]!
@@ -33,8 +33,8 @@ type CareerEducation {
   institution: String!
   degree: String!
   fieldOfStudy: String!
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
   notes: String!
   sortOrder: Int!
 }
@@ -56,8 +56,8 @@ type CareerProject {
   outcomes: String!
   technologies: [String!]!
   link: String!
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
   sortOrder: Int!
 }
 
@@ -65,8 +65,8 @@ type CareerCertification {
   certificationId: String!
   name: String!
   issuer: String!
-  issueDate: String!
-  expirationDate: String!
+  issueDate: String
+  expirationDate: String
   credentialId: String!
   credentialUrl: String!
   notes: String!
@@ -105,12 +105,13 @@ input UpdateCareerProfileSummaryInput {
 }
 
 input UpsertCareerExperienceInput {
+  profileId: String
   experienceId: String
   company: String!
   title: String!
   location: String!
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
   isCurrent: Boolean!
   description: String!
   achievements: String!
@@ -118,17 +119,19 @@ input UpsertCareerExperienceInput {
 }
 
 input UpsertCareerEducationInput {
+  profileId: String
   educationId: String
   institution: String!
   degree: String!
   fieldOfStudy: String!
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
   notes: String!
   sortOrder: Int
 }
 
 input UpsertCareerSkillInput {
+  profileId: String
   skillId: String
   name: String!
   category: String!
@@ -138,6 +141,7 @@ input UpsertCareerSkillInput {
 }
 
 input UpsertCareerProjectInput {
+  profileId: String
   projectId: String
   name: String!
   role: String!
@@ -145,17 +149,18 @@ input UpsertCareerProjectInput {
   outcomes: String!
   technologies: String!
   link: String!
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
   sortOrder: Int
 }
 
 input UpsertCareerCertificationInput {
+  profileId: String
   certificationId: String
   name: String!
   issuer: String!
-  issueDate: String!
-  expirationDate: String!
+  issueDate: String
+  expirationDate: String
   credentialId: String!
   credentialUrl: String!
   notes: String!
@@ -163,6 +168,7 @@ input UpsertCareerCertificationInput {
 }
 
 input UpdateCareerPreferencesInput {
+  profileId: String
   targetRoles: String!
   targetIndustries: String!
   locations: String!
@@ -178,16 +184,17 @@ extend type Query {
 
 extend type Mutation {
   createCareerProfile(input: CreateCareerProfileInput): CareerProfile!
+  deleteCareerProfile(profileId: String!): [CareerProfile!]!
   updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!
   upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!
-  deleteCareerExperience(experienceId: String!): CareerProfile!
+  deleteCareerExperience(experienceId: String!, profileId: String): CareerProfile!
   upsertCareerEducation(input: UpsertCareerEducationInput!): CareerProfile!
-  deleteCareerEducation(educationId: String!): CareerProfile!
+  deleteCareerEducation(educationId: String!, profileId: String): CareerProfile!
   upsertCareerSkill(input: UpsertCareerSkillInput!): CareerProfile!
-  deleteCareerSkill(skillId: String!): CareerProfile!
+  deleteCareerSkill(skillId: String!, profileId: String): CareerProfile!
   upsertCareerProject(input: UpsertCareerProjectInput!): CareerProfile!
-  deleteCareerProject(projectId: String!): CareerProfile!
+  deleteCareerProject(projectId: String!, profileId: String): CareerProfile!
   upsertCareerCertification(input: UpsertCareerCertificationInput!): CareerProfile!
-  deleteCareerCertification(certificationId: String!): CareerProfile!
+  deleteCareerCertification(certificationId: String!, profileId: String): CareerProfile!
   updateCareerPreferences(input: UpdateCareerPreferencesInput!): CareerProfile!
 }

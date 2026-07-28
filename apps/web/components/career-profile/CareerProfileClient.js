@@ -1,20 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CheckIcon,
-  Cross2Icon,
-  Pencil1Icon,
-  PlusIcon,
-  TrashIcon,
-} from "@radix-ui/react-icons";
 import { ScrollArea } from "radix-ui";
 
+import { AppDialog } from "@/components/ui/AppDialog";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import {
   createCareerProfile,
   deleteCareerCertification,
   deleteCareerEducation,
   deleteCareerExperience,
+  deleteCareerProfile,
   deleteCareerProject,
   deleteCareerSkill,
   updateCareerPreferences,
@@ -25,180 +21,32 @@ import {
   upsertCareerProject,
   upsertCareerSkill,
 } from "@/graphql/careerProfile/careerProfile";
-import { MarkdownRenderer } from "@/components/markdown/MarkdownRenderer";
-import { IconButton } from "@/components/ui/IconButton";
 
-const emptyExperience = {
-  company: "",
-  title: "",
-  location: "",
-  startDate: "",
-  endDate: "",
-  isCurrent: false,
-  description: "",
-  achievements: "",
-  sortOrder: 0,
-};
+import {
+  ProfileCreateForm,
+  ProfileEditForm,
+  ProfileList,
+  ProfileToolbar,
+} from "./CareerProfileChrome";
+import { CareerProfileDisplay } from "./CareerProfileDisplay";
+import { StatusLine } from "./CareerProfileFields";
+import { CareerProfileSectionEditor } from "./CareerProfileSectionEditor";
+import {
+  arrayToText,
+  emptyPreferences,
+  getFormValue,
+  sortProfiles,
+} from "./careerProfileUtils";
 
-const emptyEducation = {
-  institution: "",
-  degree: "",
-  fieldOfStudy: "",
-  startDate: "",
-  endDate: "",
-  notes: "",
-  sortOrder: 0,
-};
-
-const emptySkill = {
-  name: "",
-  category: "General",
-  proficiency: "",
-  evidence: "",
-  sortOrder: 0,
-};
-
-const emptyProject = {
-  name: "",
-  role: "",
-  description: "",
-  outcomes: "",
-  technologies: "",
-  link: "",
-  startDate: "",
-  endDate: "",
-  sortOrder: 0,
-};
-
-const emptyCertification = {
-  name: "",
-  issuer: "",
-  issueDate: "",
-  expirationDate: "",
-  credentialId: "",
-  credentialUrl: "",
-  notes: "",
-  sortOrder: 0,
-};
-
-const emptyPreferences = {
-  targetRoles: "",
-  targetIndustries: "",
-  locations: "",
-  workModes: "",
-  compensationGoals: "",
-  constraints: "",
-};
-
-function arrayToText(value) {
-  return Array.isArray(value) ? value.join("\n") : "";
-}
-
-function getFormValue(formData, key) {
-  return String(formData.get(key) ?? "");
-}
-
-function StatusLine({ status, error }) {
-  if (error) {
-    return <p className="text-sm text-red-300">{error}</p>;
-  }
-
-  if (status) {
-    return <p className="text-sm text-foreground-muted">{status}</p>;
-  }
-
-  return null;
-}
-
-function Field({ label, children }) {
-  return (
-    <label className="flex flex-col gap-2 text-sm font-medium">
-      <span>{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function Input(props) {
-  return (
-    <input
-      className="rounded-md border border-border bg-surface-secondary px-3 py-2 text-sm outline-none focus:border-ring"
-      {...props}
-    />
-  );
-}
-
-function Textarea(props) {
-  return (
-    <textarea
-      className="min-h-28 rounded-md border border-border bg-surface-secondary px-3 py-2 text-sm leading-6 outline-none focus:border-ring"
-      {...props}
-    />
-  );
-}
-
-function MarkdownPreview({ content }) {
-  if (!content?.trim()) {
-    return null;
-  }
-
-  return (
-    <div className="message-bubble rounded-lg border border-border bg-surface p-4 text-sm">
-      <MarkdownRenderer content={content} />
-    </div>
-  );
-}
-
-function achievementMarkdown(achievements) {
-  if (!Array.isArray(achievements) || achievements.length === 0) {
-    return "";
-  }
-
-  return achievements.map((item) => `- ${item}`).join("\n");
-}
-
-function Section({ title, action, children }) {
-  return (
-    <section className="border-t border-border py-6">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function ListItem({ title, subtitle, detail, onEdit, onDelete, disabled }) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="font-semibold">{title || "Untitled"}</h3>
-          {subtitle ? (
-            <p className="mt-1 text-sm text-foreground-muted">{subtitle}</p>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <IconButton label="Edit" onClick={onEdit} disabled={disabled}>
-            <Pencil1Icon />
-          </IconButton>
-          <IconButton label="Delete" onClick={onDelete} disabled={disabled}>
-            <TrashIcon />
-          </IconButton>
-        </div>
-      </div>
-      {detail ? (
-        <div className="mt-3">
-          <MarkdownPreview content={detail} />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function CareerProfileClient({ initialProfile }) {
+export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
+  const [profiles, setProfiles] = useState(() => sortProfiles(initialProfiles));
   const [profile, setProfile] = useState(initialProfile);
+  const [creatingProfile, setCreatingProfile] = useState(
+    initialProfiles.length === 0,
+  );
+  const [editingProfile, setEditingProfile] = useState(null);
+  const [pendingProfileDeletion, setPendingProfileDeletion] = useState(null);
+  const [profileDeleteError, setProfileDeleteError] = useState("");
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [editingSkill, setEditingSkill] = useState(null);
@@ -223,6 +71,50 @@ export function CareerProfileClient({ initialProfile }) {
     };
   }, [profile]);
 
+  function resetSectionEditors() {
+    setEditingProfile(null);
+    setEditingExperience(null);
+    setEditingEducation(null);
+    setEditingSkill(null);
+    setEditingProject(null);
+    setEditingCertification(null);
+  }
+
+  function replaceProfile(updatedProfile) {
+    if (!updatedProfile) {
+      return;
+    }
+
+    setProfiles((current) => {
+      let nextProfiles = current.filter(
+        (item) => item.profileId !== updatedProfile.profileId,
+      );
+
+      if (updatedProfile.isDefault) {
+        nextProfiles = nextProfiles.map((item) => ({
+          ...item,
+          isDefault: false,
+        }));
+      }
+
+      nextProfiles.push(updatedProfile);
+      return sortProfiles(nextProfiles);
+    });
+    setProfile(updatedProfile);
+  }
+
+  function replaceProfiles(nextProfiles, preferredProfileId) {
+    const sortedProfiles = sortProfiles(nextProfiles);
+    const nextProfile =
+      sortedProfiles.find((item) => item.profileId === preferredProfileId) ??
+      sortedProfiles.find((item) => item.isDefault) ??
+      sortedProfiles[0] ??
+      null;
+
+    setProfiles(sortedProfiles);
+    setProfile(nextProfile);
+  }
+
   async function runAction(action, successMessage) {
     setBusy(true);
     setError("");
@@ -230,7 +122,7 @@ export function CareerProfileClient({ initialProfile }) {
 
     try {
       const updatedProfile = await action();
-      setProfile(updatedProfile);
+      replaceProfile(updatedProfile);
       setStatus(successMessage);
       return true;
     } catch (actionError) {
@@ -241,43 +133,115 @@ export function CareerProfileClient({ initialProfile }) {
     }
   }
 
-  async function handleCreateProfile() {
-    await runAction(createCareerProfile, "Profile created.");
+  async function handleCreateProfileSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const created = await runAction(
+      () =>
+        createCareerProfile({
+          name: getFormValue(formData, "name"),
+          focus: getFormValue(formData, "focus"),
+          isDefault: formData.get("isDefault") === "on",
+        }),
+      "Profile created.",
+    );
+
+    if (created) {
+      setCreatingProfile(false);
+      event.currentTarget.reset();
+    }
   }
 
-  async function handleSummarySubmit(event) {
+  async function handleProfileEditSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
 
-    await runAction(
+    const saved = await runAction(
       () =>
         updateCareerProfileSummary({
+          profileId: profile.profileId,
+          name: getFormValue(formData, "name"),
+          focus: getFormValue(formData, "focus"),
+          isDefault: profile.isDefault || formData.get("isDefault") === "on",
           headline: getFormValue(formData, "headline"),
           summary: getFormValue(formData, "summary"),
           careerGoals: getFormValue(formData, "careerGoals"),
           additionalNotes: getFormValue(formData, "additionalNotes"),
         }),
-      "Profile summary saved.",
+      "Profile saved.",
+    );
+
+    if (saved) {
+      resetSectionEditors();
+    }
+  }
+
+  async function handleSetDefaultProfile() {
+    await runAction(
+      () =>
+        updateCareerProfileSummary({
+          profileId: profile.profileId,
+          isDefault: true,
+        }),
+      "Default profile updated.",
     );
   }
 
-  async function handleExperienceSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
+  async function handleDeleteProfile() {
+    if (!pendingProfileDeletion || busy) {
+      return;
+    }
 
+    setBusy(true);
+    setError("");
+    setStatus("");
+    setProfileDeleteError("");
+
+    try {
+      const nextProfiles = await deleteCareerProfile(
+        pendingProfileDeletion.profileId,
+      );
+      replaceProfiles(nextProfiles, profile.profileId);
+      setStatus("Profile deleted.");
+      setPendingProfileDeletion(null);
+      resetSectionEditors();
+    } catch (deleteError) {
+      setProfileDeleteError(deleteError.message || "Profile deletion failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function handleProfileDeleteDialogChange(open) {
+    if (!open && !busy) {
+      setPendingProfileDeletion(null);
+      setProfileDeleteError("");
+    }
+  }
+
+  function selectProfile(profileId) {
+    const nextProfile =
+      profiles.find((item) => item.profileId === profileId) ?? profile;
+
+    setProfile(nextProfile);
+    setCreatingProfile(false);
+    resetSectionEditors();
+  }
+
+  async function handleExperienceSubmit(values) {
     const saved = await runAction(
       () =>
         upsertCareerExperience({
           experienceId: editingExperience?.experienceId,
-          company: getFormValue(formData, "company"),
-          title: getFormValue(formData, "title"),
-          location: getFormValue(formData, "location"),
-          startDate: getFormValue(formData, "startDate"),
-          endDate: getFormValue(formData, "endDate"),
-          isCurrent: formData.get("isCurrent") === "on",
-          description: getFormValue(formData, "description"),
-          achievements: getFormValue(formData, "achievements"),
+          profileId: profile.profileId,
+          company: values.company,
+          title: values.title,
+          location: values.location,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          isCurrent: values.isCurrent,
+          description: values.description,
+          achievements: values.achievements,
           sortOrder: editingExperience?.sortOrder ?? profile.experience.length,
         }),
       "Experience saved.",
@@ -285,25 +249,23 @@ export function CareerProfileClient({ initialProfile }) {
 
     if (saved) {
       setEditingExperience(null);
-      form.reset();
     }
+
+    return saved;
   }
 
-  async function handleEducationSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-
+  async function handleEducationSubmit(values) {
     const saved = await runAction(
       () =>
         upsertCareerEducation({
           educationId: editingEducation?.educationId,
-          institution: getFormValue(formData, "institution"),
-          degree: getFormValue(formData, "degree"),
-          fieldOfStudy: getFormValue(formData, "fieldOfStudy"),
-          startDate: getFormValue(formData, "startDate"),
-          endDate: getFormValue(formData, "endDate"),
-          notes: getFormValue(formData, "notes"),
+          profileId: profile.profileId,
+          institution: values.institution,
+          degree: values.degree,
+          fieldOfStudy: values.fieldOfStudy,
+          startDate: values.startDate,
+          endDate: values.endDate,
+          notes: values.notes,
           sortOrder: editingEducation?.sortOrder ?? profile.education.length,
         }),
       "Education saved.",
@@ -311,8 +273,9 @@ export function CareerProfileClient({ initialProfile }) {
 
     if (saved) {
       setEditingEducation(null);
-      form.reset();
     }
+
+    return saved;
   }
 
   async function handleSkillSubmit(event) {
@@ -324,6 +287,7 @@ export function CareerProfileClient({ initialProfile }) {
       () =>
         upsertCareerSkill({
           skillId: editingSkill?.skillId,
+          profileId: profile.profileId,
           name: getFormValue(formData, "name"),
           category: getFormValue(formData, "category"),
           proficiency: getFormValue(formData, "proficiency"),
@@ -339,23 +303,20 @@ export function CareerProfileClient({ initialProfile }) {
     }
   }
 
-  async function handleProjectSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-
+  async function handleProjectSubmit(values) {
     const saved = await runAction(
       () =>
         upsertCareerProject({
           projectId: editingProject?.projectId,
-          name: getFormValue(formData, "name"),
-          role: getFormValue(formData, "role"),
-          description: getFormValue(formData, "description"),
-          outcomes: getFormValue(formData, "outcomes"),
-          technologies: getFormValue(formData, "technologies"),
-          link: getFormValue(formData, "link"),
-          startDate: getFormValue(formData, "startDate"),
-          endDate: getFormValue(formData, "endDate"),
+          profileId: profile.profileId,
+          name: values.name,
+          role: values.role,
+          description: values.description,
+          outcomes: values.outcomes,
+          technologies: values.technologies,
+          link: values.link,
+          startDate: values.startDate,
+          endDate: values.endDate,
           sortOrder: editingProject?.sortOrder ?? profile.projects.length,
         }),
       "Project saved.",
@@ -363,26 +324,24 @@ export function CareerProfileClient({ initialProfile }) {
 
     if (saved) {
       setEditingProject(null);
-      form.reset();
     }
+
+    return saved;
   }
 
-  async function handleCertificationSubmit(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-
+  async function handleCertificationSubmit(values) {
     const saved = await runAction(
       () =>
         upsertCareerCertification({
           certificationId: editingCertification?.certificationId,
-          name: getFormValue(formData, "name"),
-          issuer: getFormValue(formData, "issuer"),
-          issueDate: getFormValue(formData, "issueDate"),
-          expirationDate: getFormValue(formData, "expirationDate"),
-          credentialId: getFormValue(formData, "credentialId"),
-          credentialUrl: getFormValue(formData, "credentialUrl"),
-          notes: getFormValue(formData, "notes"),
+          profileId: profile.profileId,
+          name: values.name,
+          issuer: values.issuer,
+          issueDate: values.issueDate,
+          expirationDate: values.expirationDate,
+          credentialId: values.credentialId,
+          credentialUrl: values.credentialUrl,
+          notes: values.notes,
           sortOrder:
             editingCertification?.sortOrder ?? profile.certifications.length,
         }),
@@ -391,8 +350,9 @@ export function CareerProfileClient({ initialProfile }) {
 
     if (saved) {
       setEditingCertification(null);
-      form.reset();
     }
+
+    return saved;
   }
 
   async function handlePreferencesSubmit(event) {
@@ -402,6 +362,7 @@ export function CareerProfileClient({ initialProfile }) {
     await runAction(
       () =>
         updateCareerPreferences({
+          profileId: profile.profileId,
           targetRoles: getFormValue(formData, "targetRoles"),
           targetIndustries: getFormValue(formData, "targetIndustries"),
           locations: getFormValue(formData, "locations"),
@@ -417,20 +378,17 @@ export function CareerProfileClient({ initialProfile }) {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 py-10">
         <div className="max-w-2xl">
-          <h1 className="text-3xl font-bold">Career Profile</h1>
+          <h1 className="text-3xl font-bold">Career Profiles</h1>
           <p className="mt-3 text-foreground-muted">
-            Create the reusable career context AspAIre will use across resumes,
-            saved jobs, analysis, and interview prep.
+            Create a focused profile variant for a resume direction, career path,
+            or professional identity.
           </p>
-          <button
-            type="button"
-            onClick={handleCreateProfile}
-            disabled={busy}
-            className="mt-6 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <PlusIcon />
-            Create profile
-          </button>
+          <div className="mt-6">
+            <ProfileCreateForm
+              busy={busy}
+              onSubmit={handleCreateProfileSubmit}
+            />
+          </div>
           <div className="mt-4">
             <StatusLine status={status} error={error} />
           </div>
@@ -440,620 +398,189 @@ export function CareerProfileClient({ initialProfile }) {
   }
 
   return (
-    <ScrollArea.Root className="ScrollAreaRoot">
-      <ScrollArea.Viewport className="ScrollAreaViewport">
-        <main className="mx-auto w-full max-w-6xl px-4 py-8">
-          <div className="mb-8 flex flex-col gap-2">
-            <h1 className="text-3xl font-bold">Career Profile</h1>
-            <p className="max-w-3xl text-sm leading-6 text-foreground-muted">
-              Maintain the career context that will power resume, job, analysis,
-              and preparation workflows.
-            </p>
-            <StatusLine status={status} error={error} />
-          </div>
+    <>
+      <ScrollArea.Root className="ScrollAreaRoot">
+        <ScrollArea.Viewport className="ScrollAreaViewport">
+          <main className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 lg:grid-cols-[22rem_1fr]">
+            <ProfileList
+              profiles={profiles}
+              selectedId={profile.profileId}
+              busy={busy}
+              onDelete={(item) => setPendingProfileDeletion(item)}
+              onEdit={(item) => {
+                selectProfile(item.profileId);
+                setEditingProfile(item);
+              }}
+              onSelect={selectProfile}
+              onCreate={() => {
+                setCreatingProfile(true);
+                resetSectionEditors();
+              }}
+            />
 
-          <Section title="Summary">
-            <form className="grid gap-4" onSubmit={handleSummarySubmit}>
-              <Field label="Headline">
-                <Input
-                  name="headline"
-                  defaultValue={profile.headline}
-                  placeholder="Senior operations analyst targeting product roles"
+            <section className="min-w-0">
+              <div className="mb-8 flex flex-col justify-between gap-4 border-b border-border pb-5 md:flex-row md:items-start">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-3xl font-bold">
+                      {profile.name || "Career Profile"}
+                    </h1>
+                    {profile.isDefault ? (
+                      <span className="rounded-md border border-border px-2 py-1 text-xs text-foreground-muted">
+                        Default
+                      </span>
+                    ) : null}
+                  </div>
+                  {profile.focus ? (
+                    <p className="mt-2 max-w-3xl text-sm leading-6 text-foreground-muted">
+                      {profile.focus}
+                    </p>
+                  ) : null}
+                  {profile.headline ? (
+                    <p className="mt-2 text-sm font-medium">
+                      {profile.headline}
+                    </p>
+                  ) : null}
+                  <div className="mt-3">
+                    <StatusLine status={status} error={error} />
+                  </div>
+                </div>
+                <ProfileToolbar
+                  profile={profile}
+                  busy={busy}
+                  canDelete={profiles.length > 1}
+                  onEdit={() => setEditingProfile(profile)}
+                  onDelete={() => setPendingProfileDeletion(profile)}
+                  onSetDefault={handleSetDefaultProfile}
                 />
-              </Field>
-              <Field label="Professional summary">
-                <Textarea
-                  name="summary"
-                  defaultValue={profile.summary}
-                  placeholder="A concise overview of your background, strengths, and direction."
-                />
-              </Field>
-              <Field label="Career goals">
-                <Textarea
-                  name="careerGoals"
-                  defaultValue={profile.careerGoals}
-                  placeholder="Roles, responsibilities, growth goals, or direction you want next."
-                />
-              </Field>
-              <Field label="Additional notes">
-                <Textarea
-                  name="additionalNotes"
-                  defaultValue={profile.additionalNotes}
-                  placeholder="Resume-derived details, ambiguous evidence, or context that needs review."
-                />
-              </Field>
-              <div>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <CheckIcon />
-                  Save summary
-                </button>
               </div>
-            </form>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div>
-                <h3 className="mb-2 text-sm font-semibold">Summary preview</h3>
-                <MarkdownPreview content={profile.summary} />
-              </div>
-              <div>
-                <h3 className="mb-2 text-sm font-semibold">Goals preview</h3>
-                <MarkdownPreview content={profile.careerGoals} />
-              </div>
-              <div>
-                <h3 className="mb-2 text-sm font-semibold">
-                  Additional notes preview
-                </h3>
-                <MarkdownPreview content={profile.additionalNotes} />
-              </div>
-            </div>
-          </Section>
 
-          <Section
-            title="Experience"
-            action={
-              <IconButton
-                label="Add experience"
-                onClick={() => setEditingExperience(emptyExperience)}
-                disabled={busy}
-              >
-                <PlusIcon />
-              </IconButton>
-            }
-          >
-            <div className="grid gap-3">
-              {profile.experience.map((item) => (
-                <ListItem
-                  key={item.experienceId}
-                  title={item.title}
-                  subtitle={[item.company, item.location]
-                    .filter(Boolean)
-                    .join(" · ")}
-                  detail={[item.description, achievementMarkdown(item.achievements)]
-                    .filter(Boolean)
-                    .join("\n\n")}
-                  disabled={busy}
-                  onEdit={() =>
-                    setEditingExperience({
-                      ...item,
-                      achievements: arrayToText(item.achievements),
-                    })
-                  }
-                  onDelete={() =>
-                    runAction(
-                      () => deleteCareerExperience(item.experienceId),
-                      "Experience deleted.",
-                    )
-                  }
-                />
-              ))}
-              {profile.experience.length === 0 ? (
-                <p className="text-sm text-foreground-muted">No experience yet.</p>
+              {creatingProfile ? (
+                <div className="mb-6">
+                  <h2 className="mb-4 text-xl font-semibold">New Profile</h2>
+                  <ProfileCreateForm
+                    busy={busy}
+                    onSubmit={handleCreateProfileSubmit}
+                    onCancel={() => setCreatingProfile(false)}
+                  />
+                </div>
               ) : null}
-            </div>
 
-        {editingExperience ? (
-          <form
-            className="mt-4 grid gap-4 rounded-lg border border-border bg-surface p-4"
-            onSubmit={handleExperienceSubmit}
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Title">
-                <Input name="title" defaultValue={editingExperience.title} />
-              </Field>
-              <Field label="Company">
-                <Input name="company" defaultValue={editingExperience.company} />
-              </Field>
-              <Field label="Location">
-                <Input name="location" defaultValue={editingExperience.location} />
-              </Field>
-              <Field label="Start date">
-                <Input name="startDate" defaultValue={editingExperience.startDate} />
-              </Field>
-              <Field label="End date">
-                <Input name="endDate" defaultValue={editingExperience.endDate} />
-              </Field>
-              <label className="flex items-center gap-2 self-end text-sm">
-                <input
-                  name="isCurrent"
-                  type="checkbox"
-                  defaultChecked={editingExperience.isCurrent}
-                />
-                Current role
-              </label>
-            </div>
-            <Field label="Description">
-              <Textarea
-                name="description"
-                defaultValue={editingExperience.description}
+              <CareerProfileDisplay
+                profile={profile}
+                preferences={profilePreferences}
               />
-            </Field>
-            <Field label="Achievements">
-              <Textarea
-                name="achievements"
-                defaultValue={editingExperience.achievements}
-                placeholder="One achievement per line"
-              />
-            </Field>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <CheckIcon />
-                Save
-              </button>
-              <IconButton
-                label="Cancel"
-                onClick={() => setEditingExperience(null)}
-                disabled={busy}
-              >
-                <Cross2Icon />
-              </IconButton>
-            </div>
-          </form>
-        ) : null}
-          </Section>
+            </section>
+          </main>
+        </ScrollArea.Viewport>
+        <ScrollArea.Scrollbar
+          className="ScrollAreaScrollbar"
+          orientation="vertical"
+        >
+          <ScrollArea.Thumb className="ScrollAreaThumb" />
+        </ScrollArea.Scrollbar>
+        <ScrollArea.Corner className="ScrollAreaCorner" />
+      </ScrollArea.Root>
 
-          <Section
-        title="Education"
-        action={
-          <IconButton
-            label="Add education"
-            onClick={() => setEditingEducation(emptyEducation)}
-            disabled={busy}
-          >
-            <PlusIcon />
-          </IconButton>
-        }
+      <AppDialog
+        open={Boolean(editingProfile)}
+        onOpenChange={(open) => {
+          if (!open && !busy) {
+            resetSectionEditors();
+          }
+        }}
+        title="Edit career profile"
+        description={`Update "${profile.name || "this profile"}" and its career sections.`}
+        size="large"
       >
-        <div className="grid gap-3">
-          {profile.education.map((item) => (
-            <ListItem
-              key={item.educationId}
-              title={item.institution}
-              subtitle={[item.degree, item.fieldOfStudy].filter(Boolean).join(" · ")}
-              detail={item.notes}
-              disabled={busy}
-              onEdit={() => setEditingEducation(item)}
-              onDelete={() =>
-                runAction(
-                  () => deleteCareerEducation(item.educationId),
-                  "Education deleted.",
-                )
-              }
-            />
-          ))}
-          {profile.education.length === 0 ? (
-            <p className="text-sm text-foreground-muted">No education yet.</p>
-          ) : null}
-        </div>
+        <ProfileEditForm
+          profile={profile}
+          busy={busy}
+          onSubmit={handleProfileEditSubmit}
+        />
+        <CareerProfileSectionEditor
+          profile={profile}
+          preferences={profilePreferences}
+          busy={busy}
+          editors={{
+            experience: editingExperience,
+            education: editingEducation,
+            skill: editingSkill,
+            project: editingProject,
+            certification: editingCertification,
+          }}
+          actions={{
+            deleteExperience: (experienceId) =>
+              runAction(
+                () => deleteCareerExperience(experienceId, profile.profileId),
+                "Experience deleted.",
+              ),
+            deleteEducation: (educationId) =>
+              runAction(
+                () => deleteCareerEducation(educationId, profile.profileId),
+                "Education deleted.",
+              ),
+            deleteSkill: (skillId) =>
+              runAction(
+                () => deleteCareerSkill(skillId, profile.profileId),
+                "Skill deleted.",
+              ),
+            deleteProject: (projectId) =>
+              runAction(
+                () => deleteCareerProject(projectId, profile.profileId),
+                "Project deleted.",
+              ),
+            deleteCertification: (certificationId) =>
+              runAction(
+                () =>
+                  deleteCareerCertification(certificationId, profile.profileId),
+                "Certification deleted.",
+              ),
+          }}
+          onAdd={{
+            experience: setEditingExperience,
+            education: setEditingEducation,
+            skill: setEditingSkill,
+            project: setEditingProject,
+            certification: setEditingCertification,
+          }}
+          onEdit={{
+            experience: setEditingExperience,
+            education: setEditingEducation,
+            skill: setEditingSkill,
+            project: setEditingProject,
+            certification: setEditingCertification,
+          }}
+          onCancel={{
+            experience: setEditingExperience,
+            education: setEditingEducation,
+            skill: setEditingSkill,
+            project: setEditingProject,
+            certification: setEditingCertification,
+          }}
+          onSubmit={{
+            experience: handleExperienceSubmit,
+            education: handleEducationSubmit,
+            skill: handleSkillSubmit,
+            project: handleProjectSubmit,
+            certification: handleCertificationSubmit,
+            preferences: handlePreferencesSubmit,
+          }}
+        />
+      </AppDialog>
 
-        {editingEducation ? (
-          <form
-            className="mt-4 grid gap-4 rounded-lg border border-border bg-surface p-4"
-            onSubmit={handleEducationSubmit}
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Institution">
-                <Input
-                  name="institution"
-                  defaultValue={editingEducation.institution}
-                />
-              </Field>
-              <Field label="Degree or program">
-                <Input name="degree" defaultValue={editingEducation.degree} />
-              </Field>
-              <Field label="Field of study">
-                <Input
-                  name="fieldOfStudy"
-                  defaultValue={editingEducation.fieldOfStudy}
-                />
-              </Field>
-              <Field label="Start date">
-                <Input name="startDate" defaultValue={editingEducation.startDate} />
-              </Field>
-              <Field label="End date">
-                <Input name="endDate" defaultValue={editingEducation.endDate} />
-              </Field>
-            </div>
-            <Field label="Notes">
-              <Textarea name="notes" defaultValue={editingEducation.notes} />
-            </Field>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <CheckIcon />
-                Save
-              </button>
-              <IconButton
-                label="Cancel"
-                onClick={() => setEditingEducation(null)}
-                disabled={busy}
-              >
-                <Cross2Icon />
-              </IconButton>
-            </div>
-          </form>
-        ) : null}
-          </Section>
-
-          <Section
-        title="Skills"
-        action={
-          <IconButton
-            label="Add skill"
-            onClick={() => setEditingSkill(emptySkill)}
-            disabled={busy}
-          >
-            <PlusIcon />
-          </IconButton>
-        }
-      >
-        <div className="grid gap-3 md:grid-cols-2">
-          {profile.skills.map((item) => (
-            <ListItem
-              key={item.skillId}
-              title={item.name}
-              subtitle={[item.category, item.proficiency].filter(Boolean).join(" · ")}
-              detail={item.evidence}
-              disabled={busy}
-              onEdit={() => setEditingSkill(item)}
-              onDelete={() =>
-                runAction(() => deleteCareerSkill(item.skillId), "Skill deleted.")
-              }
-            />
-          ))}
-        </div>
-        {profile.skills.length === 0 ? (
-          <p className="text-sm text-foreground-muted">No skills yet.</p>
-        ) : null}
-
-        {editingSkill ? (
-          <form
-            className="mt-4 grid gap-4 rounded-lg border border-border bg-surface p-4"
-            onSubmit={handleSkillSubmit}
-          >
-            <div className="grid gap-4 md:grid-cols-3">
-              <Field label="Skill">
-                <Input name="name" defaultValue={editingSkill.name} required />
-              </Field>
-              <Field label="Category">
-                <Input name="category" defaultValue={editingSkill.category} />
-              </Field>
-              <Field label="Proficiency">
-                <Input
-                  name="proficiency"
-                  defaultValue={editingSkill.proficiency}
-                />
-              </Field>
-            </div>
-            <Field label="Evidence or notes">
-              <Textarea name="evidence" defaultValue={editingSkill.evidence} />
-            </Field>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <CheckIcon />
-                Save
-              </button>
-              <IconButton
-                label="Cancel"
-                onClick={() => setEditingSkill(null)}
-                disabled={busy}
-              >
-                <Cross2Icon />
-              </IconButton>
-            </div>
-          </form>
-        ) : null}
-          </Section>
-
-          <Section
-        title="Projects"
-        action={
-          <IconButton
-            label="Add project"
-            onClick={() => setEditingProject(emptyProject)}
-            disabled={busy}
-          >
-            <PlusIcon />
-          </IconButton>
-        }
-      >
-        <div className="grid gap-3">
-          {profile.projects.map((item) => (
-            <ListItem
-              key={item.projectId}
-              title={item.name}
-              subtitle={[item.role, item.link].filter(Boolean).join(" · ")}
-              detail={[
-                item.description,
-                item.outcomes,
-                achievementMarkdown(item.technologies),
-              ]
-                .filter(Boolean)
-                .join("\n\n")}
-              disabled={busy}
-              onEdit={() =>
-                setEditingProject({
-                  ...item,
-                  technologies: arrayToText(item.technologies),
-                })
-              }
-              onDelete={() =>
-                runAction(
-                  () => deleteCareerProject(item.projectId),
-                  "Project deleted.",
-                )
-              }
-            />
-          ))}
-          {profile.projects.length === 0 ? (
-            <p className="text-sm text-foreground-muted">No projects yet.</p>
-          ) : null}
-        </div>
-
-        {editingProject ? (
-          <form
-            className="mt-4 grid gap-4 rounded-lg border border-border bg-surface p-4"
-            onSubmit={handleProjectSubmit}
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Project name">
-                <Input name="name" defaultValue={editingProject.name} required />
-              </Field>
-              <Field label="Role">
-                <Input name="role" defaultValue={editingProject.role} />
-              </Field>
-              <Field label="Start date">
-                <Input name="startDate" defaultValue={editingProject.startDate} />
-              </Field>
-              <Field label="End date">
-                <Input name="endDate" defaultValue={editingProject.endDate} />
-              </Field>
-              <Field label="Link">
-                <Input name="link" defaultValue={editingProject.link} />
-              </Field>
-            </div>
-            <Field label="Description">
-              <Textarea
-                name="description"
-                defaultValue={editingProject.description}
-              />
-            </Field>
-            <Field label="Outcomes">
-              <Textarea name="outcomes" defaultValue={editingProject.outcomes} />
-            </Field>
-            <Field label="Technologies or skills">
-              <Textarea
-                name="technologies"
-                defaultValue={editingProject.technologies}
-                placeholder="One technology or skill per line"
-              />
-            </Field>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <CheckIcon />
-                Save
-              </button>
-              <IconButton
-                label="Cancel"
-                onClick={() => setEditingProject(null)}
-                disabled={busy}
-              >
-                <Cross2Icon />
-              </IconButton>
-            </div>
-          </form>
-        ) : null}
-          </Section>
-
-          <Section
-        title="Certifications and Awards"
-        action={
-          <IconButton
-            label="Add certification"
-            onClick={() => setEditingCertification(emptyCertification)}
-            disabled={busy}
-          >
-            <PlusIcon />
-          </IconButton>
-        }
-      >
-        <div className="grid gap-3">
-          {profile.certifications.map((item) => (
-            <ListItem
-              key={item.certificationId}
-              title={item.name}
-              subtitle={[item.issuer, item.issueDate].filter(Boolean).join(" · ")}
-              detail={item.notes}
-              disabled={busy}
-              onEdit={() => setEditingCertification(item)}
-              onDelete={() =>
-                runAction(
-                  () => deleteCareerCertification(item.certificationId),
-                  "Certification deleted.",
-                )
-              }
-            />
-          ))}
-          {profile.certifications.length === 0 ? (
-            <p className="text-sm text-foreground-muted">
-              No certifications or awards yet.
-            </p>
-          ) : null}
-        </div>
-
-        {editingCertification ? (
-          <form
-            className="mt-4 grid gap-4 rounded-lg border border-border bg-surface p-4"
-            onSubmit={handleCertificationSubmit}
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Name">
-                <Input
-                  name="name"
-                  defaultValue={editingCertification.name}
-                  required
-                />
-              </Field>
-              <Field label="Issuer">
-                <Input
-                  name="issuer"
-                  defaultValue={editingCertification.issuer}
-                />
-              </Field>
-              <Field label="Issue date">
-                <Input
-                  name="issueDate"
-                  defaultValue={editingCertification.issueDate}
-                />
-              </Field>
-              <Field label="Expiration date">
-                <Input
-                  name="expirationDate"
-                  defaultValue={editingCertification.expirationDate}
-                />
-              </Field>
-              <Field label="Credential ID">
-                <Input
-                  name="credentialId"
-                  defaultValue={editingCertification.credentialId}
-                />
-              </Field>
-              <Field label="Credential URL">
-                <Input
-                  name="credentialUrl"
-                  defaultValue={editingCertification.credentialUrl}
-                />
-              </Field>
-            </div>
-            <Field label="Notes">
-              <Textarea
-                name="notes"
-                defaultValue={editingCertification.notes}
-              />
-            </Field>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <CheckIcon />
-                Save
-              </button>
-              <IconButton
-                label="Cancel"
-                onClick={() => setEditingCertification(null)}
-                disabled={busy}
-              >
-                <Cross2Icon />
-              </IconButton>
-            </div>
-          </form>
-        ) : null}
-          </Section>
-
-          <Section title="Job and Location Preferences">
-        <form className="grid gap-4" onSubmit={handlePreferencesSubmit}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Target roles">
-              <Textarea
-                name="targetRoles"
-                defaultValue={profilePreferences.targetRoles}
-                placeholder="One role per line"
-              />
-            </Field>
-            <Field label="Target industries">
-              <Textarea
-                name="targetIndustries"
-                defaultValue={profilePreferences.targetIndustries}
-                placeholder="One industry per line"
-              />
-            </Field>
-            <Field label="Target locations">
-              <Textarea
-                name="locations"
-                defaultValue={profilePreferences.locations}
-                placeholder="One location per line"
-              />
-            </Field>
-            <Field label="Work modes">
-              <Textarea
-                name="workModes"
-                defaultValue={profilePreferences.workModes}
-                placeholder="Remote, hybrid, on-site"
-              />
-            </Field>
-          </div>
-          <Field label="Compensation goals">
-            <Input
-              name="compensationGoals"
-              defaultValue={profilePreferences.compensationGoals}
-            />
-          </Field>
-          <Field label="Constraints or dealbreakers">
-            <Textarea
-              name="constraints"
-              defaultValue={profilePreferences.constraints}
-            />
-          </Field>
-          <div>
-            <button
-              type="submit"
-              disabled={busy}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <CheckIcon />
-              Save preferences
-            </button>
-          </div>
-        </form>
-          </Section>
-        </main>
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar
-        className="ScrollAreaScrollbar"
-        orientation="vertical"
-      >
-        <ScrollArea.Thumb className="ScrollAreaThumb" />
-      </ScrollArea.Scrollbar>
-      <ScrollArea.Corner className="ScrollAreaCorner" />
-    </ScrollArea.Root>
+      <ConfirmationDialog
+        open={Boolean(pendingProfileDeletion)}
+        onOpenChange={handleProfileDeleteDialogChange}
+        title="Delete profile?"
+        description={`"${pendingProfileDeletion?.name || "This profile"}" and its profile sections will be removed. This does not delete resumes.`}
+        error={profileDeleteError}
+        loading={busy}
+        confirmLabel="Delete"
+        loadingLabel="Deleting..."
+        variant="destructive"
+        onConfirm={handleDeleteProfile}
+      />
+    </>
   );
 }

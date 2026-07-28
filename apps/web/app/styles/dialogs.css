@@ -41,6 +41,12 @@
   outline: none;
 }
 
+.AppDialogContentLarge {
+  width: min(calc(100vw - 2rem), 68rem);
+  max-height: min(calc(100svh - 2rem), 54rem);
+  overflow: hidden;
+}
+
 .DialogOverlay {
   position: fixed;
   inset: 0;
