@@ -6,6 +6,7 @@ import {
   deleteCareerProject,
   deleteCareerSkill,
   createCareerProfile,
+  createCareerProfileFromDraft,
   getCareerProfile,
   listCareerProfiles,
   updateCareerPreferences,
@@ -44,6 +45,11 @@ export const careerProfileResolvers = {
       const authenticatedUser = requireUser(user);
 
       return createCareerProfile(authenticatedUser.id, input ?? {});
+    },
+    createCareerProfileFromDraft: async (_, { input }, { user }) => {
+      const authenticatedUser = requireUser(user);
+
+      return createCareerProfileFromDraft(authenticatedUser.id, input);
     },
     deleteCareerProfile: async (_, { profileId }, { user }) => {
       const authenticatedUser = requireUser(user);

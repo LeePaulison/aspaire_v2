@@ -1,12 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { FileTextIcon, PlusIcon, StarFilledIcon } from "@radix-ui/react-icons";
+import { useMemo, useRef, useState } from "react";
+import {
+  FileTextIcon,
+  PlusIcon,
+  StarFilledIcon,
+} from "@radix-ui/react-icons";
 import { ScrollArea } from "radix-ui";
 
 import { AppDialog } from "@/components/ui/AppDialog";
 import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { IconButton } from "@/components/ui/IconButton";
+import {
+  createCareerProfileFromDraft,
+} from "@/graphql/careerProfile/careerProfile";
 import {
   archiveResume,
   createResume,
@@ -17,7 +24,14 @@ import {
   updateResume,
   uploadResumeOriginal,
 } from "@/graphql/resume/resume";
+import { useChatSocket } from "@/hooks/useChatSocket";
+import { parseResumeToCareerProfileDraft } from "@/lib/resumes/resumeCareerProfileParser";
+import {
+  createReviewableCareerProfileDraft,
+  parseCareerProfileDraftResponse,
+} from "@/lib/resumes/careerProfileDraftReview";
 
+import { CareerProfileDraftDialog } from "./CareerProfileDraftDialog";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { ResumeFileUpload } from "./ResumeFileUpload";
 import { ResumeFilesList } from "./ResumeFilesList";
@@ -191,6 +205,11 @@ export function ResumeLibraryClient({ initialResumes }) {
   const [fileDeletionReceipt, setFileDeletionReceipt] = useState(null);
   const [parsingReceipt, setParsingReceipt] = useState(null);
   const [uploadResumeId, setUploadResumeId] = useState(null);
+  const [profileDraft, setProfileDraft] = useState(null);
+  const [profileDraftOpen, setProfileDraftOpen] = useState(false);
+  const parserResponseRef = useRef("");
+  const parserResumeRef = useRef(null);
+  const parserRequestInFlightRef = useRef(false);
 
   const selectedResume = useMemo(
     () => resumes.find((resume) => resume.resumeId === selectedId) ?? null,
@@ -200,6 +219,65 @@ export function ResumeLibraryClient({ initialResumes }) {
     () => resumes.find((resume) => resume.resumeId === uploadResumeId) ?? null,
     [resumes, uploadResumeId],
   );
+  const { connected: parserConnected, send: sendParserMessage } = useChatSocket({
+    onChatChunk: (payload) => {
+      if (parserRequestInFlightRef.current) {
+        parserResponseRef.current += payload?.content ?? "";
+      }
+    },
+    onChatComplete: () => {
+      if (!parserRequestInFlightRef.current) {
+        return;
+      }
+
+      const resume = parserResumeRef.current;
+      const responseText = parserResponseRef.current;
+
+      try {
+        const draft = parseCareerProfileDraftResponse(responseText, resume);
+        setProfileDraft(draft);
+        setProfileDraftOpen(true);
+        setStatus("Career profile draft ready for review.");
+      } catch {
+        const fallbackDraft = createReviewableCareerProfileDraft(
+          parseResumeToCareerProfileDraft(resume),
+          resume,
+        );
+        setProfileDraft(fallbackDraft);
+        setProfileDraftOpen(true);
+        setStatus(
+          "Career profile draft ready for review. Local parsing was used because the AI response could not be read.",
+        );
+      } finally {
+        parserRequestInFlightRef.current = false;
+        parserResponseRef.current = "";
+        parserResumeRef.current = null;
+        setBusy(false);
+      }
+    },
+    onChatError: (chatError) => {
+      if (!parserRequestInFlightRef.current) {
+        return;
+      }
+
+      parserRequestInFlightRef.current = false;
+      parserResponseRef.current = "";
+      parserResumeRef.current = null;
+      setBusy(false);
+      setError(chatError.message || "Career profile draft generation failed.");
+    },
+    onError: (socketError) => {
+      if (!parserRequestInFlightRef.current) {
+        return;
+      }
+
+      parserRequestInFlightRef.current = false;
+      parserResponseRef.current = "";
+      parserResumeRef.current = null;
+      setBusy(false);
+      setError(socketError.message || "Career profile draft connection failed.");
+    },
+  });
 
   async function runAction(action, successMessage) {
     setBusy(true);
@@ -308,6 +386,106 @@ export function ResumeLibraryClient({ initialResumes }) {
       "Resume restored.",
     );
     replaceResume(updatedResume);
+  }
+
+  function handleGenerateProfileDraft(resume) {
+    if (busy || parserRequestInFlightRef.current) {
+      return;
+    }
+
+    if (!resume.resumeText?.trim()) {
+      setError("Add resume text before generating a Career Profile draft.");
+      setStatus("");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setStatus("Generating Career Profile draft...");
+    setDeletionReceipt(null);
+    setFileDeletionReceipt(null);
+    setParsingReceipt(null);
+    parserResponseRef.current = "";
+    parserResumeRef.current = resume;
+    parserRequestInFlightRef.current = true;
+
+    const sent = sendParserMessage({
+      type: "chat_message",
+      payload: {
+        content: [
+          "Extract a reviewed Career Profile draft from this resume text.",
+          `Resume title: ${resume.title}`,
+          resume.targetRole ? `Target role: ${resume.targetRole}` : "",
+          "Return only the structured JSON draft.",
+          "",
+          resume.resumeText,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        conversationId: null,
+        agentId: "resume-parser",
+        domain: "career_evidence",
+        workflowType: "resume_to_career_profile_draft",
+      },
+    });
+
+    if (!sent) {
+      parserRequestInFlightRef.current = false;
+      parserResumeRef.current = null;
+      setBusy(false);
+      setError(
+        parserConnected
+          ? "Career profile draft request could not be sent."
+          : "Career profile draft service is not connected yet.",
+      );
+      setStatus("");
+    }
+  }
+
+  async function handleAcceptProfileDraft(draft = profileDraft) {
+    if (!draft || busy) {
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const preferences = {
+        targetRoles: draft.preferences.targetRoles,
+        targetIndustries: draft.preferences.targetIndustries,
+        locations: draft.preferences.locations,
+        workModes: draft.preferences.workModes,
+        compensationGoals: draft.preferences.compensationGoals,
+        constraints: draft.preferences.constraints,
+      };
+      const savedProfile = await createCareerProfileFromDraft({
+        name: draft.name,
+        focus: draft.focus,
+        isDefault: draft.isDefault,
+        headline: draft.headline,
+        summary: draft.summary,
+        careerGoals: draft.careerGoals,
+        additionalNotes: draft.additionalNotes,
+        experience: draft.experience.map(({ experienceId, ...item }) => item),
+        education: draft.education.map(({ educationId, ...item }) => item),
+        skills: draft.skills.map(({ skillId, ...item }) => item),
+        projects: draft.projects.map(({ projectId, ...item }) => item),
+        certifications: draft.certifications.map(
+          ({ certificationId, ...item }) => item,
+        ),
+        preferences,
+      });
+
+      setProfileDraft(null);
+      setProfileDraftOpen(false);
+      setStatus(`Career Profile "${savedProfile.name}" created.`);
+    } catch (acceptError) {
+      setError(acceptError.message || "Career profile draft acceptance failed.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleUpload(resumeId, file) {
@@ -520,6 +698,9 @@ export function ResumeLibraryClient({ initialResumes }) {
                     onEdit={() => setEditingResume(selectedResume)}
                     onSetPrimary={() => handleSetPrimary(selectedResume.resumeId)}
                     onUpload={() => setUploadResumeId(selectedResume.resumeId)}
+                    onGenerateProfileDraft={() =>
+                      handleGenerateProfileDraft(selectedResume)
+                    }
                     onArchive={() => handleArchive(selectedResume.resumeId)}
                     onRestore={() => handleRestore(selectedResume.resumeId)}
                     onDelete={() => requestDeletion(selectedResume)}
@@ -612,6 +793,21 @@ export function ResumeLibraryClient({ initialResumes }) {
             />
           ) : null}
         </AppDialog>
+        <CareerProfileDraftDialog
+          draft={profileDraft}
+          open={profileDraftOpen}
+          busy={busy}
+          status={status}
+          error={error}
+          onChange={setProfileDraft}
+          onAccept={handleAcceptProfileDraft}
+          onOpenChange={(open) => {
+            if (!open && !busy) {
+              setProfileDraftOpen(false);
+              setProfileDraft(null);
+            }
+          }}
+        />
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar
         className="ScrollAreaScrollbar"

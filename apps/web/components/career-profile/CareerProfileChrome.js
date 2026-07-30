@@ -3,6 +3,7 @@
 import {
   CheckIcon,
   Cross2Icon,
+  FileTextIcon,
   Pencil1Icon,
   PlusIcon,
   StarIcon,
@@ -150,6 +151,7 @@ export function ProfileToolbar({
   canDelete,
   onDelete,
   onEdit,
+  onGenerateResumeDraft,
   onSetDefault,
 }) {
   return (
@@ -160,6 +162,13 @@ export function ProfileToolbar({
     >
       <IconButton label="Edit profile" onClick={onEdit} disabled={busy}>
         <Pencil1Icon />
+      </IconButton>
+      <IconButton
+        label="Create resume draft"
+        onClick={onGenerateResumeDraft}
+        disabled={busy}
+      >
+        <FileTextIcon />
       </IconButton>
       {!profile.isDefault ? (
         <IconButton label="Set default profile" onClick={onSetDefault} disabled={busy}>
@@ -177,10 +186,11 @@ export function ProfileToolbar({
   );
 }
 
-export function ProfileEditForm({ profile, busy, children, onSubmit }) {
+export function ProfileEditForm({ profile, busy, children, formRef, onSubmit }) {
   return (
     <form
       key={`profile-edit-${profile.profileId}`}
+      ref={formRef}
       className="grid gap-4"
       onSubmit={onSubmit}
     >

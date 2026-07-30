@@ -102,6 +102,21 @@ export async function createCareerProfile(input = null) {
   return result.createCareerProfile;
 }
 
+export async function createCareerProfileFromDraft(input) {
+  const result = await authRequest({
+    query: `
+      mutation CreateCareerProfileFromDraft($input: CreateCareerProfileFromDraftInput!) {
+        createCareerProfileFromDraft(input: $input) {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+    variables: { input },
+  });
+
+  return result.createCareerProfileFromDraft;
+}
+
 export async function deleteCareerProfile(profileId) {
   const result = await authRequest({
     query: `

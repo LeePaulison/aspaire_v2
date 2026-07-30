@@ -106,6 +106,22 @@ function buildTextFormat(responseFormat, responseSchema) {
     ? JSON.parse(responseSchema)
     : responseSchema;
 
+  if (
+    schema === null ||
+    typeof schema !== "object" ||
+    Array.isArray(schema) ||
+    Object.hasOwn(schema, "type") ||
+    typeof schema.name !== "string" ||
+    schema.name.trim().length === 0 ||
+    schema.schema === null ||
+    typeof schema.schema !== "object" ||
+    Array.isArray(schema.schema)
+  ) {
+    throw new Error(
+      "JSON schema response format must include name and schema, without type.",
+    );
+  }
+
   return {
     type: "json_schema",
     ...schema,

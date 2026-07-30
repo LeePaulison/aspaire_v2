@@ -61,7 +61,11 @@ export const emptyPreferences = {
 };
 
 export function arrayToText(value) {
-  return Array.isArray(value) ? value.join("\n") : "";
+  if (Array.isArray(value)) {
+    return value.join("\n");
+  }
+
+  return typeof value === "string" ? value : "";
 }
 
 export function getFormValue(formData, key) {
@@ -69,6 +73,10 @@ export function getFormValue(formData, key) {
 }
 
 export function achievementMarkdown(achievements) {
+  if (typeof achievements === "string") {
+    return achievements;
+  }
+
   if (!Array.isArray(achievements) || achievements.length === 0) {
     return "";
   }

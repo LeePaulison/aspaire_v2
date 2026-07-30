@@ -50,3 +50,54 @@ test("response requests merge verbosity and structured output format", () => {
     },
   });
 });
+
+test("response requests reject invalid json_schema response formats", () => {
+  assert.throws(
+    () =>
+      buildResponseRequest({
+        message: "Resume text",
+        model: {
+          modelId: "gpt-5.5",
+          supportsReasoning: false,
+          supportsVerbosity: false,
+          supportsTemperature: false,
+        },
+        systemPrompt: "Parse resumes",
+        responseFormat: "json_schema",
+        responseSchema: {
+          type: "object",
+          properties: {
+            summary: { type: "string" },
+          },
+        },
+      }),
+    /must include name and schema, without type/,
+  );
+
+  assert.throws(
+    () =>
+      buildResponseRequest({
+        message: "Resume text",
+        model: {
+          modelId: "gpt-5.5",
+          supportsReasoning: false,
+          supportsVerbosity: false,
+          supportsTemperature: false,
+        },
+        systemPrompt: "Parse resumes",
+        responseFormat: "json_schema",
+        responseSchema: {
+          type: "json_schema",
+          name: "career_profile_draft",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              summary: { type: "string" },
+            },
+          },
+        },
+      }),
+    /must include name and schema, without type/,
+  );
+});

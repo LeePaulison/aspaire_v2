@@ -1,7 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import { domainPreferences } from "@/drizzle/domainPreferences";
-import { careerProfileDraftResponseSchema } from "@/lib/ai/careerProfileDraftResponseSchema.js";
+import { careerProfileDraftResponseSchema } from "@/lib/ai/careerProfileDraftResponseSchema";
 import { db } from "@/lib/db/neon";
 
 export const defaultDomainPreferences = [

@@ -155,6 +155,137 @@ export async function createCareerProfile(userId, input = {}) {
   return getCareerProfile(userId, profile.profileId);
 }
 
+export async function createCareerProfileFromDraft(userId, input = {}) {
+  const profile = await createProfileRecord(userId, input);
+  const now = new Date();
+
+  const experienceRows = Array.isArray(input.experience)
+    ? input.experience.map((item, index) => ({
+        experienceId: randomUUID(),
+        profileId: profile.profileId,
+        company: normalizeText(item.company),
+        title: normalizeText(item.title),
+        location: normalizeText(item.location),
+        startDate: normalizeDate(item.startDate),
+        endDate: normalizeDate(item.endDate),
+        isCurrent: Boolean(item.isCurrent),
+        description: normalizeText(item.description),
+        achievements: parseList(item.achievements),
+        sortOrder: Number.isFinite(item.sortOrder) ? item.sortOrder : index,
+        updatedAt: now,
+      }))
+    : [];
+  const educationRows = Array.isArray(input.education)
+    ? input.education.map((item, index) => ({
+        educationId: randomUUID(),
+        profileId: profile.profileId,
+        institution: normalizeText(item.institution),
+        degree: normalizeText(item.degree),
+        fieldOfStudy: normalizeText(item.fieldOfStudy),
+        startDate: normalizeDate(item.startDate),
+        endDate: normalizeDate(item.endDate),
+        notes: normalizeText(item.notes),
+        sortOrder: Number.isFinite(item.sortOrder) ? item.sortOrder : index,
+        updatedAt: now,
+      }))
+    : [];
+  const skillRows = Array.isArray(input.skills)
+    ? input.skills
+        .map((item, index) => ({
+          skillId: randomUUID(),
+          profileId: profile.profileId,
+          name: normalizeText(item.name),
+          category: normalizeText(item.category) || "General",
+          proficiency: normalizeText(item.proficiency),
+          evidence: normalizeText(item.evidence),
+          sortOrder: Number.isFinite(item.sortOrder) ? item.sortOrder : index,
+          updatedAt: now,
+        }))
+        .filter((item) => item.name)
+    : [];
+  const projectRows = Array.isArray(input.projects)
+    ? input.projects
+        .map((item, index) => ({
+          projectId: randomUUID(),
+          profileId: profile.profileId,
+          name: normalizeText(item.name),
+          role: normalizeText(item.role),
+          description: normalizeText(item.description),
+          outcomes: normalizeText(item.outcomes),
+          technologies: parseList(item.technologies),
+          link: normalizeText(item.link),
+          startDate: normalizeDate(item.startDate),
+          endDate: normalizeDate(item.endDate),
+          sortOrder: Number.isFinite(item.sortOrder) ? item.sortOrder : index,
+          updatedAt: now,
+        }))
+        .filter((item) => item.name)
+    : [];
+  const certificationRows = Array.isArray(input.certifications)
+    ? input.certifications
+        .map((item, index) => ({
+          certificationId: randomUUID(),
+          profileId: profile.profileId,
+          name: normalizeText(item.name),
+          issuer: normalizeText(item.issuer),
+          issueDate: normalizeDate(item.issueDate),
+          expirationDate: normalizeDate(item.expirationDate),
+          credentialId: normalizeText(item.credentialId),
+          credentialUrl: normalizeText(item.credentialUrl),
+          notes: normalizeText(item.notes),
+          sortOrder: Number.isFinite(item.sortOrder) ? item.sortOrder : index,
+          updatedAt: now,
+        }))
+        .filter((item) => item.name)
+    : [];
+  const preferences = input.preferences ?? {};
+
+  await Promise.all([
+    experienceRows.length > 0
+      ? db.insert(careerProfileExperience).values(experienceRows)
+      : Promise.resolve(),
+    educationRows.length > 0
+      ? db.insert(careerProfileEducation).values(educationRows)
+      : Promise.resolve(),
+    skillRows.length > 0
+      ? db.insert(careerProfileSkills).values(skillRows)
+      : Promise.resolve(),
+    projectRows.length > 0
+      ? db.insert(careerProfileProjects).values(projectRows)
+      : Promise.resolve(),
+    certificationRows.length > 0
+      ? db.insert(careerProfileCertifications).values(certificationRows)
+      : Promise.resolve(),
+    db
+      .insert(careerProfilePreferences)
+      .values({
+        preferenceId: randomUUID(),
+        profileId: profile.profileId,
+        targetRoles: parseList(preferences.targetRoles),
+        targetIndustries: parseList(preferences.targetIndustries),
+        locations: parseList(preferences.locations),
+        workModes: parseList(preferences.workModes),
+        compensationGoals: normalizeText(preferences.compensationGoals),
+        constraints: normalizeText(preferences.constraints),
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: careerProfilePreferences.profileId,
+        set: {
+          targetRoles: parseList(preferences.targetRoles),
+          targetIndustries: parseList(preferences.targetIndustries),
+          locations: parseList(preferences.locations),
+          workModes: parseList(preferences.workModes),
+          compensationGoals: normalizeText(preferences.compensationGoals),
+          constraints: normalizeText(preferences.constraints),
+          updatedAt: now,
+        },
+      }),
+  ]);
+
+  return getCareerProfile(userId, profile.profileId);
+}
+
 export async function deleteCareerProfile(userId, profileId) {
   const profile = await getProfileRecord(userId, profileId);
 
@@ -337,7 +468,7 @@ export async function upsertCareerExperience(userId, input) {
     });
   }
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function deleteCareerExperience(userId, experienceId, profileId) {
@@ -356,7 +487,7 @@ export async function deleteCareerExperience(userId, experienceId, profileId) {
       ),
     );
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function upsertCareerEducation(userId, input) {
@@ -395,7 +526,7 @@ export async function upsertCareerEducation(userId, input) {
     });
   }
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function deleteCareerEducation(userId, educationId, profileId) {
@@ -414,7 +545,7 @@ export async function deleteCareerEducation(userId, educationId, profileId) {
       ),
     );
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function upsertCareerSkill(userId, input) {
@@ -457,7 +588,7 @@ export async function upsertCareerSkill(userId, input) {
     });
   }
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function deleteCareerSkill(userId, skillId, profileId) {
@@ -476,7 +607,7 @@ export async function deleteCareerSkill(userId, skillId, profileId) {
       ),
     );
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function upsertCareerProject(userId, input) {
@@ -523,7 +654,7 @@ export async function upsertCareerProject(userId, input) {
     });
   }
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function deleteCareerProject(userId, projectId, profileId) {
@@ -542,7 +673,7 @@ export async function deleteCareerProject(userId, projectId, profileId) {
       ),
     );
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function upsertCareerCertification(userId, input) {
@@ -588,7 +719,7 @@ export async function upsertCareerCertification(userId, input) {
     });
   }
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function deleteCareerCertification(userId, certificationId, profileId) {
@@ -607,7 +738,7 @@ export async function deleteCareerCertification(userId, certificationId, profile
       ),
     );
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }
 
 export async function updateCareerPreferences(userId, input) {
@@ -639,5 +770,5 @@ export async function updateCareerPreferences(userId, input) {
       set: values,
     });
 
-  return getCareerProfile(userId);
+  return getCareerProfile(userId, profile.profileId);
 }

@@ -21,6 +21,8 @@ import {
   upsertCareerProject,
   upsertCareerSkill,
 } from "@/graphql/careerProfile/careerProfile";
+import { createResume } from "@/graphql/resume/resume";
+import { createResumeDraftFromCareerProfile } from "@/lib/resumes/careerProfileResumeDraft";
 
 import {
   ProfileCreateForm,
@@ -31,6 +33,7 @@ import {
 import { CareerProfileDisplay } from "./CareerProfileDisplay";
 import { StatusLine } from "./CareerProfileFields";
 import { CareerProfileSectionEditor } from "./CareerProfileSectionEditor";
+import { ResumeMarkdownDraftDialog } from "./ResumeMarkdownDraftDialog";
 import {
   arrayToText,
   emptyPreferences,
@@ -52,6 +55,8 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
   const [editingSkill, setEditingSkill] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
   const [editingCertification, setEditingCertification] = useState(null);
+  const [resumeDraft, setResumeDraft] = useState(null);
+  const [resumeDraftOpen, setResumeDraftOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -374,6 +379,34 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
     );
   }
 
+  function handleGenerateResumeDraft() {
+    setError("");
+    setStatus("");
+    setResumeDraft(createResumeDraftFromCareerProfile(profile, profilePreferences));
+    setResumeDraftOpen(true);
+  }
+
+  async function handleAcceptResumeDraft(input) {
+    if (busy) {
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const resume = await createResume(input);
+      setResumeDraft(null);
+      setResumeDraftOpen(false);
+      setStatus(`Resume "${resume.title}" created in Resume Library.`);
+    } catch (createError) {
+      setError(createError.message || "Resume draft save failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!profile) {
     return (
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 py-10">
@@ -450,6 +483,7 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
                   busy={busy}
                   canDelete={profiles.length > 1}
                   onEdit={() => setEditingProfile(profile)}
+                  onGenerateResumeDraft={handleGenerateResumeDraft}
                   onDelete={() => setPendingProfileDeletion(profile)}
                   onSetDefault={handleSetDefaultProfile}
                 />
@@ -580,6 +614,20 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
         loadingLabel="Deleting..."
         variant="destructive"
         onConfirm={handleDeleteProfile}
+      />
+      <ResumeMarkdownDraftDialog
+        draft={resumeDraft}
+        open={resumeDraftOpen}
+        busy={busy}
+        status={status}
+        error={error}
+        onAccept={handleAcceptResumeDraft}
+        onOpenChange={(open) => {
+          if (!open && !busy) {
+            setResumeDraftOpen(false);
+            setResumeDraft(null);
+          }
+        }}
       />
     </>
   );

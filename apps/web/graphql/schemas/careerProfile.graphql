@@ -177,6 +177,84 @@ input UpdateCareerPreferencesInput {
   constraints: String!
 }
 
+input CreateCareerProfileFromDraftInput {
+  name: String
+  focus: String
+  isDefault: Boolean
+  headline: String
+  summary: String
+  careerGoals: String
+  additionalNotes: String
+  experience: [CareerProfileDraftExperienceInput!]!
+  education: [CareerProfileDraftEducationInput!]!
+  skills: [CareerProfileDraftSkillInput!]!
+  projects: [CareerProfileDraftProjectInput!]!
+  certifications: [CareerProfileDraftCertificationInput!]!
+  preferences: CareerProfileDraftPreferencesInput!
+}
+
+input CareerProfileDraftExperienceInput {
+  company: String!
+  title: String!
+  location: String!
+  startDate: String
+  endDate: String
+  isCurrent: Boolean!
+  description: String!
+  achievements: String!
+  sortOrder: Int
+}
+
+input CareerProfileDraftEducationInput {
+  institution: String!
+  degree: String!
+  fieldOfStudy: String!
+  startDate: String
+  endDate: String
+  notes: String!
+  sortOrder: Int
+}
+
+input CareerProfileDraftSkillInput {
+  name: String!
+  category: String!
+  proficiency: String!
+  evidence: String!
+  sortOrder: Int
+}
+
+input CareerProfileDraftProjectInput {
+  name: String!
+  role: String!
+  description: String!
+  outcomes: String!
+  technologies: String!
+  link: String!
+  startDate: String
+  endDate: String
+  sortOrder: Int
+}
+
+input CareerProfileDraftCertificationInput {
+  name: String!
+  issuer: String!
+  issueDate: String
+  expirationDate: String
+  credentialId: String!
+  credentialUrl: String!
+  notes: String!
+  sortOrder: Int
+}
+
+input CareerProfileDraftPreferencesInput {
+  targetRoles: String!
+  targetIndustries: String!
+  locations: String!
+  workModes: String!
+  compensationGoals: String!
+  constraints: String!
+}
+
 extend type Query {
   careerProfiles: [CareerProfile!]!
   careerProfile(profileId: String): CareerProfile
@@ -184,6 +262,7 @@ extend type Query {
 
 extend type Mutation {
   createCareerProfile(input: CreateCareerProfileInput): CareerProfile!
+  createCareerProfileFromDraft(input: CreateCareerProfileFromDraftInput!): CareerProfile!
   deleteCareerProfile(profileId: String!): [CareerProfile!]!
   updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!
   upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!

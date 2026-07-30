@@ -2,6 +2,7 @@
 
 import {
   ArchiveIcon,
+  MagicWandIcon,
   Pencil1Icon,
   RotateCounterClockwiseIcon,
   StarIcon,
@@ -17,6 +18,7 @@ export function ResumeToolbar({
   onArchive,
   onDelete,
   onEdit,
+  onGenerateProfileDraft,
   onRestore,
   onSetPrimary,
   onUpload,
@@ -47,6 +49,17 @@ export function ResumeToolbar({
         disabled={busy || isArchived}
       >
         <UploadIcon />
+      </IconButton>
+      <IconButton
+        label={
+          isArchived
+            ? "Restore resume to create profile draft"
+            : "Create Career Profile draft"
+        }
+        onClick={onGenerateProfileDraft}
+        disabled={busy || isArchived || !resume.resumeText?.trim()}
+      >
+        <MagicWandIcon />
       </IconButton>
       {isArchived ? (
         <IconButton label="Restore resume" onClick={onRestore} disabled={busy}>
