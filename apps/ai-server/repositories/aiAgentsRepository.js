@@ -7,6 +7,9 @@ export async function getAiAgentById({ token, agentId }) {
       query AiAgentConfiguration($agentId: String!) {
         aiAgentConfiguration(agentId: $agentId) {
           agentId
+          domain
+          workflowType
+          defaultModelId
           systemPrompt
         }
       }

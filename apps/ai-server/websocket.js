@@ -4,6 +4,7 @@ import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { createChatStream } from "./lib/openai/chat.js";
 import { saveConversationTurn } from "./repositories/conversationRepository.js";
 import { getPreferences } from "./repositories/preferencesRepository.js";
+import { getDomainPreference } from "./repositories/domainPreferencesRepository.js";
 import { getAiModelById } from "./repositories/aiModelsRepository.js";
 import { getAiAgentById } from "./repositories/aiAgentsRepository.js";
 import { createWebSocketConnectionHandler } from "./lib/websocket/connectionHandler.js";
@@ -51,6 +52,7 @@ export function createWebSocketServer(configuration) {
     verifyAuthenticationToken,
     decodeToken: decodeJwt,
     getPreferences,
+    getDomainPreference,
     getAiModelById,
     getAiAgentById,
     createChatStream,

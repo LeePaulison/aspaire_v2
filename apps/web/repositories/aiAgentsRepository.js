@@ -47,6 +47,21 @@ export const defaultAgents = [
     sortOrder: 30,
   },
   {
+    agentId: "resume-parser",
+    category: "Resume",
+    domain: "career_evidence",
+    workflowType: "resume_to_career_profile_draft",
+    name: "Resume Parser",
+    description:
+      "Extracts imported resume content into a structured Career Profile draft for user review.",
+    defaultModelId: "gpt-5.5",
+    contextPolicy: "selected-resume",
+    toolPolicy: "none",
+    systemPrompt:
+      "You are AspAIre's resume parser. Extract the provided resume text into a structured Career Profile draft JSON object. Preserve user-owned facts, do not invent details, and place ambiguous or unplaced content into additionalNotes. Parsed content is only a draft for review and must not be treated as durable profile truth until accepted by the user.",
+    sortOrder: 35,
+  },
+  {
     agentId: "job-fit-analyst",
     category: "Analysis",
     domain: "resume_analysis",

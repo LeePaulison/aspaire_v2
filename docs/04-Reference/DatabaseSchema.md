@@ -51,6 +51,7 @@ Current exported schema modules include:
 * `career_profile_projects`
 * `career_profile_certifications`
 * `career_profile_preferences`
+* `domain_preferences`
 * `preferences`
 * `reasoning_levels`
 * `resume_analyses`
@@ -200,6 +201,32 @@ Defined in `apps/web/drizzle/aiAgents.js`.
 | `sort_order` | integer | Required, defaults `0` |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |
+
+## `domain_preferences`
+
+Defined in `apps/web/drizzle/domainPreferences.js`.
+
+Stores product-level AI runtime defaults for domain workflows. These defaults are not per-user preferences; they describe how a domain workflow should run unless a request explicitly overrides them.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | text | Primary key |
+| `domain` | text | Required |
+| `workflow_type` | text | Required |
+| `agent_id` | text | Optional, references `ai_agents.id`, set null on delete |
+| `default_model_id` | text | Optional, references `ai_models.id`, set null on delete |
+| `temperature` | real | Optional |
+| `default_reasoning_id` | text | Optional, references `reasoning_levels.id`, set null on delete |
+| `default_verbosity_id` | text | Optional, references `verbosity_levels.id`, set null on delete |
+| `response_format` | text | Required, defaults `text` |
+| `response_schema` | jsonb | Optional |
+| `enabled` | boolean | Required, defaults true |
+| `created_at` | timestamp with timezone | Required, defaults now |
+| `updated_at` | timestamp with timezone | Required, defaults now |
+
+Indexes:
+
+* `domain_preferences_domain_workflow_unique` on `domain`, `workflow_type`
 
 ## `reasoning_levels`
 

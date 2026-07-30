@@ -5,8 +5,10 @@ import { drizzle } from "drizzle-orm/neon-http";
 
 import { aiAgents } from "../drizzle/aiAgents.js";
 import { aiModels } from "../drizzle/aiModels.js";
+import { domainPreferences } from "../drizzle/domainPreferences.js";
 import { reasoningLevels } from "../drizzle/reasoningLevels.js";
 import { verbosityLevels } from "../drizzle/verbosityLevels.js";
+import { careerProfileDraftResponseSchema } from "../lib/ai/careerProfileDraftResponseSchema.js";
 
 const { loadEnvConfig } = nextEnv;
 
@@ -152,6 +154,21 @@ const defaultAgents = [
     sortOrder: 30,
   },
   {
+    agentId: "resume-parser",
+    category: "Resume",
+    domain: "career_evidence",
+    workflowType: "resume_to_career_profile_draft",
+    name: "Resume Parser",
+    description:
+      "Extracts imported resume content into a structured Career Profile draft for user review.",
+    defaultModelId: "gpt-5.5",
+    contextPolicy: "selected-resume",
+    toolPolicy: "none",
+    systemPrompt:
+      "You are AspAIre's resume parser. Extract the provided resume text into a structured Career Profile draft JSON object. Preserve user-owned facts, do not invent details, and place ambiguous or unplaced content into additionalNotes. Parsed content is only a draft for review and must not be treated as durable profile truth until accepted by the user.",
+    sortOrder: 35,
+  },
+  {
     agentId: "job-fit-analyst",
     category: "Analysis",
     domain: "resume_analysis",
@@ -192,6 +209,22 @@ const defaultAgents = [
     systemPrompt:
       "You are AspAIre's interview prep coach. Help the user prepare for interviews using selected career, resume, and job context. Generate likely questions, talking points, gaps to study, and concise practice guidance.",
     sortOrder: 60,
+  },
+];
+
+const defaultDomainPreferences = [
+  {
+    domainPreferenceId: "career_evidence.resume_to_career_profile_draft",
+    domain: "career_evidence",
+    workflowType: "resume_to_career_profile_draft",
+    agentId: "resume-parser",
+    defaultModelId: "gpt-5.5",
+    temperature: null,
+    defaultReasoningId: "medium",
+    defaultVerbosityId: "low",
+    responseFormat: "json_schema",
+    responseSchema: careerProfileDraftResponseSchema,
+    enabled: true,
   },
 ];
 
@@ -280,6 +313,29 @@ async function createDefaultAiAgents() {
     });
 }
 
+async function createDefaultDomainPreferences() {
+  await db
+    .insert(domainPreferences)
+    .values(defaultDomainPreferences)
+    .onConflictDoUpdate({
+      target: [
+        domainPreferences.domain,
+        domainPreferences.workflowType,
+      ],
+      set: {
+        agentId: drizzleSql.raw("excluded.agent_id"),
+        defaultModelId: drizzleSql.raw("excluded.default_model_id"),
+        temperature: drizzleSql.raw("excluded.temperature"),
+        defaultReasoningId: drizzleSql.raw("excluded.default_reasoning_id"),
+        defaultVerbosityId: drizzleSql.raw("excluded.default_verbosity_id"),
+        responseFormat: drizzleSql.raw("excluded.response_format"),
+        responseSchema: drizzleSql.raw("excluded.response_schema"),
+        enabled: drizzleSql.raw("excluded.enabled"),
+        updatedAt: new Date(),
+      },
+    });
+}
+
 async function createDefaultReasoningLevels() {
   await db
     .insert(reasoningLevels)
@@ -313,6 +369,7 @@ async function main() {
   await createDefaultReasoningLevels();
   await createDefaultVerbosityLevels();
   await createDefaultAiAgents();
+  await createDefaultDomainPreferences();
 
   console.log("Default AI data created or updated.");
 }

@@ -32,4 +32,5 @@ export const resolvers = {
   Resume: resumeResolvers.Resume,
   ResumeFile: resumeResolvers.ResumeFile,
   ResumeDeletionReceipt: resumeResolvers.ResumeDeletionReceipt,
+  DomainPreference: aiAgentsResolvers.DomainPreference,
 };
