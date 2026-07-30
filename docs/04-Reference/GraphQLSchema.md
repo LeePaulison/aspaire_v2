@@ -151,12 +151,14 @@ Queries:
 
 * `aiAgents: [AiAgent!]!`
 * `aiAgentConfiguration(agentId: String!): AiAgentConfiguration`
+* `domainPreference(domain: String!, workflowType: String!): DomainPreference`
 
 Purpose:
 
 * Expose user-facing AI agent metadata.
 * Include MVP-oriented agent domain, workflow, context policy, tool policy, prompt version, enabled state, and ordering metadata.
 * Expose selected agent system prompt configuration to authenticated AI server calls.
+* Expose domain workflow defaults such as the resume-parser structured output configuration.
 
 ---
 
@@ -174,6 +176,14 @@ Types:
 
 Inputs:
 
+* `CreateCareerProfileInput`
+* `CreateCareerProfileFromDraftInput`
+* `CareerProfileDraftExperienceInput`
+* `CareerProfileDraftEducationInput`
+* `CareerProfileDraftSkillInput`
+* `CareerProfileDraftProjectInput`
+* `CareerProfileDraftCertificationInput`
+* `CareerProfileDraftPreferencesInput`
 * `UpdateCareerProfileSummaryInput`
 * `UpsertCareerExperienceInput`
 * `UpsertCareerEducationInput`
@@ -190,6 +200,7 @@ Queries:
 Mutations:
 
 * `createCareerProfile(input: CreateCareerProfileInput): CareerProfile!`
+* `createCareerProfileFromDraft(input: CreateCareerProfileFromDraftInput!): CareerProfile!`
 * `deleteCareerProfile(profileId: String!): [CareerProfile!]!`
 * `updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!`
 * `upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!`
@@ -207,6 +218,7 @@ Mutations:
 Purpose:
 
 * Create, list, read, update, and delete authenticated user career profile variants.
+* Create reviewed resume-derived Career Profile variants in one mutation.
 * Support multiple profile variants per authenticated user while preserving exactly one default profile where profiles exist.
 * Manage profile name, focus, default state, summary, additional notes, experience, education, skills, projects, certifications, and job/location preferences.
 * Expose date-bearing fields as nullable strings backed by PostgreSQL `date` columns.

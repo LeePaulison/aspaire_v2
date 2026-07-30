@@ -18,7 +18,7 @@ For first-run users, Resume Library is the preferred starting point when the use
 
 ## Current State
 
-The Resume Library MVP foundation slice is complete. The broader SaaS Resume Library domain remains open for deeper product capabilities.
+The Resume Library MVP foundation slice is complete. The Phase 4 resume-to-profile review workflow is implemented. The broader SaaS Resume Library domain remains open for deeper product capabilities.
 
 The current implementation includes a production resume schema, separate uploaded-file metadata schema, repository, GraphQL operations, authenticated Resume Library UI for manual resume records, and an upload path for attaching original resume files to existing resume records.
 
@@ -26,7 +26,9 @@ The storage boundary for uploaded resume originals is decided: uploaded original
 
 Resume text extraction is implemented for uploaded PDF, DOCX, and plain text originals. Extracted text may populate the stored `resume_text` field when the resume has no manually entered text or already uses uploaded text as its source.
 
-Structured section extraction, download links, true version history, richer resume comparison, resume-to-profile review workflows, and AI-assisted resume improvement are not yet implemented. They belong to the broader SaaS Resume Library phase or later resume-focused refinement slices.
+Resume Library records with stored resume text can generate a reviewed Career Profile draft. Draft review happens in client session state and durable Career Profile data is created only after explicit user acceptance.
+
+Structured resume section extraction, download links, true version history, richer resume comparison, resume-profile alignment suggestions, and AI-assisted resume improvement remain open. They belong to the broader SaaS Resume Library phase, Career Evidence, or later resume-focused refinement slices.
 
 ## Roadmap Phase
 
@@ -93,17 +95,18 @@ Initial capabilities should include:
 * Receive clear confirmation when a resume record, stored content, file metadata, and uploaded originals are deleted
 * Upload an original PDF, DOCX, or plain text resume file to an existing resume record
 * Extract plain resume text from uploaded PDF, DOCX, or TXT originals without overwriting manually entered resume text
+* Generate a reviewed Career Profile draft from a resume with stored text
+* Accept a reviewed profile draft into a new durable Career Profile variant
 
 Later capabilities may include:
 
 * Extract structured resume sections
-* Generate a resume from career profile data
 * Duplicate a resume as a new version
 * Compare resume versions
 * Attach resumes to applications
 * Track resume usage across saved jobs and applications
 * AI-assisted resume cleanup and tailoring
-* AI-assisted career profile drafting from imported resume content
+* Generate alternate resume Markdown structures from career profile data
 
 Resume generation and parsed-resume review should produce basic editable Markdown before any template or export system is introduced. Basic examples, such as an Executive resume format, may be used when the user requests a format direction. They should not become a broad template system by default.
 
@@ -368,12 +371,14 @@ Plain text extraction from uploaded files is a server-side library operation in 
 
 Potential later AI features include:
 
-* Drafting a career profile from imported resume content for user review
-* Drafting a resume from the career profile
 * Tailoring a resume toward a saved job
 * Suggesting stronger bullet wording
 * Detecting missing evidence or weak sections
 * Comparing resume versions
+
+Implemented Phase 4 behavior includes AI-assisted career profile drafting from resume text. The AI server returns a structured draft, and the web application owns review state and final persistence.
+
+Profile-to-resume Markdown drafting is implemented deterministically from Career Profile data rather than through AI.
 
 AI-generated changes should be reviewable before they overwrite stored resume content.
 
@@ -447,7 +452,7 @@ Testing should prioritize authorization and data integrity because resume conten
 
 Resume Library should eventually integrate with:
 
-* Career Profile for generating or checking resume content against profile context
+* Career Profile for generating reviewed profile drafts and checking resume content against profile context
 * Resume Analysis for fit evaluation and improvement guidance
 * Saved Jobs for target-role context
 * Application Tracking for recording which resume was submitted

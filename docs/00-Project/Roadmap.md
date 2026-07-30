@@ -38,6 +38,26 @@ A complete slice may include:
 
 ---
 
+## Add Phase-Boundary Review Slices
+
+After any substantial product phase, AspAIre should add a small review and cleanup slice before starting the next major domain.
+
+These slices may be numbered as `.5` phases when useful, such as Phase 4.5 after Phase 4. They are not major product feature phases. They exist to review the newly completed workflow while the design is still fresh, refactor obvious maintainability problems, and keep future phases from inheriting avoidable complexity.
+
+Phase-boundary review slices should focus on:
+
+* Code review and cleanup after the completed phase
+* Single Responsibility Principle refactors at both helper and workflow-orchestration levels
+* Domain conveyor-belt functions that provide obvious central entry points for multi-step workflows
+* Data-shape consistency between UI, helper functions, GraphQL inputs, repositories, and AI contracts
+* Removal of dead code, stale comments, temporary scaffolding, and unnecessary normalization
+* Regression tests around the workflow that was just completed
+* Documentation updates that reflect the final implementation shape
+
+The goal is not to atomize every function. The goal is to keep small functions focused while preserving readable domain-level call points that explain how a workflow moves from user action to durable result.
+
+---
+
 ## Establish Shared Context Early
 
 AspAIre becomes more valuable as career context accumulates.
@@ -187,11 +207,15 @@ Users can maintain a usable resume library that supports later analysis, tailori
 
 Completed MVP foundation behavior includes manual resume records, primary resume selection, archive and restore, resume deletion receipts, uploaded-original metadata, individual uploaded-original deletion, private S3 storage boundaries, and server-side text extraction that does not overwrite manually entered resume text.
 
-The broader SaaS Resume Library phase still includes deeper resume versioning, structured section extraction, download links, richer resume comparison, resume-to-profile workflows, and AI-assisted resume improvement. Those remain future work and should not be treated as complete because the MVP foundation slice is complete.
+The broader SaaS Resume Library phase still includes deeper resume versioning, structured section extraction, download links, richer resume comparison, richer resume-profile alignment workflows, and AI-assisted resume improvement. Those remain future work and should not be treated as complete because the MVP foundation slice and Phase 4 draft loop are complete.
 
 ---
 
 # Phase 4: Career Evidence and Resume-Profile Linkage
+
+## Status
+
+Bidirectional draft-loop MVP implemented. Full Career Evidence and alignment package remains open.
 
 ## Goal
 
@@ -204,10 +228,13 @@ This phase should let a resume feed a career profile draft, let a career profile
 * Resume-to-profile draft workflow implemented
 * Profile-to-resume Markdown draft workflow implemented
 * Review and acceptance UI implemented for AI-generated or parsed content
-* Career evidence and project proof points made usable for resume guidance
-* Resume-profile consistency checks implemented
 * Basic Markdown resume formatting supported without introducing a full template system
-* Existing resume upload behavior adjusted so parsed Markdown is reviewed before becoming durable resume text where practical
+* Draft content remains client-session scoped until accepted
+* Accepted profile drafts create durable Career Profile variants
+* Accepted resume Markdown drafts create durable Resume Library records
+* Career evidence and project proof points made usable for resume guidance
+* Resume-profile consistency checks planned
+* Reviewable parsed-upload Markdown behavior planned where practical
 
 ## Core Capabilities
 
@@ -218,6 +245,23 @@ This phase should let a resume feed a career profile draft, let a career profile
 * Surface missing, inconsistent, or underused career evidence
 * Save durable profile or resume changes only after explicit user acceptance
 * Use basic Markdown structure for generated or parsed resume text
+
+Implemented MVP behavior:
+
+* Resume Library resumes with stored text can request an AI-assisted Career Profile draft through the resume-parser WebSocket workflow.
+* Resume-derived Career Profile drafts open in a review dialog and are not persisted until accepted.
+* Ambiguous or unclassified parsed resume content is preserved in `Additional Notes` rather than silently discarded.
+* Accepted profile drafts are saved through a single GraphQL mutation that creates the profile and its reviewed sections.
+* Career Profile variants can generate deterministic editable resume Markdown locally.
+* Accepted profile-derived Markdown creates a new Resume Library record.
+
+Remaining Phase 4 product work:
+
+* Resume-profile alignment suggestions
+* First-class Career Evidence records where needed for reuse, linking, or review state
+* Reviewable Markdown formatting after upload where practical
+* Richer evidence surfacing and consistency checks
+* UI polish around draft review states
 
 ## Exit Criteria
 
@@ -231,6 +275,54 @@ Career Profile -> Resume Markdown draft
 Users can also review alignment suggestions that compare what the resume says against the accepted career profile, projects, skills, and outcomes.
 
 The phase is complete when the user can create, review, edit, accept, or reject generated profile and resume content without silent overwrites. Basic format examples, such as an Executive resume format, may be supported when requested, but a broad resume template system remains out of scope.
+
+---
+
+# Phase 4.5: Post-Phase 4 Review and Cleanup
+
+## Status
+
+Not started.
+
+## Goal
+
+Stabilize the Phase 4 resume-profile workflow before starting the next product domain.
+
+This phase is the first explicit phase-boundary review slice. It is a quality bridge, not a major feature phase. It should make the implemented Resume Library, Career Profile, AI structured-output, and draft-review paths easier to understand, test, and extend.
+
+## Outcomes
+
+* Post-Phase 4 code review completed
+* Single Responsibility Principle issues identified and refactored where they create real maintenance risk
+* Domain conveyor-belt functions introduced or clarified for the major resume-profile workflows
+* Resume-to-profile and profile-to-resume data flow simplified where unnecessary normalization or reshaping remains
+* GraphQL save paths reviewed for avoidable over-fetching or redundant requests
+* WebSocket structured-output contract documented and covered by focused tests
+* Draft review UI states cleaned up for loading, error, cancel, accept, and retry behavior
+* Dead code, stale comments, and temporary implementation scaffolding removed
+* Documentation updated after cleanup decisions
+
+## Core Capabilities
+
+* Review component boundaries around Resume Library, Career Profile, draft dialogs, section editors, and Markdown generation
+* Extract narrowly scoped helpers only where they reduce component or resolver complexity
+* Preserve obvious domain-level call points for workflows that require multiple SRP helper calls
+* Keep canonical data shapes consistent between creator functions, review UI, GraphQL input, and repository writes
+* Audit accepted-draft persistence so each accept action performs the minimum practical set of durable mutations and follow-up reads
+* Verify that rejected, dismissed, or failed drafts do not persist partial state
+* Add focused tests for any refactored data-shape, GraphQL, AI-server, and UI behavior
+* Re-run lint, unit tests, and the web build after cleanup
+
+## Exit Criteria
+
+Phase 4.5 is complete when the bidirectional draft loop is easier to reason about than it was immediately after implementation:
+
+```text
+Resume -> reviewed profile draft -> accepted Career Profile
+Career Profile -> reviewed resume Markdown -> accepted Resume Library record
+```
+
+The implementation should have clear ownership boundaries, minimal shape translation between functions, no obvious redundant save-time GraphQL chatter, and enough regression coverage to protect the review-first behavior.
 
 ---
 

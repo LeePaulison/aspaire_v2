@@ -153,11 +153,31 @@ apps/web/components/career-profile/CareerProfileClient.js
 
 The UI is protected by the shared authenticated route group and uses GraphQL helpers to load and persist user-owned profile data.
 
-The Career Profile page supports multiple profile variants. The left pane lists profiles and supports selection, edit, delete, and new-profile actions. The selected profile detail is display-only with a toolbar for edit, delete, and set-default actions. Editing opens a larger dialog that contains top-level profile fields plus experience, education, skills, projects, certifications, and preferences.
+The Career Profile page supports multiple profile variants. The left pane lists profiles and supports selection, edit, delete, and new-profile actions. The selected profile detail is display-only with a toolbar for edit, delete, set-default, and create-resume-draft actions. Editing opens a larger dialog that contains top-level profile fields plus experience, education, skills, projects, certifications, and preferences.
 
 Narrative profile fields accept Markdown text in editable textareas and render saved content through the shared Markdown renderer. This keeps profile context readable while preserving plain text entry and storage.
 
 Date-bearing section forms use native date pickers and React Hook Form with Yup validation for start/end date rules. Read-only profile displays show formatted date ranges when date values are available.
+
+The profile-to-resume workflow generates deterministic editable Markdown from the selected Career Profile, opens a review dialog, and creates a Resume Library record only after the user accepts the draft.
+
+## Resume Library UI
+
+The Resume Library route lives at:
+
+```text
+apps/web/app/(protected)/resumes/page.js
+```
+
+The main client component lives at:
+
+```text
+apps/web/components/resumes/ResumeLibraryClient.js
+```
+
+The Resume Library page supports text-first resume records, uploaded original metadata, upload and deletion dialogs, primary/archive/delete actions, and review-first Career Profile draft generation from stored resume text.
+
+The resume-to-profile workflow sends an authenticated WebSocket request using the `resume-parser` agent and `career_evidence.resume_to_career_profile_draft` domain preference. The returned structured draft opens in a review dialog and is persisted only through explicit user acceptance.
 
 ---
 

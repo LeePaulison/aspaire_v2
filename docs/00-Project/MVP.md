@@ -552,7 +552,7 @@ After the MVP is useful, likely next candidates include:
 * Company and role research
 * Manual reminder improvements
 * Better analysis comparison across jobs
-* Profile drafting from resume content
+* Richer profile/resume alignment suggestions
 * Deployment hardening
 
 Post-MVP work should be selected based on real use of the MVP, not roadmap appeal alone.

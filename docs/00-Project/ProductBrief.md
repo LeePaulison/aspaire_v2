@@ -178,16 +178,22 @@ Current example:
 
 * **Phase 3 MVP / Resume Library foundation:** complete.
 * **Phase 3 SaaS / full Resume Library:** still open.
+* **Phase 4 MVP / bidirectional resume-profile draft loop:** implemented.
+* **Phase 4 SaaS / full Career Evidence package:** still open.
 
 The completed MVP foundation supports manual resume records, uploaded originals, plain text extraction, primary resume selection, archive and delete behavior, and storage cleanup.
 
-The broader SaaS Resume Library still includes deeper version history, structured section extraction, download links, richer comparison, resume-to-profile review workflows, and AI-assisted resume improvement.
+The completed Phase 4 draft loop supports review-first resume-to-profile drafting and profile-to-resume Markdown drafting. Resume-derived profile drafts are reviewed before becoming durable Career Profile variants. Profile-derived resume Markdown is reviewed before becoming a Resume Library record.
+
+The broader SaaS Resume Library still includes deeper version history, structured section extraction, download links, richer comparison, and AI-assisted resume improvement. The broader Career Evidence package still includes resume-profile alignment suggestions, first-class evidence records where needed, richer comparison, and deeper review workflows.
 
 Use this distinction whenever marking a phase done:
 
 ```text
 MVP slice complete != SaaS phase complete
 ```
+
+Substantial product phases may also be followed by `.5` review slices. These are engineering quality phases, not new product domains. They should capture post-phase code review, SRP refactors, workflow-level domain conveyor-belt functions, data-flow cleanup, regression hardening, and documentation alignment before the next major domain begins.
 
 ---
 
@@ -199,7 +205,8 @@ MVP slice complete != SaaS phase complete
 | 1 | Platform Baseline | Complete enough for feature work | Ongoing hardening |
 | 2 | Career Profile | Foundation complete | Broader profile intelligence remains open |
 | 3 | Resume Library | Foundation complete | Full Resume Library remains open |
-| 4 | Career Evidence and Resume-Profile Linkage | Not started | Intended as a complete SaaS package |
+| 4 | Career Evidence and Resume-Profile Linkage | Bidirectional draft loop implemented | Full evidence and alignment package remains open |
+| 4.5 | Post-Phase 4 Review and Cleanup | Not started | Code review, SRP refactor, data-flow cleanup, and regression hardening |
 | 5 | Job Search and Saved Jobs | Not started | Not started |
 | 6 | Resume Analysis and Fit Evaluation | Not started | Not started |
 | 7 | Application Tracking | Not started | Not started |

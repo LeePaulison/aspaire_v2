@@ -18,7 +18,7 @@ In first-run setup, Career Profile is the primary path for users who do not have
 
 ## Current State
 
-The Career Profile foundation slice is implemented.
+The Career Profile foundation slice is implemented. Phase 4 review workflows now let users create a Career Profile variant from a reviewed resume-derived draft and generate reviewed Resume Markdown from an accepted profile.
 
 Current implementation includes PostgreSQL schema, repository access, GraphQL operations, and a protected multi-profile UI.
 
@@ -59,7 +59,7 @@ The Career Profile should:
 * Provide a manual first-run path for users without a resume
 * Capture structured information that can power later product workflows
 * Support both quick onboarding and deeper profile refinement over time
-* Support reviewed profile drafting from resume content when available
+* Support reviewed profile drafting from Resume Library content
 * Provide AI workflows with better context than a single resume upload
 * Reduce repeated data entry across resumes, applications, interviews, and research
 
@@ -75,6 +75,8 @@ Implemented capabilities include:
 * Select, edit, delete, and set a default career profile
 * Start setup manually when the user does not have a resume
 * Review and edit a draft profile generated from imported resume content
+* Generate an editable Resume Markdown draft from an accepted profile
+* Accept reviewed Resume Markdown into a new Resume Library record
 * View the selected profile in a read-only display
 * Edit profile sections in a large review dialog
 * Save professional summary information
@@ -91,7 +93,6 @@ The foundation UI supports Markdown-formatted text in narrative fields. Users ed
 
 Later capabilities may include:
 
-* AI-assisted profile drafting from resume data
 * Profile completeness suggestions
 * Skill normalization and grouping
 * Career positioning recommendations
@@ -300,6 +301,7 @@ Implemented queries:
 Implemented foundation mutations:
 
 * `createCareerProfile`
+* `createCareerProfileFromDraft`
 * `deleteCareerProfile`
 * `updateCareerProfileSummary`
 * `upsertCareerExperience`
@@ -356,7 +358,9 @@ Implemented views:
 * New profile form
 * Display-only selected profile detail
 * Toolbar actions for edit, delete, and set default
+* Toolbar action for generating a reviewed Resume Markdown draft
 * Edit dialog covering profile summary, experience, education, skills, projects, certifications, and preferences
+* Resume Markdown review dialog before creating a Resume Library record
 
 The current foundation route is:
 
@@ -388,6 +392,8 @@ Career Profile is primarily an AI context source in the first implementation.
 
 Initial AI-adjacent uses include:
 
+* Generating reviewed profile drafts from resume content through the resume-parser workflow
+* Generating deterministic reviewed Resume Markdown drafts from accepted profile data
 * Supplying structured career context to resume analysis
 * Supplying user background for interview preparation
 * Supplying target-role and preference context for market research
@@ -404,6 +410,8 @@ Potential later AI features include:
 AI-generated changes should be reviewable before they become profile data.
 
 Resume-derived profile drafts should be treated as suggestions, not truth. The user should review and accept the draft before it becomes the durable Career Profile record.
+
+Profile-derived resume Markdown is also review-first. The generated Markdown remains editable draft content until the user accepts it into the Resume Library.
 
 ---
 
@@ -463,7 +471,7 @@ Testing should scale with the implemented surface area. The first slice should p
 
 Career Profile should eventually integrate with:
 
-* Resume Library for profile-to-resume consistency and drafting
+* Resume Library for profile-to-resume drafting and future consistency checks
 * Resume Analysis for user background and target positioning
 * Job Search for search terms and preference filtering
 * Saved Jobs for fit and relevance signals
