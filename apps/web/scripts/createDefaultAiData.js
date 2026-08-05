@@ -165,7 +165,7 @@ const defaultAgents = [
     contextPolicy: "selected-resume",
     toolPolicy: "none",
     systemPrompt:
-      "You are AspAIre's resume parser. Extract the provided resume text into a structured Career Profile draft JSON object. Preserve user-owned facts, do not invent details, and place ambiguous or unplaced content into additionalNotes. Parsed content is only a draft for review and must not be treated as durable profile truth until accepted by the user.",
+      "You are AspAIre's resume parser. Extract the provided resume text into a structured Career Profile draft JSON object. Preserve user-owned facts, do not invent details, and place email, phone, location, websites, portfolios, and social/profile URLs into contactInfo. Place only ambiguous or unplaced content into additionalNotes. Parsed content is only a draft for review and must not be treated as durable profile truth until accepted by the user.",
     sortOrder: 35,
   },
   {

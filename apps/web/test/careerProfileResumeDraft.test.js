@@ -12,6 +12,15 @@ const profile = {
   focus: "Platform Engineering",
   headline: "Senior Platform Engineer",
   summary: "Builds resilient developer platforms.",
+  contactInfo: {
+    email: "engineer@example.com",
+    phone: "555-123-4567",
+    location: "Remote",
+    links: [
+      { label: "LinkedIn", url: "https://linkedin.com/in/engineer" },
+      { label: "Company", url: "https://example.com/company" },
+    ],
+  },
   additionalNotes: "Open to infrastructure-heavy teams.",
   experience: [
     {
@@ -66,6 +75,10 @@ test("career profile resume formatter creates editable Markdown sections", () =>
   const markdown = createResumeMarkdownFromCareerProfile(profile);
 
   assert.match(markdown, /^# Senior Platform Engineer/);
+  assert.match(
+    markdown,
+    /engineer@example.com \| 555-123-4567 \| Remote \| LinkedIn: https:\/\/linkedin.com\/in\/engineer \| Company: https:\/\/example.com\/company/,
+  );
   assert.match(markdown, /## Experience/);
   assert.match(markdown, /Senior Developer, Acme \| Remote \| 2022-01 - Present/);
   assert.match(markdown, /- Reduced deploy time/);

@@ -274,6 +274,7 @@ Durable career profile variants for authenticated users. A user may have multipl
 | `headline` | text | Required, defaults empty |
 | `summary` | text | Required, defaults empty |
 | `career_goals` | text | Required, defaults empty |
+| `contact_info` | jsonb | Required, defaults empty object; stores reviewed email, phone, location, and ordered labeled links |
 | `additional_notes` | text | Required, defaults empty; review holding field for ambiguous or unplaced career context |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |

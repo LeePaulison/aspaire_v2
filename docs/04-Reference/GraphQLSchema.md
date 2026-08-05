@@ -177,6 +177,8 @@ Types:
 Inputs:
 
 * `CreateCareerProfileInput`
+* `CareerProfileContactInfoInput`
+* `CareerProfileContactLinkInput`
 * `CreateCareerProfileFromDraftInput`
 * `CareerProfileDraftExperienceInput`
 * `CareerProfileDraftEducationInput`

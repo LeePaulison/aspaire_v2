@@ -50,6 +50,26 @@ function normalizeProfileName(value) {
   return normalizeText(value) || "Default Profile";
 }
 
+function normalizeContactInfo(value = {}) {
+  const source =
+    value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const links = Array.isArray(source.links)
+    ? source.links
+        .map((link) => ({
+          label: normalizeText(link?.label),
+          url: normalizeText(link?.url),
+        }))
+        .filter((link) => link.label || link.url)
+    : [];
+
+  return {
+    email: normalizeText(source.email),
+    phone: normalizeText(source.phone),
+    location: normalizeText(source.location),
+    links,
+  };
+}
+
 async function getProfileRecord(userId, profileId) {
   if (profileId) {
     const [profile] = await db
@@ -111,6 +131,7 @@ async function createProfileRecord(userId, input = {}) {
       headline: normalizeText(input.headline),
       summary: normalizeText(input.summary),
       careerGoals: normalizeText(input.careerGoals),
+      contactInfo: normalizeContactInfo(input.contactInfo),
       additionalNotes: normalizeText(input.additionalNotes),
     })
     .returning();
@@ -385,6 +406,7 @@ export async function getCareerProfile(userId, profileId) {
 
   return {
     ...profile,
+    contactInfo: normalizeContactInfo(profile.contactInfo),
     experience,
     education,
     skills,
@@ -415,6 +437,10 @@ export async function updateCareerProfileSummary(userId, input) {
       headline: normalizeOptionalText(input.headline) ?? profile.headline,
       summary: normalizeOptionalText(input.summary) ?? profile.summary,
       careerGoals: normalizeOptionalText(input.careerGoals) ?? profile.careerGoals,
+      contactInfo:
+        input.contactInfo === undefined
+          ? normalizeContactInfo(profile.contactInfo)
+          : normalizeContactInfo(input.contactInfo),
       additionalNotes:
         normalizeOptionalText(input.additionalNotes) ?? profile.additionalNotes,
       updatedAt: new Date(),

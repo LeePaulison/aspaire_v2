@@ -10,6 +10,28 @@ export const careerProfileDraftResponseSchema = {
       headline: { type: "string" },
       summary: { type: "string" },
       careerGoals: { type: "string" },
+      contactInfo: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          email: { type: "string" },
+          phone: { type: "string" },
+          location: { type: "string" },
+          links: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                label: { type: "string" },
+                url: { type: "string" },
+              },
+              required: ["label", "url"],
+            },
+          },
+        },
+        required: ["email", "phone", "location", "links"],
+      },
       additionalNotes: { type: "string" },
       experience: {
         type: "array",
@@ -154,6 +176,7 @@ export const careerProfileDraftResponseSchema = {
       "headline",
       "summary",
       "careerGoals",
+      "contactInfo",
       "additionalNotes",
       "experience",
       "education",

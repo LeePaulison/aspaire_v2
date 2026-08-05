@@ -6,7 +6,10 @@ import { AppDialog } from "@/components/ui/AppDialog";
 import { ProfileEditForm } from "@/components/career-profile/CareerProfileChrome";
 import { CareerProfileSectionEditor } from "@/components/career-profile/CareerProfileSectionEditor";
 import { StatusLine } from "@/components/career-profile/CareerProfileFields";
-import { getFormValue } from "@/components/career-profile/careerProfileUtils";
+import {
+  getContactInfoFromForm,
+  getFormValue,
+} from "@/components/career-profile/careerProfileUtils";
 
 function nextDraftId(prefix) {
   return `draft-${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -110,6 +113,7 @@ export function CareerProfileDraftDialog({
       headline: getFormValue(formData, "headline"),
       summary: getFormValue(formData, "summary"),
       careerGoals: getFormValue(formData, "careerGoals"),
+      contactInfo: getContactInfoFromForm(formData),
       additionalNotes: getFormValue(formData, "additionalNotes"),
     }));
   }
@@ -125,6 +129,7 @@ export function CareerProfileDraftDialog({
         headline: getFormValue(formData, "headline"),
         summary: getFormValue(formData, "summary"),
         careerGoals: getFormValue(formData, "careerGoals"),
+        contactInfo: getContactInfoFromForm(formData),
         additionalNotes: getFormValue(formData, "additionalNotes"),
       });
       return;

@@ -35,6 +35,7 @@ Current implemented behavior includes:
 * Resume-to-profile draft generation from an owned Resume Library record with stored resume text
 * AI-assisted structured output through the resume-parser WebSocket workflow
 * Editable Career Profile draft review before durable profile creation
+* Contact and social information captured as structured profile contact info
 * Preservation of unclassified or ambiguous resume content in `Additional Notes`
 * Single GraphQL acceptance mutation that creates the reviewed Career Profile variant and sections
 * Profile-to-resume Markdown generation from an accepted Career Profile

@@ -2,6 +2,26 @@ function text(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function normalizeContactInfo(value = {}) {
+  const source =
+    value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const links = Array.isArray(source.links)
+    ? source.links
+        .map((link) => ({
+          label: text(link?.label),
+          url: text(link?.url),
+        }))
+        .filter((link) => link.label || link.url)
+    : [];
+
+  return {
+    email: text(source.email),
+    phone: text(source.phone),
+    location: text(source.location),
+    links,
+  };
+}
+
 function id(prefix, index) {
   return `draft-${prefix}-${index}`;
 }
@@ -28,6 +48,7 @@ export function createReviewableCareerProfileDraft(draft, resume = {}) {
     name: text(draft.name) || `${text(resume.title) || "Resume"} profile draft`,
     focus: text(draft.focus) || text(resume.targetRole),
     isDefault: Boolean(draft.isDefault),
+    contactInfo: normalizeContactInfo(draft.contactInfo),
     experience: withDraftIds(draft.experience, "experienceId", "experience"),
     education: withDraftIds(draft.education, "educationId", "education"),
     skills: withDraftIds(draft.skills, "skillId", "skill"),

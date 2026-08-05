@@ -8,6 +8,15 @@ export const CAREER_PROFILE_FIELDS = `
   headline
   summary
   careerGoals
+  contactInfo {
+    email
+    phone
+    location
+    links {
+      label
+      url
+    }
+  }
   additionalNotes
   experience {
     experienceId

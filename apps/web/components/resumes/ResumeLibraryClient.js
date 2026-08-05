@@ -117,15 +117,19 @@ function EmptyState({ busy, onCreate }) {
   );
 }
 
-function getResumeInputFromForm(formData) {
+function getResumeInputFromForm(formData, { fallbackTitle = "" } = {}) {
   return {
-    title: getFormValue(formData, "title"),
+    title: getFormValue(formData, "title") || fallbackTitle,
     targetRole: getFormValue(formData, "targetRole"),
     notes: getFormValue(formData, "notes"),
     resumeText: getFormValue(formData, "resumeText"),
     status: getFormValue(formData, "status"),
     isPrimary: formData.get("isPrimary") === "on",
   };
+}
+
+function getResumeTitleFromFile(file) {
+  return (file?.name || "Uploaded resume").replace(/\.[^.]+$/, "").trim();
 }
 
 function sortResumes(resumesToSort) {
@@ -348,6 +352,45 @@ export function ResumeLibraryClient({ initialResumes }) {
     }
   }
 
+  async function handleCreateUpload(file, form) {
+    if (busy) {
+      return null;
+    }
+
+    setBusy(true);
+    setError("");
+    setStatus("");
+    setDeletionReceipt(null);
+    setFileDeletionReceipt(null);
+    setParsingReceipt(null);
+
+    try {
+      const formData = new FormData(form);
+      const input = getResumeInputFromForm(formData, {
+        fallbackTitle: getResumeTitleFromFile(file),
+      });
+      const createdResume = await createResume(input);
+      replaceResume(createdResume);
+      setCreating(false);
+
+      const uploadResult = await uploadResumeOriginal(createdResume.resumeId, file);
+      const updatedResume = uploadResult?.resume ?? createdResume;
+
+      replaceResume(updatedResume);
+      setParsingReceipt(
+        buildParsingReceipt(createdResume, updatedResume, uploadResult?.parsing),
+      );
+      setStatus("Resume created and original uploaded.");
+      form.reset();
+      return updatedResume;
+    } catch (uploadError) {
+      setError(uploadError.message || "Resume upload failed");
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleUpdateSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -467,6 +510,7 @@ export function ResumeLibraryClient({ initialResumes }) {
         headline: draft.headline,
         summary: draft.summary,
         careerGoals: draft.careerGoals,
+        contactInfo: draft.contactInfo,
         additionalNotes: draft.additionalNotes,
         experience: draft.experience.map(({ experienceId, ...item }) => item),
         education: draft.education.map(({ educationId, ...item }) => item),
@@ -662,6 +706,7 @@ export function ResumeLibraryClient({ initialResumes }) {
                   busy={busy}
                   onSubmit={handleCreateSubmit}
                   onCancel={() => setCreating(false)}
+                  onUploadFile={handleCreateUpload}
                 />
               </div>
             ) : null}

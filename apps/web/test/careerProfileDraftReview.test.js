@@ -14,6 +14,8 @@ test("career profile draft schema uses editable Career Profile field names", () 
   assert.ok(schema.properties.name);
   assert.ok(schema.properties.focus);
   assert.ok(schema.properties.headline);
+  assert.ok(schema.properties.contactInfo);
+  assert.ok(schema.properties.contactInfo.properties.links.items.properties.label);
   assert.ok(schema.properties.experience.items.properties.achievements);
   assert.ok(schema.properties.education.items.properties.fieldOfStudy);
   assert.ok(schema.properties.projects.items.properties.link);
@@ -29,6 +31,12 @@ test("career profile draft review helper only adds review metadata", () => {
       headline: "Platform engineer",
       summary: "Platform engineer focused on reliability.",
       careerGoals: "",
+      contactInfo: {
+        email: "dev@example.com",
+        phone: "555-123-4567",
+        location: "Remote",
+        links: [{ label: "GitHub", url: "https://github.com/dev" }],
+      },
       additionalNotes: "Needs review.",
       experience: [
         {
@@ -61,6 +69,8 @@ test("career profile draft review helper only adds review metadata", () => {
   assert.equal(draft.name, "Platform resume profile draft");
   assert.equal(draft.focus, "Platform");
   assert.equal(draft.sourceResumeId, "resume-1");
+  assert.equal(draft.contactInfo.email, "dev@example.com");
+  assert.equal(draft.contactInfo.links[0].label, "GitHub");
   assert.equal(draft.experience[0].experienceId, "draft-experience-0");
   assert.equal(draft.experience[0].achievements, "Reduced deployment time");
   assert.equal(draft.preferences.targetIndustries, "Developer Tools");

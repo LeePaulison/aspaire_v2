@@ -5,13 +5,38 @@ import {
   achievementMarkdown,
   formatCertificationDateRange,
   formatDateRange,
+  normalizeContactInfo,
 } from "./careerProfileUtils";
 
 export function CareerProfileDisplay({ profile, preferences }) {
+  const contactInfo = normalizeContactInfo(profile.contactInfo);
+  const contactDetails = [
+    contactInfo.email,
+    contactInfo.phone,
+    contactInfo.location,
+    ...contactInfo.links.map((link) =>
+      [link.label, link.url].filter(Boolean).join(": "),
+    ),
+  ].filter(Boolean);
+
   return (
     <>
       <Section title="Summary">
         <div className="grid gap-4">
+          <div>
+            <h3 className="mb-2 text-sm font-semibold">Contact preview</h3>
+            {contactDetails.length > 0 ? (
+              <ul className="grid gap-1 text-sm text-foreground-muted">
+                {contactDetails.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-foreground-muted">
+                No contact or social links yet.
+              </p>
+            )}
+          </div>
           <div>
             <h3 className="mb-2 text-sm font-semibold">Summary preview</h3>
             <MarkdownPreview

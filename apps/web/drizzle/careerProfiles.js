@@ -27,6 +27,7 @@ export const careerProfiles = pgTable(
     headline: text("headline").notNull().default(""),
     summary: text("summary").notNull().default(""),
     careerGoals: text("career_goals").notNull().default(""),
+    contactInfo: jsonb("contact_info").notNull().default({}),
     additionalNotes: text("additional_notes").notNull().default(""),
 
     createdAt: timestamp("created_at", { withTimezone: true })

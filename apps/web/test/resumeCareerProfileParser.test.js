@@ -64,11 +64,19 @@ AWS Certified Developer | Amazon | Feb 2024
   assert.equal(draft.certifications[0].issueDate, "2024-02-01");
 });
 
-test("resume parser places unsectioned resume content into additional notes", () => {
-  const draft = parseResumeToCareerProfileDraft("Jane Candidate\njane@example.com");
+test("resume parser separates contact info from unsectioned additional notes", () => {
+  const draft = parseResumeToCareerProfileDraft(
+    "Jane Candidate\njane@example.com\n555-123-4567\nhttps://github.com/jane",
+  );
 
   assert.match(draft.additionalNotes, /Unsectioned resume content:/);
   assert.match(draft.additionalNotes, /Jane Candidate/);
+  assert.doesNotMatch(draft.additionalNotes, /jane@example.com/);
+  assert.equal(draft.contactInfo.email, "jane@example.com");
+  assert.equal(draft.contactInfo.phone, "555-123-4567");
+  assert.deepEqual(draft.contactInfo.links, [
+    { label: "GitHub", url: "https://github.com/jane" },
+  ]);
   assert.equal(draft.experience.length, 0);
 });
 

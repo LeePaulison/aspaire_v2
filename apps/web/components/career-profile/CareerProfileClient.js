@@ -37,6 +37,7 @@ import { ResumeMarkdownDraftDialog } from "./ResumeMarkdownDraftDialog";
 import {
   arrayToText,
   emptyPreferences,
+  getContactInfoFromForm,
   getFormValue,
   sortProfiles,
 } from "./careerProfileUtils";
@@ -171,6 +172,7 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
           headline: getFormValue(formData, "headline"),
           summary: getFormValue(formData, "summary"),
           careerGoals: getFormValue(formData, "careerGoals"),
+          contactInfo: getContactInfoFromForm(formData),
           additionalNotes: getFormValue(formData, "additionalNotes"),
         }),
       "Profile saved.",

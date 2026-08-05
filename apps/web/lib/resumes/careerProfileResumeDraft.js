@@ -42,6 +42,37 @@ function profileTitle(profile) {
   return text(profile.headline) || text(profile.name) || "Resume";
 }
 
+function normalizeContactInfo(value = {}) {
+  const source =
+    value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const links = Array.isArray(source.links)
+    ? source.links
+        .map((link) => ({
+          label: text(link?.label),
+          url: text(link?.url),
+        }))
+        .filter((link) => link.label || link.url)
+    : [];
+
+  return {
+    email: text(source.email),
+    phone: text(source.phone),
+    location: text(source.location),
+    links,
+  };
+}
+
+function formatContactInfo(contactInfo) {
+  const contact = normalizeContactInfo(contactInfo);
+  const links = contact.links.map((link) =>
+    [link.label, link.url].filter(Boolean).join(": "),
+  );
+
+  return [contact.email, contact.phone, contact.location, ...links]
+    .filter(Boolean)
+    .join(" | ");
+}
+
 function formatExperience(items) {
   return Array.isArray(items)
     ? items
@@ -148,6 +179,7 @@ function formatCertifications(items) {
 export function createResumeMarkdownFromCareerProfile(profile) {
   const sections = [
     `# ${profileTitle(profile)}`,
+    formatContactInfo(profile.contactInfo),
     text(profile.summary),
     section("Experience", formatExperience(profile.experience)),
     section("Skills", formatSkills(profile.skills)),

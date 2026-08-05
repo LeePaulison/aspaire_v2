@@ -6,6 +6,7 @@ type CareerProfile {
   headline: String!
   summary: String!
   careerGoals: String!
+  contactInfo: CareerProfileContactInfo!
   additionalNotes: String!
   experience: [CareerExperience!]!
   education: [CareerEducation!]!
@@ -13,6 +14,18 @@ type CareerProfile {
   projects: [CareerProject!]!
   certifications: [CareerCertification!]!
   preferences: CareerProfilePreferences
+}
+
+type CareerProfileContactInfo {
+  email: String!
+  phone: String!
+  location: String!
+  links: [CareerProfileContactLink!]!
+}
+
+type CareerProfileContactLink {
+  label: String!
+  url: String!
 }
 
 type CareerExperience {
@@ -90,6 +103,7 @@ input CreateCareerProfileInput {
   headline: String
   summary: String
   careerGoals: String
+  contactInfo: CareerProfileContactInfoInput
   additionalNotes: String
 }
 
@@ -101,7 +115,20 @@ input UpdateCareerProfileSummaryInput {
   headline: String
   summary: String
   careerGoals: String
+  contactInfo: CareerProfileContactInfoInput
   additionalNotes: String
+}
+
+input CareerProfileContactInfoInput {
+  email: String
+  phone: String
+  location: String
+  links: [CareerProfileContactLinkInput!]
+}
+
+input CareerProfileContactLinkInput {
+  label: String!
+  url: String!
 }
 
 input UpsertCareerExperienceInput {
@@ -184,6 +211,7 @@ input CreateCareerProfileFromDraftInput {
   headline: String
   summary: String
   careerGoals: String
+  contactInfo: CareerProfileContactInfoInput
   additionalNotes: String
   experience: [CareerProfileDraftExperienceInput!]!
   education: [CareerProfileDraftEducationInput!]!

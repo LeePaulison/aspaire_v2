@@ -86,6 +86,7 @@ Implemented capabilities include:
 * Add and manage projects
 * Add and manage certifications
 * Record career goals
+* Record contact and social link information
 * Record job preferences
 * Record location and work-mode preferences
 

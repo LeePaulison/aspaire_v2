@@ -2,6 +2,11 @@ const SECTION_ALIASES = new Map([
   ["summary", "summary"],
   ["professional summary", "summary"],
   ["profile", "summary"],
+  ["contact", "contact"],
+  ["contact information", "contact"],
+  ["websites, portfolios, profiles", "contact"],
+  ["websites", "contact"],
+  ["links", "contact"],
   ["experience", "experience"],
   ["professional experience", "experience"],
   ["work experience", "experience"],
@@ -20,6 +25,7 @@ const SECTION_ALIASES = new Map([
 
 const SECTION_ORDER = [
   "summary",
+  "contact",
   "experience",
   "education",
   "skills",
@@ -76,6 +82,10 @@ export function parseResumeToCareerProfileDraft(resume) {
   const normalizedText = normalizeResumeText(resumeText);
   const sections = splitResumeSections(normalizedText);
   const additionalNotes = [];
+  const contactInfo = extractContactInfo([
+    ...(sections.get("unsectioned") ?? []),
+    ...(sections.get("contact") ?? []),
+  ]);
 
   if (!normalizedText) {
     return emptyDraft({
@@ -84,7 +94,9 @@ export function parseResumeToCareerProfileDraft(resume) {
     });
   }
 
-  const unsectionedContent = sections.get("unsectioned") ?? [];
+  const unsectionedContent = (sections.get("unsectioned") ?? []).filter(
+    (line) => !isContactLine(line),
+  );
 
   if (unsectionedContent.length > 0) {
     additionalNotes.push(
@@ -99,6 +111,7 @@ export function parseResumeToCareerProfileDraft(resume) {
     headline: firstContentLine(sections.get("summary")) || "",
     summary: (sections.get("summary") ?? []).join("\n"),
     careerGoals: "",
+    contactInfo,
     additionalNotes: additionalNotes.join("\n\n"),
     experience: parseExperience(sections.get("experience") ?? []),
     education: parseEducation(sections.get("education") ?? []),
@@ -124,6 +137,12 @@ function emptyDraft({ sourceResumeId = null, additionalNotes = "" } = {}) {
     headline: "",
     summary: "",
     careerGoals: "",
+    contactInfo: {
+      email: "",
+      phone: "",
+      location: "",
+      links: [],
+    },
     additionalNotes,
     experience: [],
     education: [],
@@ -312,6 +331,32 @@ function parseCertifications(lines) {
   });
 }
 
+function extractContactInfo(lines = []) {
+  const email = lines.map(findEmail).find(Boolean) ?? "";
+  const phone = lines.map(findPhone).find(Boolean) ?? "";
+  const links = [];
+
+  for (const line of lines) {
+    for (const url of findUrls(line)) {
+      links.push({
+        label: inferLinkLabel(url),
+        url,
+      });
+    }
+  }
+
+  return {
+    email,
+    phone,
+    location: "",
+    links,
+  };
+}
+
+function isContactLine(line) {
+  return Boolean(findEmail(line) || findPhone(line) || findUrls(line).length > 0);
+}
+
 function groupSectionItems(lines, { bulletStartsEntry = false } = {}) {
   const entries = [];
   let currentEntry = null;
@@ -454,6 +499,32 @@ function stripBullet(line) {
 
 function findUrl(value) {
   return normalizeText(value).match(/https?:\/\/\S+/)?.[0] ?? "";
+}
+
+function findUrls(value) {
+  return [...normalizeText(value).matchAll(/https?:\/\/[^\s,|]+/gi)].map(
+    (match) => match[0],
+  );
+}
+
+function findEmail(value) {
+  return normalizeText(value).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] ?? "";
+}
+
+function findPhone(value) {
+  return normalizeText(value).match(
+    /(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/,
+  )?.[0] ?? "";
+}
+
+function inferLinkLabel(url) {
+  const normalizedUrl = url.toLowerCase();
+
+  if (normalizedUrl.includes("linkedin.com")) return "LinkedIn";
+  if (normalizedUrl.includes("github.com")) return "GitHub";
+  if (normalizedUrl.includes("gitlab.com")) return "GitLab";
+
+  return "Website";
 }
 
 function removeDateRange(header, dateRange) {

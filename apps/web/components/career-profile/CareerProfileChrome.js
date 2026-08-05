@@ -14,6 +14,7 @@ import { ScrollArea } from "radix-ui";
 import { IconButton } from "@/components/ui/IconButton";
 
 import { Field, Input, Textarea } from "./CareerProfileFields";
+import { contactLinksToText, normalizeContactInfo } from "./careerProfileUtils";
 
 export function ProfileList({
   profiles,
@@ -187,6 +188,8 @@ export function ProfileToolbar({
 }
 
 export function ProfileEditForm({ profile, busy, children, formRef, onSubmit }) {
+  const contactInfo = normalizeContactInfo(profile.contactInfo);
+
   return (
     <form
       key={`profile-edit-${profile.profileId}`}
@@ -239,6 +242,39 @@ export function ProfileEditForm({ profile, busy, children, formRef, onSubmit }) 
             placeholder="Roles, responsibilities, growth goals, or direction you want next."
           />
         </Field>
+        <div className="grid gap-4 rounded-md border border-border bg-surface-secondary p-3">
+          <h3 className="text-sm font-semibold">Contact and social links</h3>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Field label="Email">
+              <Input
+                name="contactEmail"
+                defaultValue={contactInfo.email}
+                placeholder="name@example.com"
+              />
+            </Field>
+            <Field label="Phone">
+              <Input
+                name="contactPhone"
+                defaultValue={contactInfo.phone}
+                placeholder="(555) 123-4567"
+              />
+            </Field>
+            <Field label="Location">
+              <Input
+                name="contactLocation"
+                defaultValue={contactInfo.location}
+                placeholder="City, State"
+              />
+            </Field>
+          </div>
+          <Field label="Links">
+            <Textarea
+              name="contactLinks"
+              defaultValue={contactLinksToText(contactInfo.links)}
+              placeholder={"LinkedIn: https://linkedin.com/in/name\nGitHub: https://github.com/name\nCompany: https://example.com"}
+            />
+          </Field>
+        </div>
         <Field label="Additional notes">
           <Textarea
             name="additionalNotes"

@@ -26,7 +26,7 @@ The storage boundary for uploaded resume originals is decided: uploaded original
 
 Resume text extraction is implemented for uploaded PDF, DOCX, and plain text originals. Extracted text may populate the stored `resume_text` field when the resume has no manually entered text or already uses uploaded text as its source.
 
-Resume Library records with stored resume text can generate a reviewed Career Profile draft. Draft review happens in client session state and durable Career Profile data is created only after explicit user acceptance.
+Resume Library records with stored resume text can generate a reviewed Career Profile draft, including structured contact and social link information. Draft review happens in client session state and durable Career Profile data is created only after explicit user acceptance.
 
 Structured resume section extraction, download links, true version history, richer resume comparison, resume-profile alignment suggestions, and AI-assisted resume improvement remain open. They belong to the broader SaaS Resume Library phase, Career Evidence, or later resume-focused refinement slices.
 
