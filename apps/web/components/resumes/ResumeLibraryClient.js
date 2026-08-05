@@ -16,11 +16,13 @@ import {
 } from "@/graphql/careerProfile/careerProfile";
 import {
   archiveResume,
+  acceptParsedResumeText,
   createResume,
   deleteResume,
   deleteResumeFile,
   restoreResume,
   setPrimaryResume,
+  setPrimaryResumeFileSource,
   updateResume,
   uploadResumeOriginal,
 } from "@/graphql/resume/resume";
@@ -207,6 +209,10 @@ function buildParsedResumeMarkdownDraft(resume, extractedText) {
   });
 }
 
+function getResumeFile(resume, fileId) {
+  return resume?.files?.find((file) => file.fileId === fileId) ?? null;
+}
+
 export function ResumeLibraryClient({ initialResumes }) {
   const [resumes, setResumes] = useState(initialResumes);
   const [selectedId, setSelectedId] = useState(initialResumes[0]?.resumeId ?? null);
@@ -225,6 +231,8 @@ export function ResumeLibraryClient({ initialResumes }) {
   const [uploadResumeId, setUploadResumeId] = useState(null);
   const [profileDraft, setProfileDraft] = useState(null);
   const [profileDraftOpen, setProfileDraftOpen] = useState(false);
+  const [profileSourceResume, setProfileSourceResume] = useState(null);
+  const [profileSourceFileId, setProfileSourceFileId] = useState("");
   const [parsedResumeDraft, setParsedResumeDraft] = useState(null);
   const [parsedResumeDraftOpen, setParsedResumeDraftOpen] = useState(false);
   const parserResponseRef = useRef("");
@@ -431,6 +439,14 @@ export function ResumeLibraryClient({ initialResumes }) {
     replaceResume(updatedResume);
   }
 
+  async function handleSetPrimarySource(resume, file) {
+    const updatedResume = await runAction(
+      () => setPrimaryResumeFileSource(resume.resumeId, file.fileId),
+      "Default uploaded source updated.",
+    );
+    replaceResume(updatedResume);
+  }
+
   async function handleArchive(resumeId) {
     const updatedResume = await runAction(
       () => archiveResume(resumeId),
@@ -454,11 +470,27 @@ export function ResumeLibraryClient({ initialResumes }) {
     }
 
     if (!resume.resumeText?.trim()) {
-      setError("Add resume text before generating a Career Profile draft.");
+      if (resume.files?.length) {
+        const defaultFile =
+          resume.files.find((file) => file.isPrimarySource) ?? resume.files[0];
+        setProfileSourceResume(resume);
+        setProfileSourceFileId(defaultFile.fileId);
+        setError("");
+        setStatus("");
+        return;
+      }
+
+      setError(
+        "Add accepted resume text or upload a source file before generating a Career Profile draft.",
+      );
       setStatus("");
       return;
     }
 
+    requestProfileDraftFromText(resume, resume.resumeText);
+  }
+
+  function requestProfileDraftFromText(resume, resumeText) {
     setBusy(true);
     setError("");
     setStatus("Generating Career Profile draft...");
@@ -478,7 +510,7 @@ export function ResumeLibraryClient({ initialResumes }) {
           resume.targetRole ? `Target role: ${resume.targetRole}` : "",
           "Return only the structured JSON draft.",
           "",
-          resume.resumeText,
+          resumeText,
         ]
           .filter(Boolean)
           .join("\n"),
@@ -500,6 +532,62 @@ export function ResumeLibraryClient({ initialResumes }) {
       );
       setStatus("");
     }
+  }
+
+  function handleProfileSourceDialogChange(open) {
+    if (!open && !busy) {
+      setProfileSourceResume(null);
+      setProfileSourceFileId("");
+    }
+  }
+
+  function getSelectedProfileSourceFile() {
+    return (
+      profileSourceResume?.files?.find(
+        (file) => file.fileId === profileSourceFileId,
+      ) ?? null
+    );
+  }
+
+  function handleCreateProfileDraftFromSelectedFile() {
+    const file = getSelectedProfileSourceFile();
+
+    if (!profileSourceResume || !file) {
+      return;
+    }
+
+    const sourceText = file.parsedText || file.extractedText;
+
+    if (!sourceText.trim()) {
+      setError("The selected uploaded file does not have parsed or extracted text.");
+      return;
+    }
+
+    const sourceResume = {
+      ...profileSourceResume,
+      resumeText: sourceText,
+    };
+
+    setProfileSourceResume(null);
+    setProfileSourceFileId("");
+    requestProfileDraftFromText(sourceResume, sourceText);
+  }
+
+  function handleReviewSelectedFileParse() {
+    const file = getSelectedProfileSourceFile();
+
+    if (!profileSourceResume || !file?.parsedText) {
+      return;
+    }
+
+    setParsedResumeDraft({
+      resume: profileSourceResume,
+      file,
+      resumeText: file.parsedText,
+    });
+    setParsedResumeDraftOpen(true);
+    setProfileSourceResume(null);
+    setProfileSourceFileId("");
   }
 
   async function handleAcceptProfileDraft(draft = profileDraft) {
@@ -572,19 +660,29 @@ export function ResumeLibraryClient({ initialResumes }) {
   }
 
   function openParsedResumeDraft(resume, parsing) {
-    if (!resume || !parsing?.extractedText) {
+    if (!resume || !parsing?.textDraftAvailable) {
+      return;
+    }
+
+    const file = getResumeFile(resume, parsing.fileId);
+    const resumeText =
+      parsing.parsedText ||
+      file?.parsedText ||
+      buildParsedResumeMarkdownDraft(resume, parsing.extractedText);
+
+    if (!file || !resumeText) {
       return;
     }
 
     setParsedResumeDraft({
       resume,
-      filename: parsing.filename,
-      resumeText: buildParsedResumeMarkdownDraft(resume, parsing.extractedText),
+      file,
+      resumeText,
     });
     setParsedResumeDraftOpen(true);
   }
 
-  async function handleAcceptParsedResumeDraft({ resumeId, resumeText }) {
+  async function handleAcceptParsedResumeDraft({ resumeId, fileId, resumeText }) {
     if (busy) {
       return;
     }
@@ -594,16 +692,8 @@ export function ResumeLibraryClient({ initialResumes }) {
     setStatus("");
 
     try {
-      const targetResume =
-        resumes.find((resume) => resume.resumeId === resumeId) ??
-        parsedResumeDraft?.resume;
-      const updatedResume = await updateResume(resumeId, {
-        title: targetResume.title,
-        targetRole: targetResume.targetRole,
-        notes: targetResume.notes,
+      const updatedResume = await acceptParsedResumeText(resumeId, fileId, {
         resumeText,
-        status: targetResume.status === "draft" ? "active" : targetResume.status,
-        isPrimary: targetResume.isPrimary,
       });
 
       replaceResume(updatedResume);
@@ -835,6 +925,9 @@ export function ResumeLibraryClient({ initialResumes }) {
                         busy={busy}
                         files={selectedResume.files}
                         readOnly={selectedResume.status === "archived"}
+                        onSetPrimarySource={(file) =>
+                          handleSetPrimarySource(selectedResume, file)
+                        }
                         onDelete={(file) => requestFileDeletion(selectedResume, file)}
                       />
                     </div>
@@ -900,6 +993,54 @@ export function ResumeLibraryClient({ initialResumes }) {
               busy={busy}
               onUpload={handleUpload}
             />
+          ) : null}
+        </AppDialog>
+        <AppDialog
+          open={Boolean(profileSourceResume)}
+          onOpenChange={handleProfileSourceDialogChange}
+          title="Choose resume source"
+          description={`"${profileSourceResume?.title || "This resume"}" does not have accepted resume text yet. Choose which uploaded original to use for the Career Profile draft.`}
+        >
+          {profileSourceResume ? (
+            <div className="grid gap-4">
+              <label className="grid gap-2 text-sm font-medium">
+                <span>Uploaded source</span>
+                <select
+                  value={profileSourceFileId}
+                  onChange={(event) => setProfileSourceFileId(event.target.value)}
+                  className="rounded-md border border-border bg-surface-secondary px-3 py-2 text-sm outline-none focus:border-ring"
+                >
+                  {profileSourceResume.files.map((file) => (
+                    <option key={file.fileId} value={file.fileId}>
+                      {file.isPrimarySource ? "Default source: " : ""}
+                      {file.originalFilename}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="text-xs leading-5 text-foreground-muted">
+                Accepted resume text is still the preferred source. This fallback uses
+                only the uploaded file you select here.
+              </p>
+              <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
+                <button
+                  type="button"
+                  disabled={busy || !getSelectedProfileSourceFile()?.parsedText}
+                  onClick={handleReviewSelectedFileParse}
+                  className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-4 py-2 text-sm font-semibold hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Review parsed resume text
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={handleCreateProfileDraftFromSelectedFile}
+                  className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Create profile draft
+                </button>
+              </div>
+            </div>
           ) : null}
         </AppDialog>
         <CareerProfileDraftDialog

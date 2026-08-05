@@ -11,11 +11,15 @@ function createRepository(overrides = {}) {
     createResume: async () => assert.fail("unexpected createResume call"),
     deleteResume: async () => assert.fail("unexpected deleteResume call"),
     deleteResumeFile: async () => assert.fail("unexpected deleteResumeFile call"),
+    acceptParsedResumeText: async () =>
+      assert.fail("unexpected acceptParsedResumeText call"),
     getPrimaryResume: async () => assert.fail("unexpected getPrimaryResume call"),
     getResumeById: async () => assert.fail("unexpected getResumeById call"),
     listResumes: async () => assert.fail("unexpected listResumes call"),
     restoreResume: async () => assert.fail("unexpected restoreResume call"),
     setPrimaryResume: async () => assert.fail("unexpected setPrimaryResume call"),
+    setPrimaryResumeFileSource: async () =>
+      assert.fail("unexpected setPrimaryResumeFileSource call"),
     updateResume: async () => assert.fail("unexpected updateResume call"),
     ...overrides,
   };
@@ -124,6 +128,56 @@ test("deleting a resume file is scoped to the authenticated user", async () => {
     userId: "user-1",
     resumeId: "resume-1",
     fileId: "file-1",
+  });
+});
+
+test("setting a primary resume file source is scoped to the authenticated user", async () => {
+  let received;
+  const resolvers = createResumeResolvers(
+    createRepository({
+      setPrimaryResumeFileSource: async (userId, resumeId, fileId) => {
+        received = { userId, resumeId, fileId };
+        return { resumeId };
+      },
+    }),
+  );
+
+  await resolvers.Mutation.setPrimaryResumeFileSource(
+    null,
+    { resumeId: "resume-1", fileId: "file-1" },
+    { user: { id: "user-1" } },
+  );
+
+  assert.deepEqual(received, {
+    userId: "user-1",
+    resumeId: "resume-1",
+    fileId: "file-1",
+  });
+});
+
+test("accepting parsed resume text is scoped to the authenticated user", async () => {
+  let received;
+  const input = { resumeText: "Accepted Markdown" };
+  const resolvers = createResumeResolvers(
+    createRepository({
+      acceptParsedResumeText: async (userId, resumeId, fileId, mutationInput) => {
+        received = { userId, resumeId, fileId, input: mutationInput };
+        return { resumeId };
+      },
+    }),
+  );
+
+  await resolvers.Mutation.acceptParsedResumeText(
+    null,
+    { resumeId: "resume-1", fileId: "file-1", input },
+    { user: { id: "user-1" } },
+  );
+
+  assert.deepEqual(received, {
+    userId: "user-1",
+    resumeId: "resume-1",
+    fileId: "file-1",
+    input,
   });
 });
 

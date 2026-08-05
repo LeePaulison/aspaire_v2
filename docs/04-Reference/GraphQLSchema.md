@@ -240,6 +240,7 @@ Inputs:
 
 * `CreateResumeInput`
 * `UpdateResumeInput`
+* `AcceptParsedResumeTextInput`
 
 Queries:
 
@@ -255,6 +256,8 @@ Mutations:
 * `archiveResume(resumeId: String!): Resume`
 * `restoreResume(resumeId: String!): Resume`
 * `deleteResumeFile(resumeId: String!, fileId: String!): Resume`
+* `setPrimaryResumeFileSource(resumeId: String!, fileId: String!): Resume`
+* `acceptParsedResumeText(resumeId: String!, fileId: String!, input: AcceptParsedResumeTextInput!): Resume`
 * `deleteResume(resumeId: String!): ResumeDeletionReceipt`
 
 Purpose:
@@ -262,7 +265,9 @@ Purpose:
 * Create, read, update, archive, restore, and delete authenticated user resume records.
 * Delete individual uploaded-original files while returning the updated resume.
 * Store manual resume text plus metadata for future analysis workflows.
-* Expose non-sensitive uploaded-original metadata through `Resume.files` while keeping storage keys private.
+* Expose uploaded-original metadata, raw extracted text, parsed Markdown draft text, parsed draft status, and default-source state through `Resume.files` while keeping storage keys private.
+* Accept reviewed parsed Markdown from one selected uploaded file into durable resume text.
+* Mark one uploaded file as the resume's default source for file-based draft fallbacks.
 * Preserve user ownership by deriving `userId` from GraphQL context rather than client input.
 
 ---

@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { user } from "./auth-schema.ts";
@@ -62,6 +63,13 @@ export const resumeFiles = pgTable(
     textExtractionStatus: text("text_extraction_status")
       .notNull()
       .default("pending"),
+    extractedText: text("extracted_text").notNull().default(""),
+    parsedText: text("parsed_text").notNull().default(""),
+    parsedTextStatus: text("parsed_text_status").notNull().default("none"),
+    parsedTextAcceptedAt: timestamp("parsed_text_accepted_at", {
+      withTimezone: true,
+    }),
+    isPrimarySource: boolean("is_primary_source").notNull().default(false),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -76,6 +84,10 @@ export const resumeFiles = pgTable(
   (table) => [
     index("resume_files_resume_id_idx").on(table.resumeId),
     index("resume_files_user_id_idx").on(table.userId),
+    index("resume_files_parsed_text_status_idx").on(table.parsedTextStatus),
+    uniqueIndex("resume_files_primary_source_unique")
+      .on(table.resumeId)
+      .where(sql`${table.isPrimarySource} = true`),
   ],
 );
 

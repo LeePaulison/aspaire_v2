@@ -433,6 +433,11 @@ Stores uploaded resume original file metadata. S3 stores the binary file; Postgr
 | `file_size` | integer | Required uploaded original size in bytes |
 | `storage_key` | text | Required private S3 object key, never exposed through GraphQL |
 | `text_extraction_status` | text | Required, defaults `pending`; expected values are `pending`, `completed`, `failed` |
+| `extracted_text` | text | Required, defaults empty; raw text extracted from the uploaded original |
+| `parsed_text` | text | Required, defaults empty; editable parsed Markdown draft generated from the raw extraction |
+| `parsed_text_status` | text | Required, defaults `none`; expected values are `none`, `ready`, `accepted`, `dismissed`, `failed` |
+| `parsed_text_accepted_at` | timestamp with timezone | Optional timestamp for when this file's parsed Markdown was accepted into `resumes.resume_text` |
+| `is_primary_source` | boolean | Required, defaults false; at most one uploaded source file is primary per resume |
 | `uploaded_at` | timestamp with timezone | Required, defaults now |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |
@@ -441,6 +446,8 @@ Indexes:
 
 * `resume_files_resume_id_idx` on `resume_id`
 * `resume_files_user_id_idx` on `user_id`
+* `resume_files_parsed_text_status_idx` on `parsed_text_status`
+* `resume_files_primary_source_unique` on `resume_id` where `is_primary_source = true`
 
 ## `saved_jobs`
 

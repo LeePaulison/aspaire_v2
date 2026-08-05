@@ -17,6 +17,11 @@ export const RESUME_FIELDS = `
     contentType
     fileSize
     textExtractionStatus
+    extractedText
+    parsedText
+    parsedTextStatus
+    parsedTextAcceptedAt
+    isPrimarySource
     uploadedAt
     createdAt
     updatedAt
@@ -69,6 +74,36 @@ export async function setPrimaryResume(resumeId) {
   });
 
   return result.setPrimaryResume;
+}
+
+export async function setPrimaryResumeFileSource(resumeId, fileId) {
+  const result = await authRequest({
+    query: `
+      mutation SetPrimaryResumeFileSource($resumeId: String!, $fileId: String!) {
+        setPrimaryResumeFileSource(resumeId: $resumeId, fileId: $fileId) {
+          ${RESUME_FIELDS}
+        }
+      }
+    `,
+    variables: { resumeId, fileId },
+  });
+
+  return result.setPrimaryResumeFileSource;
+}
+
+export async function acceptParsedResumeText(resumeId, fileId, input) {
+  const result = await authRequest({
+    query: `
+      mutation AcceptParsedResumeText($resumeId: String!, $fileId: String!, $input: AcceptParsedResumeTextInput!) {
+        acceptParsedResumeText(resumeId: $resumeId, fileId: $fileId, input: $input) {
+          ${RESUME_FIELDS}
+        }
+      }
+    `,
+    variables: { resumeId, fileId, input },
+  });
+
+  return result.acceptParsedResumeText;
 }
 
 export async function archiveResume(resumeId) {

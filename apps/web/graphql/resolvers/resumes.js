@@ -40,6 +40,10 @@ const defaultRepository = {
     const repository = await import("../../repositories/resumeRepository.js");
     return repository.deleteResumeFile(...args);
   },
+  async acceptParsedResumeText(...args) {
+    const repository = await import("../../repositories/resumeRepository.js");
+    return repository.acceptParsedResumeText(...args);
+  },
   async getPrimaryResume(...args) {
     const repository = await import("../../repositories/resumeRepository.js");
     return repository.getPrimaryResume(...args);
@@ -59,6 +63,10 @@ const defaultRepository = {
   async setPrimaryResume(...args) {
     const repository = await import("../../repositories/resumeRepository.js");
     return repository.setPrimaryResume(...args);
+  },
+  async setPrimaryResumeFileSource(...args) {
+    const repository = await import("../../repositories/resumeRepository.js");
+    return repository.setPrimaryResumeFileSource(...args);
   },
   async updateResume(...args) {
     const repository = await import("../../repositories/resumeRepository.js");
@@ -122,6 +130,25 @@ export function createResumeResolvers(repository = defaultRepository) {
 
         return repository.deleteResumeFile(authenticatedUser.id, resumeId, fileId);
       },
+      setPrimaryResumeFileSource: async (_, { resumeId, fileId }, { user }) => {
+        const authenticatedUser = requireUser(user);
+
+        return repository.setPrimaryResumeFileSource(
+          authenticatedUser.id,
+          resumeId,
+          fileId,
+        );
+      },
+      acceptParsedResumeText: async (_, { resumeId, fileId, input }, { user }) => {
+        const authenticatedUser = requireUser(user);
+
+        return repository.acceptParsedResumeText(
+          authenticatedUser.id,
+          resumeId,
+          fileId,
+          input,
+        );
+      },
     },
 
     Resume: {
@@ -131,6 +158,7 @@ export function createResumeResolvers(repository = defaultRepository) {
 
     ResumeFile: {
       uploadedAt: (file) => serializeDate(file.uploadedAt),
+      parsedTextAcceptedAt: (file) => serializeDate(file.parsedTextAcceptedAt),
       createdAt: (file) => serializeDate(file.createdAt),
       updatedAt: (file) => serializeDate(file.updatedAt),
     },

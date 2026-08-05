@@ -19,6 +19,7 @@ export function ParsedResumeTextDraftDialog({
 
     onAccept({
       resumeId: draft.resume.resumeId,
+      fileId: draft.file.fileId,
       resumeText: String(formData.get("resumeText") ?? ""),
     });
   }
@@ -32,7 +33,7 @@ export function ParsedResumeTextDraftDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="Review parsed resume draft"
-      description={`Accepting this draft will replace the stored resume text for "${draft.resume.title}".`}
+      description={`Accepting this draft from "${draft.file.originalFilename}" will replace the stored resume text for "${draft.resume.title}".`}
       size="large"
     >
       <form className="grid gap-4" onSubmit={handleSubmit}>
