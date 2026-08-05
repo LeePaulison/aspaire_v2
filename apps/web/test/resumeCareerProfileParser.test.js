@@ -69,8 +69,7 @@ test("resume parser separates contact info from unsectioned additional notes", (
     "Jane Candidate\njane@example.com\n555-123-4567\nhttps://github.com/jane",
   );
 
-  assert.match(draft.additionalNotes, /Unsectioned resume content:/);
-  assert.match(draft.additionalNotes, /Jane Candidate/);
+  assert.equal(draft.additionalNotes, "");
   assert.doesNotMatch(draft.additionalNotes, /jane@example.com/);
   assert.equal(draft.contactInfo.email, "jane@example.com");
   assert.equal(draft.contactInfo.phone, "555-123-4567");

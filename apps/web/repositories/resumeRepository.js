@@ -313,20 +313,9 @@ export function createResumeRepository({
         })
         .returning();
 
-      const shouldApplyExtractedText =
-        extractedText && (!existing.resumeText || existing.sourceType === "upload");
-      const resumeUpdate = shouldApplyExtractedText
-        ? {
-            resumeText: extractedText,
-            sourceType: "upload",
-            status: existing.status === "draft" ? "active" : existing.status,
-            updatedAt: new Date(),
-          }
-        : { updatedAt: new Date() };
-
       await database
         .update(resumes)
-        .set(resumeUpdate)
+        .set({ updatedAt: new Date() })
         .where(and(eq(resumes.userId, userId), eq(resumes.resumeId, resumeId)));
 
       return shapeResumeFile(file);

@@ -85,7 +85,7 @@ export function ProfileList({
                   <IconButton
                     label={`Delete ${item.name || "profile"}`}
                     onClick={() => onDelete(item)}
-                    disabled={busy || profiles.length <= 1}
+                    disabled={busy}
                   >
                     <TrashIcon />
                   </IconButton>

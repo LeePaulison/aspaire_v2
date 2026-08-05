@@ -38,6 +38,23 @@ function bullets(items) {
   return list(items).map((item) => `- ${item}`).join("\n");
 }
 
+function bulletLines(items) {
+  if (Array.isArray(items)) {
+    return items.map(text).filter(Boolean).map((item) => `- ${item}`).join("\n");
+  }
+
+  if (typeof items !== "string") {
+    return "";
+  }
+
+  return items
+    .split(/\r?\n/)
+    .map(text)
+    .filter(Boolean)
+    .map((item) => `- ${item}`)
+    .join("\n");
+}
+
 function profileTitle(profile) {
   return text(profile.headline) || text(profile.name) || "Resume";
 }
@@ -85,7 +102,7 @@ function formatExperience(items) {
           const details = [
             heading ? `### ${heading}` : "",
             text(item.description),
-            bullets(item.achievements),
+            bulletLines(item.achievements),
           ].filter(Boolean);
 
           return details.join("\n");

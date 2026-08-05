@@ -28,6 +28,21 @@ function parseList(value) {
     .filter(Boolean);
 }
 
+function parseLines(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return value
+    .split(/\r?\n/)
+    .map((item) => item.trim().replace(/^[-*•]\s+/, ""))
+    .filter(Boolean);
+}
+
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -191,7 +206,7 @@ export async function createCareerProfileFromDraft(userId, input = {}) {
         endDate: normalizeDate(item.endDate),
         isCurrent: Boolean(item.isCurrent),
         description: normalizeText(item.description),
-        achievements: parseList(item.achievements),
+        achievements: parseLines(item.achievements),
         sortOrder: Number.isFinite(item.sortOrder) ? item.sortOrder : index,
         updatedAt: now,
       }))
@@ -312,12 +327,6 @@ export async function deleteCareerProfile(userId, profileId) {
 
   if (!profile) {
     return listCareerProfiles(userId);
-  }
-
-  const profiles = await listCareerProfiles(userId);
-
-  if (profiles.length <= 1) {
-    throw new Error("At least one career profile is required");
   }
 
   await db
@@ -471,7 +480,7 @@ export async function upsertCareerExperience(userId, input) {
     endDate: normalizeDate(input.endDate),
     isCurrent: Boolean(input.isCurrent),
     description: normalizeText(input.description),
-    achievements: parseList(input.achievements),
+    achievements: parseLines(input.achievements),
     sortOrder: Number.isFinite(input.sortOrder) ? input.sortOrder : 0,
     updatedAt: new Date(),
   };

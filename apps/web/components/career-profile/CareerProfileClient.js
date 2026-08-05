@@ -119,6 +119,7 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
 
     setProfiles(sortedProfiles);
     setProfile(nextProfile);
+    setCreatingProfile(sortedProfiles.length === 0);
   }
 
   async function runAction(action, successMessage) {
@@ -208,7 +209,7 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
       const nextProfiles = await deleteCareerProfile(
         pendingProfileDeletion.profileId,
       );
-      replaceProfiles(nextProfiles, profile.profileId);
+      replaceProfiles(nextProfiles, pendingProfileDeletion.profileId);
       setStatus("Profile deleted.");
       setPendingProfileDeletion(null);
       resetSectionEditors();
@@ -483,7 +484,7 @@ export function CareerProfileClient({ initialProfile, initialProfiles = [] }) {
                 <ProfileToolbar
                   profile={profile}
                   busy={busy}
-                  canDelete={profiles.length > 1}
+                  canDelete={true}
                   onEdit={() => setEditingProfile(profile)}
                   onGenerateResumeDraft={handleGenerateResumeDraft}
                   onDelete={() => setPendingProfileDeletion(profile)}

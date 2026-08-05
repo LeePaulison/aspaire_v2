@@ -25,6 +25,7 @@ import {
   uploadResumeOriginal,
 } from "@/graphql/resume/resume";
 import { useChatSocket } from "@/hooks/useChatSocket";
+import { createResumeMarkdownFromCareerProfile } from "@/lib/resumes/careerProfileResumeDraft";
 import { parseResumeToCareerProfileDraft } from "@/lib/resumes/resumeCareerProfileParser";
 import {
   createReviewableCareerProfileDraft,
@@ -33,6 +34,7 @@ import {
 
 import { CareerProfileDraftDialog } from "./CareerProfileDraftDialog";
 import { MarkdownPreview } from "./MarkdownPreview";
+import { ParsedResumeTextDraftDialog } from "./ParsedResumeTextDraftDialog";
 import { ResumeFileUpload } from "./ResumeFileUpload";
 import { ResumeFilesList } from "./ResumeFilesList";
 import { ResumeForm } from "./ResumeForm";
@@ -158,21 +160,18 @@ function buildParsingReceipt(previousResume, updatedResume, parsing) {
   }
 
   const hadStoredText = Boolean(previousResume?.resumeText?.trim());
-  const previousText = previousResume?.resumeText ?? "";
-  const updatedText = updatedResume.resumeText ?? "";
-  const textChanged = previousText !== updatedText;
   const parsingStatus = parsing?.status ?? latestFile.textExtractionStatus;
   const parsingCompleted = parsingStatus === "completed";
   const parsingFailed = parsingStatus === "failed";
   let message = "The original file was uploaded.";
   let textStatus = "Unchanged";
 
-  if (parsingCompleted && (parsing?.textApplied || textChanged)) {
-    message = "Text was parsed from the upload and added to this resume.";
-    textStatus = "Updated from upload";
+  if (parsingCompleted && parsing?.textDraftAvailable) {
+    message = "Text was parsed from the upload and is ready for review.";
+    textStatus = "Review required";
   } else if (parsingCompleted && hadStoredText) {
     message =
-      "Text was parsed from the upload, but your existing manual resume text was preserved.";
+      "Text parsing completed, but your existing resume text was preserved.";
     textStatus = "Manual text preserved";
   } else if (parsingCompleted) {
     message =
@@ -193,6 +192,21 @@ function buildParsingReceipt(previousResume, updatedResume, parsing) {
   };
 }
 
+function buildParsedResumeMarkdownDraft(resume, extractedText) {
+  const draftProfile = parseResumeToCareerProfileDraft({
+    resumeId: resume.resumeId,
+    title: resume.title,
+    targetRole: resume.targetRole,
+    resumeText: extractedText,
+  });
+
+  return createResumeMarkdownFromCareerProfile({
+    ...draftProfile,
+    name: resume.title,
+    headline: resume.targetRole || resume.title,
+  });
+}
+
 export function ResumeLibraryClient({ initialResumes }) {
   const [resumes, setResumes] = useState(initialResumes);
   const [selectedId, setSelectedId] = useState(initialResumes[0]?.resumeId ?? null);
@@ -211,6 +225,8 @@ export function ResumeLibraryClient({ initialResumes }) {
   const [uploadResumeId, setUploadResumeId] = useState(null);
   const [profileDraft, setProfileDraft] = useState(null);
   const [profileDraftOpen, setProfileDraftOpen] = useState(false);
+  const [parsedResumeDraft, setParsedResumeDraft] = useState(null);
+  const [parsedResumeDraftOpen, setParsedResumeDraftOpen] = useState(false);
   const parserResponseRef = useRef("");
   const parserResumeRef = useRef(null);
   const parserRequestInFlightRef = useRef(false);
@@ -380,6 +396,7 @@ export function ResumeLibraryClient({ initialResumes }) {
       setParsingReceipt(
         buildParsingReceipt(createdResume, updatedResume, uploadResult?.parsing),
       );
+      openParsedResumeDraft(updatedResume, uploadResult?.parsing);
       setStatus("Resume created and original uploaded.");
       form.reset();
       return updatedResume;
@@ -548,9 +565,56 @@ export function ResumeLibraryClient({ initialResumes }) {
       setParsingReceipt(
         buildParsingReceipt(previousResume, updatedResume, uploadResult?.parsing),
       );
+      openParsedResumeDraft(updatedResume, uploadResult?.parsing);
       setUploadResumeId(null);
     }
     return updatedResume;
+  }
+
+  function openParsedResumeDraft(resume, parsing) {
+    if (!resume || !parsing?.extractedText) {
+      return;
+    }
+
+    setParsedResumeDraft({
+      resume,
+      filename: parsing.filename,
+      resumeText: buildParsedResumeMarkdownDraft(resume, parsing.extractedText),
+    });
+    setParsedResumeDraftOpen(true);
+  }
+
+  async function handleAcceptParsedResumeDraft({ resumeId, resumeText }) {
+    if (busy) {
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setStatus("");
+
+    try {
+      const targetResume =
+        resumes.find((resume) => resume.resumeId === resumeId) ??
+        parsedResumeDraft?.resume;
+      const updatedResume = await updateResume(resumeId, {
+        title: targetResume.title,
+        targetRole: targetResume.targetRole,
+        notes: targetResume.notes,
+        resumeText,
+        status: targetResume.status === "draft" ? "active" : targetResume.status,
+        isPrimary: targetResume.isPrimary,
+      });
+
+      replaceResume(updatedResume);
+      setParsedResumeDraft(null);
+      setParsedResumeDraftOpen(false);
+      setStatus("Parsed resume draft accepted.");
+    } catch (acceptError) {
+      setError(acceptError.message || "Parsed resume draft update failed.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleDelete(resumeId) {
@@ -850,6 +914,20 @@ export function ResumeLibraryClient({ initialResumes }) {
             if (!open && !busy) {
               setProfileDraftOpen(false);
               setProfileDraft(null);
+            }
+          }}
+        />
+        <ParsedResumeTextDraftDialog
+          draft={parsedResumeDraft}
+          open={parsedResumeDraftOpen}
+          busy={busy}
+          status={status}
+          error={error}
+          onAccept={handleAcceptParsedResumeDraft}
+          onOpenChange={(open) => {
+            if (!open && !busy) {
+              setParsedResumeDraftOpen(false);
+              setParsedResumeDraft(null);
             }
           }}
         />

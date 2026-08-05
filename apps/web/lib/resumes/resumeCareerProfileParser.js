@@ -38,7 +38,6 @@ const INLINE_SECTION_HEADINGS = [
   "PROFESSIONAL SUMMARY",
   "TECHNICAL SKILLS",
   "CORE SKILLS",
-  "SKILLS",
   "WORK HISTORY",
   "WORK EXPERIENCE",
   "PROFESSIONAL EXPERIENCE",
@@ -109,7 +108,7 @@ export function parseResumeToCareerProfileDraft(resume) {
     name: "",
     focus: normalizeText(resume?.targetRole),
     headline: firstContentLine(sections.get("summary")) || "",
-    summary: (sections.get("summary") ?? []).join("\n"),
+    summary: joinProseLines(sections.get("summary") ?? []),
     careerGoals: "",
     contactInfo,
     additionalNotes: additionalNotes.join("\n\n"),
@@ -168,7 +167,17 @@ function normalizeResumeText(value) {
     .replace(/[^\S\n]+/g, " ")
     .replace(/Written in LATEX by .*? Page \d+/gi, " ")
     .replace(/--\s*\d+\s+of\s+\d+\s*--/gi, " ")
-    .replace(/\b([A-Za-z]{3,})-\s+([a-z]{2,})\b/g, "$1$2");
+    .replace(/\b([A-Za-z]{2,})-\s+([a-z]{2,})\b/g, "$1$2");
+
+  normalizedText = joinSplitHeading(normalizedText, [
+    "WEBSITES,",
+    "PORTFOLIOS,",
+    "PROFILES",
+  ]);
+  normalizedText = joinSplitHeading(normalizedText, [
+    "PROFESSIONAL",
+    "SUMMARY",
+  ]);
 
   for (const heading of INLINE_SECTION_HEADINGS) {
     normalizedText = normalizedText.replace(
@@ -179,6 +188,7 @@ function normalizeResumeText(value) {
 
   return normalizedText
     .replace(/\s+•\s+/g, "\n• ")
+    .replace(/\b([A-Za-z]{2,})-\s+([a-z]{2,})\b/g, "$1$2")
     .replace(
       /([.!?])\s+([A-Z][A-Z\s-]{4,}?)\s+(\d{1,2}\/\d{4})/g,
       "$1\n$2 $3",
@@ -199,7 +209,8 @@ function splitResumeSections(resumeText) {
       continue;
     }
 
-    const sectionName = getSectionName(line);
+    const sectionStart = getLineSectionStart(line);
+    const sectionName = sectionStart?.section ?? getSectionName(line);
 
     if (sectionName) {
       currentSection = sectionName;
@@ -208,13 +219,49 @@ function splitResumeSections(resumeText) {
         sections.set(currentSection, []);
       }
 
+      if (sectionStart?.remainder) {
+        addSectionLine(sections, currentSection, sectionStart.remainder);
+      }
+
       continue;
     }
 
-    sections.get(currentSection).push(line);
+    addSectionLine(sections, currentSection, line);
   }
 
   return sections;
+}
+
+function addSectionLine(sections, section, line) {
+  const sectionLines = sections.get(section);
+  const previousLine = sectionLines.at(-1) ?? "";
+
+  if (shouldJoinContinuation(previousLine, line)) {
+    sectionLines[sectionLines.length - 1] = `${previousLine} ${stripBullet(line)}`;
+    return;
+  }
+
+  sectionLines.push(line);
+}
+
+function shouldJoinContinuation(previousLine, line) {
+  if (!previousLine || isBulletLine(line) || getLineSectionStart(line)) {
+    return false;
+  }
+
+  if (extractDateRange(line).raw) {
+    return false;
+  }
+
+  if (isBulletLine(previousLine)) {
+    return true;
+  }
+
+  return (
+    /[-,/&]$/.test(previousLine) ||
+    /^[a-z0-9]/.test(line) ||
+    /^(and|or|with|without|for|to|across|through|including)\b/i.test(line)
+  );
 }
 
 function getSectionName(line) {
@@ -234,20 +281,42 @@ function getSectionName(line) {
   return null;
 }
 
+function getLineSectionStart(line) {
+  const normalizedLine = normalizeHeading(line);
+
+  for (const [heading, section] of SECTION_ALIASES) {
+    if (normalizedLine === heading) {
+      return { section, remainder: "" };
+    }
+
+    if (normalizedLine.startsWith(`${heading} `)) {
+      const remainder = line.slice(heading.length).replace(/^[:\-•\s]+/, "");
+
+      return { section, remainder: normalizeText(remainder) };
+    }
+  }
+
+  return null;
+}
+
 function parseExperience(lines) {
-  const entries = groupSectionItems(lines);
+  const entries = groupExperienceItems(lines);
 
   return entries.map((entry, index) => {
     const header = entry.header;
     const dateRange = extractDateRange(header);
     const headerWithoutDates = removeDateRange(header, dateRange);
-    const parts = splitHeaderParts(headerWithoutDates);
-    const inferredCompany = parts[1] || inferCompanyAfterDateRange(header, dateRange);
+    const headerParts = splitHeaderParts(headerWithoutDates);
+    const companyParts = splitHeaderParts(entry.companyLine ?? "");
+    const inferredCompany =
+      companyParts[0] ||
+      headerParts[1] ||
+      inferCompanyAfterDateRange(header, dateRange);
 
     return {
       company: inferredCompany,
-      title: parts[0] ?? "",
-      location: parts[2] ?? "",
+      title: headerParts[0] ?? "",
+      location: companyParts[1] || headerParts[2] || "",
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
       isCurrent: dateRange.isCurrent,
@@ -258,24 +327,108 @@ function parseExperience(lines) {
   });
 }
 
+function groupExperienceItems(lines) {
+  const entries = [];
+  let currentEntry = null;
+
+  for (const line of lines) {
+    const dateRange = extractDateRange(line);
+
+    if (!isBulletLine(line) && dateRange.raw) {
+      currentEntry = {
+        header: line,
+        companyLine: "",
+        details: [],
+      };
+      entries.push(currentEntry);
+      continue;
+    }
+
+    if (
+      currentEntry &&
+      !currentEntry.companyLine &&
+      !isBulletLine(line) &&
+      splitHeaderParts(line).length > 1
+    ) {
+      currentEntry.companyLine = line;
+      continue;
+    }
+
+    if (!currentEntry) {
+      currentEntry = {
+        header: line,
+        companyLine: "",
+        details: [],
+      };
+      entries.push(currentEntry);
+      continue;
+    }
+
+    currentEntry.details.push(line);
+  }
+
+  return entries;
+}
+
 function parseEducation(lines) {
-  return groupSectionItems(lines).map((entry, index) => {
+  return groupEducationItems(lines).map((entry, index) => {
     const dateRange = extractDateRange(entry.header);
     const headerWithoutDates = dateRange.raw
       ? normalizeText(entry.header.replace(dateRange.raw, ""))
       : entry.header;
-    const parts = splitHeaderParts(headerWithoutDates);
+    const headerParts = splitHeaderParts(headerWithoutDates);
+    const institutionParts = splitHeaderParts(entry.institutionLine ?? "");
 
     return {
-      institution: parts[0] ?? "",
-      degree: parts[1] ?? "",
-      fieldOfStudy: parts[2] ?? "",
+      institution: institutionParts[0] || headerParts[0] || "",
+      degree: institutionParts[0] ? headerParts[0] || "" : headerParts[1] || "",
+      fieldOfStudy: institutionParts[0] ? headerParts[1] || "" : headerParts[2] || "",
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
       notes: entry.details.join("\n"),
       sortOrder: index,
     };
   });
+}
+
+function groupEducationItems(lines) {
+  const entries = [];
+  let currentEntry = null;
+
+  for (const line of lines) {
+    if (!isBulletLine(line) && extractDateRange(line).raw) {
+      currentEntry = {
+        header: line,
+        institutionLine: "",
+        details: [],
+      };
+      entries.push(currentEntry);
+      continue;
+    }
+
+    if (
+      currentEntry &&
+      !currentEntry.institutionLine &&
+      !isBulletLine(line)
+    ) {
+      currentEntry.institutionLine = line;
+      continue;
+    }
+
+    if (!currentEntry) {
+      currentEntry = {
+        header: line,
+        institutionLine: "",
+        details: [],
+      };
+      entries.push(currentEntry);
+      continue;
+    }
+
+    currentEntry.details.push(stripBullet(line));
+  }
+
+  return entries;
 }
 
 function parseSkills(lines) {
@@ -296,14 +449,27 @@ function parseProjects(lines) {
   return groupSectionItems(lines, { bulletStartsEntry: true }).map((entry, index) => {
     const dateRange = extractDateRange(entry.header);
     const headerWithoutDates = removeDateRange(entry.header, dateRange);
-    const parts = splitHeaderParts(headerWithoutDates);
+    const cleanedHeader = normalizeText(
+      headerWithoutDates.replace(/\(\s*\)/g, "").replace(/\s+,/g, ","),
+    );
+    const pipeParts = splitHeaderParts(cleanedHeader);
+    const usesPipeParts = pipeParts.length > 1;
+    const [namePart, ...descriptionParts] = usesPipeParts
+      ? [pipeParts[0], pipeParts.slice(2).join(" ")]
+      : cleanedHeader.split(/,\s+/);
+    const description = descriptionParts.filter(Boolean).join(", ");
+    const technologies =
+      description.match(/Tech stack includes (.*?)(?:\. Built|\. Provides|\. Designed|$)/i)?.[1] ??
+      "";
 
     return {
-      name: parts[0] ?? "",
-      role: parts[1] ?? "",
-      description: nonBulletLines(entry.details).join("\n"),
+      name: namePart ?? "",
+      role: usesPipeParts ? pipeParts[1] ?? "" : "",
+      description: [description, nonBulletLines(entry.details).join("\n")]
+        .filter(Boolean)
+        .join("\n"),
       outcomes: bulletLines(entry.details).join("\n"),
-      technologies: "",
+      technologies,
       link: findUrl(entry.header) || findUrl(entry.details.join(" ")) || "",
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
@@ -334,6 +500,7 @@ function parseCertifications(lines) {
 function extractContactInfo(lines = []) {
   const email = lines.map(findEmail).find(Boolean) ?? "";
   const phone = lines.map(findPhone).find(Boolean) ?? "";
+  const location = lines.map(findLocation).find(Boolean) ?? "";
   const links = [];
 
   for (const line of lines) {
@@ -348,7 +515,7 @@ function extractContactInfo(lines = []) {
   return {
     email,
     phone,
-    location: "",
+    location,
     links,
   };
 }
@@ -481,6 +648,10 @@ function firstContentLine(lines = []) {
   return lines.find(Boolean) ?? "";
 }
 
+function joinProseLines(lines = []) {
+  return lines.map(normalizeText).filter(Boolean).join(" ");
+}
+
 function bulletLines(lines) {
   return lines.filter(isBulletLine).map(stripBullet);
 }
@@ -527,6 +698,15 @@ function inferLinkLabel(url) {
   return "Website";
 }
 
+function findLocation(value) {
+  const textValue = normalizeText(value);
+  const locationMatch = textValue.match(
+    /(?:Map-marker-alt\s*)?([A-Z][A-Za-z .'-]+,\s*[A-Z]{2}(?:\s+\d{5})?)/,
+  );
+
+  return normalizeText(locationMatch?.[1]);
+}
+
 function removeDateRange(header, dateRange) {
   return dateRange.raw ? normalizeText(header.replace(dateRange.raw, "")) : header;
 }
@@ -543,6 +723,19 @@ function inferCompanyAfterDateRange(header, dateRange) {
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function joinSplitHeading(value, parts) {
+  const pattern = parts.map(escapeRegExp).join("\\s*\\n\\s*");
+
+  return value.replace(new RegExp(pattern, "gi"), parts.join(" "));
+}
+
+function normalizeHeading(value) {
+  return value
+    .replace(/[:\-]+$/, "")
+    .trim()
+    .toLowerCase();
 }
 
 function normalizeText(value) {
