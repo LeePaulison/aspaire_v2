@@ -951,6 +951,57 @@ This phase protects the product from rushing into job tracking before the career
 
 ---
 
+# ASP-0023: Add Phase-Boundary Review Slices
+
+## Status
+
+Accepted
+
+## Date
+
+2026-07-30
+
+## Context
+
+Phase 4 introduced a meaningful bidirectional workflow between Resume Library, Career Profile, GraphQL persistence, and AI structured-output handling. The product slice is usable, but it also created enough new code paths that waiting until the end of the full roadmap to review and refactor would make cleanup harder and riskier.
+
+AspAIre needs a repeatable habit for cleaning up after substantial phases. This is especially important for Single Responsibility Principle work, because SRP can be taken too far. Very small functions are useful only when the larger workflow remains discoverable.
+
+## Decision
+
+AspAIre will add phase-boundary review slices after substantial product phases when the completed work introduces enough new domain behavior to justify review before the next phase.
+
+The first explicit instance is:
+
+```text
+Phase 4.5: Post-Phase 4 Review and Cleanup
+```
+
+Future `.5` phases may be added after later major phases when useful. These review slices should not become large product feature phases. They should focus on code review, SRP refactor, cleanup, regression hardening, and documentation alignment.
+
+AspAIre will treat SRP at two levels:
+
+* Focused helper functions that each do one thing.
+* Domain conveyor-belt functions that act as obvious central call points for multi-step workflows.
+
+A domain conveyor-belt function may call several smaller helpers. Its purpose is to make the workflow easy to find and read from end to end, such as accepting a reviewed draft, saving an answer, or creating a resume from a profile.
+
+## Rationale
+
+Doing cleanup immediately after a phase keeps the workflow fresh in memory and prevents the next domain from building on avoidable complexity.
+
+This approach also protects against over-atomized SRP. The codebase should not force developers to hunt through many tiny files to understand one product action. Small functions should remain focused, but the business workflow should still have a clear, named entry point.
+
+## Consequences
+
+* Phase 4.5 is added before Phase 5.
+* Future phase plans may include `.5` review slices when a completed phase warrants one.
+* Refactors should preserve or improve workflow discoverability, not only reduce function size.
+* Domain docs and architecture docs should identify central workflow call points when those call points matter.
+* Review slices should include focused regression tests around the completed workflow.
+
+---
+
 # Adding New Decisions
 
 New decisions should be added when a choice materially affects:

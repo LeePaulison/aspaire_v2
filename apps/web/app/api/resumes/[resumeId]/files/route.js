@@ -107,8 +107,6 @@ export async function POST(request, context) {
     });
 
     const updatedResume = await getResumeById(user.id, resumeId);
-    const textApplied =
-      Boolean(extractedText) && resume.resumeText !== updatedResume?.resumeText;
 
     return Response.json(
       {
@@ -117,7 +115,8 @@ export async function POST(request, context) {
           fileId,
           filename: validatedFile.filename,
           status: textExtractionStatus,
-          textApplied,
+          extractedText,
+          textDraftAvailable: Boolean(extractedText),
           error: textExtractionError,
         },
       },

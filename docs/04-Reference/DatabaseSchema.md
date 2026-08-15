@@ -48,7 +48,10 @@ Current exported schema modules include:
 * `career_profile_experience`
 * `career_profile_education`
 * `career_profile_skills`
+* `career_profile_projects`
+* `career_profile_certifications`
 * `career_profile_preferences`
+* `domain_preferences`
 * `preferences`
 * `reasoning_levels`
 * `resume_analyses`
@@ -199,6 +202,32 @@ Defined in `apps/web/drizzle/aiAgents.js`.
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |
 
+## `domain_preferences`
+
+Defined in `apps/web/drizzle/domainPreferences.js`.
+
+Stores product-level AI runtime defaults for domain workflows. These defaults are not per-user preferences; they describe how a domain workflow should run unless a request explicitly overrides them.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | text | Primary key |
+| `domain` | text | Required |
+| `workflow_type` | text | Required |
+| `agent_id` | text | Optional, references `ai_agents.id`, set null on delete |
+| `default_model_id` | text | Optional, references `ai_models.id`, set null on delete |
+| `temperature` | real | Optional |
+| `default_reasoning_id` | text | Optional, references `reasoning_levels.id`, set null on delete |
+| `default_verbosity_id` | text | Optional, references `verbosity_levels.id`, set null on delete |
+| `response_format` | text | Required, defaults `text` |
+| `response_schema` | jsonb | Optional |
+| `enabled` | boolean | Required, defaults true |
+| `created_at` | timestamp with timezone | Required, defaults now |
+| `updated_at` | timestamp with timezone | Required, defaults now |
+
+Indexes:
+
+* `domain_preferences_domain_workflow_unique` on `domain`, `workflow_type`
+
 ## `reasoning_levels`
 
 Defined in `apps/web/drizzle/reasoningLevels.js`.
@@ -233,21 +262,26 @@ Defined in `apps/web/drizzle/*.js`.
 
 ## `career_profiles`
 
-One durable career profile per authenticated user.
+Durable career profile variants for authenticated users. A user may have multiple profiles, with at most one marked default.
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | text | Primary key |
-| `user_id` | text | Required, references `user.id`, cascade delete, unique |
+| `user_id` | text | Required, references `user.id`, cascade delete |
+| `name` | text | Required, defaults `Default Profile` |
+| `focus` | text | Required, defaults empty |
+| `is_default` | boolean | Required, defaults false; at most one default profile per user |
 | `headline` | text | Required, defaults empty |
 | `summary` | text | Required, defaults empty |
 | `career_goals` | text | Required, defaults empty |
+| `contact_info` | jsonb | Required, defaults empty object; stores reviewed email, phone, location, and ordered labeled links |
+| `additional_notes` | text | Required, defaults empty; review holding field for ambiguous or unplaced career context |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |
 
 Indexes:
 
-* `career_profiles_user_id_unique` on `user_id`
+* `career_profiles_user_id_default_unique` on `user_id` where `is_default = true`
 * `career_profiles_user_id_idx` on `user_id`
 
 ## `career_profile_experience`
@@ -261,8 +295,8 @@ Stores work experience rows for a career profile.
 | `company` | text | Required, defaults empty |
 | `title` | text | Required, defaults empty |
 | `location` | text | Required, defaults empty |
-| `start_date` | text | Required, defaults empty |
-| `end_date` | text | Required, defaults empty |
+| `start_date` | date | Optional |
+| `end_date` | date | Optional |
 | `is_current` | boolean | Required, defaults false |
 | `description` | text | Required, defaults empty |
 | `achievements` | jsonb | Required, defaults empty array |
@@ -281,8 +315,8 @@ Stores education rows for a career profile.
 | `institution` | text | Required, defaults empty |
 | `degree` | text | Required, defaults empty |
 | `field_of_study` | text | Required, defaults empty |
-| `start_date` | text | Required, defaults empty |
-| `end_date` | text | Required, defaults empty |
+| `start_date` | date | Optional |
+| `end_date` | date | Optional |
 | `notes` | text | Required, defaults empty |
 | `sort_order` | integer | Required, defaults `0` |
 | `created_at` | timestamp with timezone | Required, defaults now |
@@ -300,6 +334,45 @@ Stores skill rows for a career profile.
 | `category` | text | Required, defaults `General` |
 | `proficiency` | text | Required, defaults empty |
 | `evidence` | text | Required, defaults empty |
+| `sort_order` | integer | Required, defaults `0` |
+| `created_at` | timestamp with timezone | Required, defaults now |
+| `updated_at` | timestamp with timezone | Required, defaults now |
+
+## `career_profile_projects`
+
+Stores notable projects for a career profile.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | text | Primary key |
+| `profile_id` | text | Required, references `career_profiles.id`, cascade delete |
+| `name` | text | Required |
+| `role` | text | Required, defaults empty |
+| `description` | text | Required, defaults empty |
+| `outcomes` | text | Required, defaults empty |
+| `technologies` | jsonb | Required, defaults empty array |
+| `link` | text | Required, defaults empty |
+| `start_date` | date | Optional |
+| `end_date` | date | Optional |
+| `sort_order` | integer | Required, defaults `0` |
+| `created_at` | timestamp with timezone | Required, defaults now |
+| `updated_at` | timestamp with timezone | Required, defaults now |
+
+## `career_profile_certifications`
+
+Stores certifications, credentials, awards, and similar career proof points for a career profile.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | text | Primary key |
+| `profile_id` | text | Required, references `career_profiles.id`, cascade delete |
+| `name` | text | Required |
+| `issuer` | text | Required, defaults empty |
+| `issue_date` | date | Optional |
+| `expiration_date` | date | Optional |
+| `credential_id` | text | Required, defaults empty |
+| `credential_url` | text | Required, defaults empty |
+| `notes` | text | Required, defaults empty |
 | `sort_order` | integer | Required, defaults `0` |
 | `created_at` | timestamp with timezone | Required, defaults now |
 | `updated_at` | timestamp with timezone | Required, defaults now |

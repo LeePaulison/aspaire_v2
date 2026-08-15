@@ -200,7 +200,7 @@ test("resume file deletion removes one uploaded original and metadata row", asyn
   assert.deepEqual(updatedResume.files, []);
 });
 
-test("resume file creation applies extracted text to an empty resume", async () => {
+test("resume file creation does not apply extracted text without review", async () => {
   let insertedFile = null;
   let resumeUpdate = null;
   const resumeRow = {
@@ -243,12 +243,12 @@ test("resume file creation applies extracted text to an empty resume", async () 
 
   assert.equal(file.fileId, "file-1");
   assert.equal(insertedFile.textExtractionStatus, "completed");
-  assert.equal(resumeUpdate.resumeText, "Parsed resume text");
-  assert.equal(resumeUpdate.sourceType, "upload");
-  assert.equal(resumeUpdate.status, "active");
+  assert.equal("resumeText" in resumeUpdate, false);
+  assert.equal("sourceType" in resumeUpdate, false);
+  assert.equal("status" in resumeUpdate, false);
 });
 
-test("resume file creation does not overwrite manually entered resume text", async () => {
+test("resume file creation preserves existing resume text before review", async () => {
   let resumeUpdate = null;
   const resumeRow = {
     resumeId: "resume-1",
@@ -288,4 +288,5 @@ test("resume file creation does not overwrite manually entered resume text", asy
 
   assert.equal("resumeText" in resumeUpdate, false);
   assert.equal("sourceType" in resumeUpdate, false);
+  assert.equal("status" in resumeUpdate, false);
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { CheckIcon, Cross2Icon, UploadIcon } from "@radix-ui/react-icons";
 
 import { IconButton } from "@/components/ui/IconButton";
@@ -43,9 +44,39 @@ function Textarea(props) {
   );
 }
 
-export function ResumeForm({ resume, busy, onSubmit, onCancel, onUpload }) {
+export function ResumeForm({
+  resume,
+  busy,
+  onSubmit,
+  onCancel,
+  onUpload,
+  onUploadFile,
+}) {
+  const fileInputRef = useRef(null);
   const isArchived = resume.status === "archived";
-  const canUpload = Boolean(resume.resumeId) && !isArchived && onUpload;
+  const canUpload =
+    !isArchived && (Boolean(resume.resumeId && onUpload) || Boolean(onUploadFile));
+
+  function handleUploadClick() {
+    if (resume.resumeId && onUpload) {
+      onUpload();
+      return;
+    }
+
+    fileInputRef.current?.click();
+  }
+
+  async function handleUploadFileChange(event) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    const form = input.form;
+
+    if (file && form && onUploadFile) {
+      await onUploadFile(file, form);
+    }
+
+    input.value = "";
+  }
 
   return (
     <form
@@ -95,12 +126,27 @@ export function ResumeForm({ resume, busy, onSubmit, onCancel, onUpload }) {
         label="Resume text"
         action={
           canUpload ? (
-            <IconButton label="Upload original" onClick={onUpload} disabled={busy}>
+            <IconButton
+              label="Upload original"
+              onClick={handleUploadClick}
+              disabled={busy}
+            >
               <UploadIcon />
             </IconButton>
           ) : null
         }
       >
+        {onUploadFile ? (
+          <input
+            ref={fileInputRef}
+            name="createUploadFile"
+            type="file"
+            accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            className="hidden"
+            disabled={busy}
+            onChange={handleUploadFileChange}
+          />
+        ) : null}
         <Textarea
           name="resumeText"
           defaultValue={resume.resumeText}

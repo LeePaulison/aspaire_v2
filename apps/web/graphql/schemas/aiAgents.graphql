@@ -23,7 +23,22 @@ type AiAgentConfiguration {
   promptVersion: Int!
 }
 
+type DomainPreference {
+  domainPreferenceId: String!
+  domain: String!
+  workflowType: String!
+  agentId: String
+  defaultModelId: String
+  temperature: Float
+  defaultReasoningId: String
+  defaultVerbosityId: String
+  responseFormat: String!
+  responseSchema: String
+  enabled: Boolean!
+}
+
 extend type Query {
   aiAgents: [AiAgent!]!
   aiAgentConfiguration(agentId: String!): AiAgentConfiguration
+  domainPreference(domain: String!, workflowType: String!): DomainPreference
 }

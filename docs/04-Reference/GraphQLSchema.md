@@ -151,12 +151,14 @@ Queries:
 
 * `aiAgents: [AiAgent!]!`
 * `aiAgentConfiguration(agentId: String!): AiAgentConfiguration`
+* `domainPreference(domain: String!, workflowType: String!): DomainPreference`
 
 Purpose:
 
 * Expose user-facing AI agent metadata.
 * Include MVP-oriented agent domain, workflow, context policy, tool policy, prompt version, enabled state, and ordering metadata.
 * Expose selected agent system prompt configuration to authenticated AI server calls.
+* Expose domain workflow defaults such as the resume-parser structured output configuration.
 
 ---
 
@@ -168,23 +170,40 @@ Types:
 * `CareerExperience`
 * `CareerEducation`
 * `CareerSkill`
+* `CareerProject`
+* `CareerCertification`
 * `CareerProfilePreferences`
 
 Inputs:
 
+* `CreateCareerProfileInput`
+* `CareerProfileContactInfoInput`
+* `CareerProfileContactLinkInput`
+* `CreateCareerProfileFromDraftInput`
+* `CareerProfileDraftExperienceInput`
+* `CareerProfileDraftEducationInput`
+* `CareerProfileDraftSkillInput`
+* `CareerProfileDraftProjectInput`
+* `CareerProfileDraftCertificationInput`
+* `CareerProfileDraftPreferencesInput`
 * `UpdateCareerProfileSummaryInput`
 * `UpsertCareerExperienceInput`
 * `UpsertCareerEducationInput`
 * `UpsertCareerSkillInput`
+* `UpsertCareerProjectInput`
+* `UpsertCareerCertificationInput`
 * `UpdateCareerPreferencesInput`
 
 Queries:
 
-* `careerProfile: CareerProfile`
+* `careerProfiles: [CareerProfile!]!`
+* `careerProfile(profileId: String): CareerProfile`
 
 Mutations:
 
-* `createCareerProfile: CareerProfile!`
+* `createCareerProfile(input: CreateCareerProfileInput): CareerProfile!`
+* `createCareerProfileFromDraft(input: CreateCareerProfileFromDraftInput!): CareerProfile!`
+* `deleteCareerProfile(profileId: String!): [CareerProfile!]!`
 * `updateCareerProfileSummary(input: UpdateCareerProfileSummaryInput!): CareerProfile!`
 * `upsertCareerExperience(input: UpsertCareerExperienceInput!): CareerProfile!`
 * `deleteCareerExperience(experienceId: String!): CareerProfile!`
@@ -192,12 +211,19 @@ Mutations:
 * `deleteCareerEducation(educationId: String!): CareerProfile!`
 * `upsertCareerSkill(input: UpsertCareerSkillInput!): CareerProfile!`
 * `deleteCareerSkill(skillId: String!): CareerProfile!`
+* `upsertCareerProject(input: UpsertCareerProjectInput!): CareerProfile!`
+* `deleteCareerProject(projectId: String!): CareerProfile!`
+* `upsertCareerCertification(input: UpsertCareerCertificationInput!): CareerProfile!`
+* `deleteCareerCertification(certificationId: String!): CareerProfile!`
 * `updateCareerPreferences(input: UpdateCareerPreferencesInput!): CareerProfile!`
 
 Purpose:
 
-* Create, read, and update one authenticated user's career profile.
-* Manage profile summary, experience, education, skills, and job/location preferences.
+* Create, list, read, update, and delete authenticated user career profile variants.
+* Create reviewed resume-derived Career Profile variants in one mutation.
+* Support multiple profile variants per authenticated user while preserving exactly one default profile where profiles exist.
+* Manage profile name, focus, default state, summary, additional notes, experience, education, skills, projects, certifications, and job/location preferences.
+* Expose date-bearing fields as nullable strings backed by PostgreSQL `date` columns.
 * Preserve user ownership by deriving `userId` from GraphQL context rather than client input.
 
 ---

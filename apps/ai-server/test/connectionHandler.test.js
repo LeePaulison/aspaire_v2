@@ -135,6 +135,60 @@ test("successful streams emit chunks, persist the complete turn, and finish", as
   assert.equal(savedInput.assistantMessage, "Hello there");
 });
 
+test("domain workflow requests use domain preferences over user preferences", async () => {
+  let streamInput;
+  const socket = await connect({
+    getDomainPreference: async ({ domain, workflowType }) => {
+      assert.equal(domain, "career_evidence");
+      assert.equal(workflowType, "resume_to_career_profile_draft");
+
+      return {
+        agentId: "resume-parser",
+        defaultModelId: "gpt-5.5",
+        defaultReasoningId: "medium",
+        defaultVerbosityId: "low",
+        temperature: null,
+        responseFormat: "json_schema",
+      };
+    },
+    getAiAgentById: async ({ agentId }) => ({
+      agentId,
+      domain: "career_evidence",
+      workflowType: "resume_to_career_profile_draft",
+      defaultModelId: "gpt-4.1-mini",
+      systemPrompt: "Parse resumes",
+    }),
+    getAiModelById: async ({ modelId }) => ({
+      modelId,
+      supportsReasoning: true,
+      supportsVerbosity: true,
+      supportsTemperature: false,
+    }),
+    createChatStream: async (input) => {
+      streamInput = input;
+
+      return (async function* () {
+        yield { type: "response.output_text.delta", delta: "{}" };
+      })();
+    },
+  });
+
+  send(socket, "chat_message", {
+    content: "Resume text",
+    conversationId: null,
+    agentId: "resume-parser",
+  });
+  await tick();
+  await tick();
+
+  assert.equal(streamInput.model.modelId, "gpt-5.5");
+  assert.equal(streamInput.reasoningLevel.levelId, "medium");
+  assert.equal(streamInput.verbosityLevel.levelId, "low");
+  assert.equal(streamInput.temperature, null);
+  assert.equal(streamInput.agentSystemPrompt, "Parse resumes");
+  assert.equal(streamInput.responseFormat, "json_schema");
+});
+
 test("upstream and persistence failures return a stable client error", async () => {
   const streamFailure = await connect({
     createChatStream: async () => (async function* () {

@@ -107,7 +107,10 @@ Chat requests use:
   "type": "chat_message",
   "payload": {
     "content": "...",
-    "conversationId": null
+    "conversationId": null,
+    "agentId": "assistant",
+    "domain": "general",
+    "workflowType": "chat"
   }
 }
 ```
@@ -129,6 +132,7 @@ Current GraphQL-backed operations include:
 * `getPreferences`
 * `getAiModelById`
 * `getAiAgentById`
+* `getDomainPreference`
 * `saveConversationTurn`
 
 The user's bearer token is forwarded to GraphQL.
@@ -149,9 +153,16 @@ OpenAI integration lives in `apps/ai-server/lib/openai`.
 * Optional temperature
 * Optional reasoning effort
 * Optional text verbosity
+* Optional strict structured-output JSON schema from a domain workflow preference
 * Streaming enabled
 
 Model capability flags determine which optional OpenAI request fields are sent.
+
+Domain workflows can provide product-level runtime defaults through `domain_preferences`.
+The current resume-to-career-profile draft workflow uses the `resume-parser` agent with the
+`career_evidence.resume_to_career_profile_draft` preference and a strict response schema.
+The AI server converts that stored schema into the OpenAI Responses API `text.format`
+shape before streaming the structured response back to the web app.
 
 ---
 
@@ -227,4 +238,3 @@ Current controls include:
 The Fly app and examples still use Saigely names such as `saigely-server`.
 
 AspAIre should decide whether to create a new Fly application for the AI server or rename/reconfigure the inherited one. Any production rename must be coordinated with `NEXT_PUBLIC_WS_SERVER`, `CLIENT_ORIGIN`, `API_ORIGIN`, JWKS configuration, and deployment documentation.
-

@@ -103,17 +103,21 @@ Career Profile is the durable user context layer.
 
 MVP capabilities:
 
-* Create and edit one profile per authenticated user
+* Create and edit multiple profile variants per authenticated user
+* Select a profile, delete non-final profiles, and set a default profile
 * Store professional headline and summary
 * Store work experience
 * Store education
 * Store skills
+* Store projects
+* Store certifications and awards
 * Store career goals
 * Store job and location preferences
+* Validate date-bearing sections before save
+* Display formatted dates when available
 
 MVP constraints:
 
-* No multiple profile variants
 * No public sharing
 * No AI auto-editing of profile data without user review
 
@@ -548,7 +552,7 @@ After the MVP is useful, likely next candidates include:
 * Company and role research
 * Manual reminder improvements
 * Better analysis comparison across jobs
-* Profile drafting from resume content
+* Richer profile/resume alignment suggestions
 * Deployment hardening
 
 Post-MVP work should be selected based on real use of the MVP, not roadmap appeal alone.

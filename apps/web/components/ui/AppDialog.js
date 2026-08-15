@@ -1,7 +1,7 @@
 "use client";
 
 import { Cross2Icon } from "@radix-ui/react-icons";
-import { Dialog } from "radix-ui";
+import { Dialog, ScrollArea } from "radix-ui";
 
 export function AppDialog({
   open,
@@ -10,12 +10,16 @@ export function AppDialog({
   description,
   children,
   closeLabel = "Close dialog",
+  size = "default",
 }) {
+  const contentClassName =
+    size === "large" ? "AppDialogContent AppDialogContentLarge" : "AppDialogContent";
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="DialogOverlay" />
-        <Dialog.Content className="AppDialogContent">
+        <Dialog.Content className={contentClassName}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-lg font-semibold text-foreground">
@@ -37,7 +41,22 @@ export function AppDialog({
               </button>
             </Dialog.Close>
           </div>
-          <div className="mt-5">{children}</div>
+          {size === "large" ? (
+            <ScrollArea.Root className="DialogScrollArea mt-5 h-[min(74svh,46rem)]">
+              <ScrollArea.Viewport className="DialogViewport">
+                {children}
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar
+                className="DialogScrollbar"
+                orientation="vertical"
+              >
+                <ScrollArea.Thumb className="DialogScrollThumb" />
+              </ScrollArea.Scrollbar>
+              <ScrollArea.Corner className="DialogScrollCorner" />
+            </ScrollArea.Root>
+          ) : (
+            <div className="mt-5">{children}</div>
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

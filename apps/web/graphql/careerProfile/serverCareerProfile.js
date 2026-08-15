@@ -15,3 +15,17 @@ export async function getCareerProfile() {
 
   return result.careerProfile;
 }
+
+export async function listCareerProfiles() {
+  const result = await serverAuthRequest({
+    query: `
+      query CareerProfiles {
+        careerProfiles {
+          ${CAREER_PROFILE_FIELDS}
+        }
+      }
+    `,
+  });
+
+  return result.careerProfiles;
+}

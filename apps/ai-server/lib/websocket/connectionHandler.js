@@ -30,10 +30,100 @@ async function cancelIterator(iterator) {
   }
 }
 
+function optionalString(value) {
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : null;
+}
+
+function optionalNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+async function resolveAiRuntime({
+  token,
+  preferences,
+  requestedAgentId,
+  requestedDomain,
+  requestedWorkflowType,
+  requestedModelId,
+  requestedReasoningId,
+  requestedVerbosityId,
+  requestedTemperature,
+  getDomainPreference,
+  getAiAgentById,
+  getAiModelById,
+}) {
+  const explicitAgentId = optionalString(requestedAgentId);
+  const explicitDomain = optionalString(requestedDomain);
+  const explicitWorkflowType = optionalString(requestedWorkflowType);
+  const explicitModelId = optionalString(requestedModelId);
+  const explicitReasoningId = optionalString(requestedReasoningId);
+  const explicitVerbosityId = optionalString(requestedVerbosityId);
+  const explicitTemperature = optionalNumber(requestedTemperature);
+  const hasDomainRequest =
+    Boolean(explicitAgentId) ||
+    Boolean(explicitDomain) ||
+    Boolean(explicitWorkflowType);
+
+  let agent = null;
+
+  if (explicitAgentId) {
+    agent = await getAiAgentById({ token, agentId: explicitAgentId });
+  }
+
+  const domain = explicitDomain ?? agent?.domain ?? null;
+  const workflowType = explicitWorkflowType ?? agent?.workflowType ?? null;
+  const domainPreference =
+    hasDomainRequest && domain && workflowType
+      ? await getDomainPreference({ token, domain, workflowType })
+      : null;
+  const effectiveAgentId =
+    explicitAgentId ??
+    domainPreference?.agentId ??
+    preferences.defaultAgentId;
+
+  if (!agent || agent.agentId !== effectiveAgentId) {
+    agent = await getAiAgentById({ token, agentId: effectiveAgentId });
+  }
+
+  const modelId =
+    explicitModelId ??
+    domainPreference?.defaultModelId ??
+    agent?.defaultModelId ??
+    preferences.defaultModelId;
+  const model = await getAiModelById({ token, modelId });
+  const hasDomainTemperature = domainPreference
+    ? Object.hasOwn(domainPreference, "temperature")
+    : false;
+
+  return {
+    agent,
+    model,
+    reasoningId:
+      explicitReasoningId ??
+      domainPreference?.defaultReasoningId ??
+      preferences.defaultReasoningId,
+    verbosityId:
+      explicitVerbosityId ??
+      domainPreference?.defaultVerbosityId ??
+      preferences.defaultVerbosityId,
+    temperature:
+      explicitTemperature ??
+      (hasDomainTemperature
+        ? optionalNumber(domainPreference.temperature)
+        : preferences.temperature),
+    responseFormat: domainPreference?.responseFormat ?? "text",
+    responseSchema: domainPreference?.responseSchema ?? null,
+    domainPreference,
+  };
+}
+
 export function createWebSocketConnectionHandler({
   verifyAuthenticationToken,
   decodeToken = () => ({}),
   getPreferences,
+  getDomainPreference = async () => null,
   getAiModelById,
   getAiAgentById,
   createChatStream,
@@ -193,7 +283,17 @@ export function createWebSocketConnectionHandler({
           return;
         }
 
-        const { content, conversationId } = parsedMessage.payload;
+        const {
+          content,
+          conversationId,
+          agentId: requestedAgentId,
+          domain: requestedDomain,
+          workflowType: requestedWorkflowType,
+          modelId: requestedModelId,
+          reasoningId: requestedReasoningId,
+          verbosityId: requestedVerbosityId,
+          temperature: requestedTemperature,
+        } = parsedMessage.payload;
 
         if (typeof content !== "string" || content.trim().length === 0) {
           sendError("Invalid message content");
@@ -218,20 +318,27 @@ export function createWebSocketConnectionHandler({
             return;
           }
 
-          const aiModel = await getAiModelById({
+          const runtime = await resolveAiRuntime({
             token: authenticationToken,
-            modelId: conversationPreferences.defaultModelId,
+            preferences: conversationPreferences,
+            requestedAgentId,
+            requestedDomain,
+            requestedWorkflowType,
+            requestedModelId,
+            requestedReasoningId,
+            requestedVerbosityId,
+            requestedTemperature,
+            getDomainPreference,
+            getAiAgentById,
+            getAiModelById,
           });
-          if (!aiModel) {
+
+          if (!runtime.model) {
             sendError("Selected AI model was not found");
             return;
           }
 
-          const aiAgent = await getAiAgentById({
-            token: authenticationToken,
-            agentId: conversationPreferences.defaultAgentId,
-          });
-          if (!aiAgent) {
+          if (!runtime.agent) {
             sendError("Selected AI agent was not found");
             return;
           }
@@ -239,11 +346,17 @@ export function createWebSocketConnectionHandler({
           let fullAssistantResponse = "";
           const stream = await createChatStream({
             message: content.trim(),
-            model: aiModel,
-            reasoningLevel: { levelId: conversationPreferences.defaultReasoningId },
-            verbosityLevel: { levelId: conversationPreferences.defaultVerbosityId },
-            temperature: conversationPreferences.temperature,
-            agentSystemPrompt: aiAgent.systemPrompt,
+            model: runtime.model,
+            reasoningLevel: runtime.reasoningId
+              ? { levelId: runtime.reasoningId }
+              : null,
+            verbosityLevel: runtime.verbosityId
+              ? { levelId: runtime.verbosityId }
+              : null,
+            temperature: runtime.temperature,
+            agentSystemPrompt: runtime.agent.systemPrompt,
+            responseFormat: runtime.responseFormat,
+            responseSchema: runtime.responseSchema,
           });
 
           const iterator = stream[Symbol.asyncIterator]();
