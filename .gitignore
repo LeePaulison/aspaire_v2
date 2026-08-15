@@ -42,3 +42,6 @@ Thumbs.db
 *.key
 *.crt
 /client_secret_*.apps.googleusercontent.com.json
+
+# Local career artifacts
+Career-Snapshot.md

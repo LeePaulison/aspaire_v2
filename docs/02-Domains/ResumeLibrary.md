@@ -24,7 +24,7 @@ The current implementation includes a production resume schema, separate uploade
 
 The storage boundary for uploaded resume originals is decided: uploaded originals should be stored in S3, while application-owned metadata, extracted text, and manually entered text remain in PostgreSQL.
 
-Resume text extraction is implemented for uploaded PDF, DOCX, and plain text originals. Extracted text may populate the stored `resume_text` field when the resume has no manually entered text or already uses uploaded text as its source.
+Resume text extraction is implemented for uploaded PDF, DOCX, and plain text originals. Uploads store raw extracted text and a reviewable parsed Markdown draft on the specific `resume_files` row. Accepted Markdown is copied into `resumes.resume_text` only after explicit user review.
 
 Resume Library records with stored resume text can generate a reviewed Career Profile draft, including structured contact and social link information. Draft review happens in client session state and durable Career Profile data is created only after explicit user acceptance.
 
@@ -94,7 +94,9 @@ Initial capabilities should include:
 * Preserve enough content for future analysis
 * Receive clear confirmation when a resume record, stored content, file metadata, and uploaded originals are deleted
 * Upload an original PDF, DOCX, or plain text resume file to an existing resume record
-* Extract plain resume text from uploaded PDF, DOCX, or TXT originals without overwriting manually entered resume text
+* Extract plain resume text and generate a parsed Markdown draft from uploaded PDF, DOCX, or TXT originals without overwriting manually entered resume text
+* Mark one uploaded file as the default source for a resume record
+* Accept a reviewed parsed Markdown draft into the resume's durable editable text
 * Generate a reviewed Career Profile draft from a resume with stored text
 * Accept a reviewed profile draft into a new durable Career Profile variant
 
@@ -162,7 +164,10 @@ Expected fields include:
 * File size
 * Upload timestamp
 * Text extraction status
-* Parsing status
+* Raw extracted text
+* Parsed Markdown draft text
+* Parsed Markdown review status
+* Default-source flag
 
 File storage should be documented before implementation. PostgreSQL should store metadata, not large binary file content.
 
@@ -235,7 +240,7 @@ Each table should include:
 
 The first implementation should avoid overbuilding version control. A clear duplicate-as-new-version workflow may be enough until real user behavior proves deeper history is needed.
 
-Uploaded resume file metadata lives in `resume_files` and should include the S3 object key, original filename, content type, size, upload timestamp, extraction status, owning user relationship, and parent resume relationship. S3 object keys should be scoped as:
+Uploaded resume file metadata lives in `resume_files` and should include the S3 object key, original filename, content type, size, upload timestamp, extraction status, raw extracted text, parsed Markdown draft text, parsed draft status, default-source flag, owning user relationship, and parent resume relationship. S3 object keys should be scoped as:
 
 ```text
 users/{userId}/resumes/{resumeId}/{safeFilename}
@@ -281,13 +286,17 @@ Initial mutation direction:
 * `restoreResume`
 * `setPrimaryResume`
 * `deleteResumeFile`
+* `setPrimaryResumeFileSource`
+* `acceptParsedResumeText`
 * `duplicateResume`
 * `updateResumeContent`
 * `updateResumeSections`
 
 Upload mechanics are implemented through an authenticated Next.js route handler rather than GraphQL multipart upload. `POST /api/resumes/:resumeId/files` validates authentication, resume ownership, active resume status, file type, file size, object key generation, and S3 storage before persisting `resume_files` metadata.
 
-The upload route performs server-side text extraction for supported files. Extraction status is stored on the `resume_files` row as `pending`, `completed`, or `failed`. A completed extraction updates `resumes.resume_text` only when the resume has no existing text or already uses uploaded text as its source. Manual resume text is not overwritten by uploading an original file.
+The upload route performs server-side text extraction for supported files. Extraction status is stored on the `resume_files` row as `pending`, `completed`, or `failed`. The route also generates a parsed Markdown draft for review and stores that draft on the same `resume_files` row. Uploading an original file does not overwrite `resumes.resume_text`; accepting a parsed draft copies the reviewed Markdown into `resumes.resume_text`, marks the file as accepted, and sets that file as the resume's default uploaded source.
+
+Career Profile drafting prefers durable accepted `resumes.resume_text`. If a resume has no accepted text but does have uploads, the UI asks the user to choose the default uploaded file or a specific file before generating the profile draft. The fallback uses only the selected `resume_files.id`; it must not infer from the latest upload across unrelated files.
 
 Resolvers should validate authentication first, then delegate persistence to a resume repository.
 
@@ -307,6 +316,8 @@ Expected repository responsibilities include:
 * Mark a resume as primary while clearing prior primary state
 * Archive, restore, or delete resumes
 * Delete individual uploaded originals from S3 and `resume_files`
+* Set the default uploaded source file for a resume
+* Accept parsed Markdown from a selected uploaded file into durable resume text
 * Duplicate a resume where supported
 * Return domain-shaped objects suitable for GraphQL resolvers
 
@@ -342,8 +353,8 @@ Useful interface patterns include:
 * Clear actions for edit, duplicate, archive, and analyze
 * Clear deletion confirmation for resume records, individual uploaded originals, and extracted text
 * Empty state for users without resumes
-* Preview of resume text or extracted sections
-* Uploaded original metadata list showing filename, size, upload date, and extraction status
+* Preview of accepted resume text or parsed uploaded-file drafts
+* Uploaded original metadata list showing filename, size, upload date, extraction status, parsed-draft status, and default-source state
 * First-run resume input state with clear alternate paths for users without a resume or users who want to skip setup
 
 The UI should keep document management calm and efficient. It should not hide core actions behind AI-first flows.
@@ -472,7 +483,7 @@ Recommended scope:
 * Resume list and detail
 * Manual resume creation with title, notes, status, and text content
 * Upload PDF, DOCX, or plain text original resume files
-* Plain text extraction from uploaded originals into empty or upload-sourced resumes
+* Plain text extraction and parsed Markdown draft creation from uploaded originals
 * Primary resume selection
 * Archive, resume delete, and individual uploaded-original delete behavior
 * Repository
@@ -512,6 +523,6 @@ The Resume Library domain is complete for its foundation phase when:
 * The UI supports empty, draft, active, and archived resume states
 * Uploaded originals can be attached to resumes and removed individually
 * Stored resumes can be referenced by future analysis and application workflows
-* Uploaded PDF, DOCX, and TXT originals can produce stored resume text without overwriting manual text
+* Uploaded PDF, DOCX, and TXT originals can produce reviewed parsed Markdown that becomes stored resume text only after explicit acceptance
 * Tests cover important authorization and persistence paths
 * Database and GraphQL reference docs are updated to match the implementation

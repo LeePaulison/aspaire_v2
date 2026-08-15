@@ -7,6 +7,8 @@ import {
   validateResumeUploadFile,
 } from "@/lib/resumes/resumeFileStorage";
 import { extractResumeText } from "@/lib/resumes/resumeTextExtraction";
+import { createResumeMarkdownFromCareerProfile } from "@/lib/resumes/careerProfileResumeDraft";
+import { parseResumeToCareerProfileDraft } from "@/lib/resumes/resumeCareerProfileParser";
 import {
   createResumeFile,
   getResumeById,
@@ -73,6 +75,7 @@ export async function POST(request, context) {
     });
     const buffer = Buffer.from(await file.arrayBuffer());
     let extractedText = "";
+    let parsedText = "";
     let textExtractionStatus = "pending";
     let textExtractionError = "";
 
@@ -82,6 +85,18 @@ export async function POST(request, context) {
         contentType: validatedFile.contentType,
       });
       textExtractionStatus = extractedText ? "completed" : "failed";
+      parsedText = extractedText
+        ? createResumeMarkdownFromCareerProfile({
+            ...parseResumeToCareerProfileDraft({
+              resumeId,
+              title: resume.title,
+              targetRole: resume.targetRole,
+              resumeText: extractedText,
+            }),
+            name: resume.title,
+            headline: resume.targetRole || resume.title,
+          })
+        : "";
       textExtractionError = extractedText
         ? ""
         : "No extractable text was found in this file.";
@@ -104,6 +119,8 @@ export async function POST(request, context) {
       storageKey,
       textExtractionStatus,
       extractedText,
+      parsedText,
+      parsedTextStatus: parsedText ? "ready" : "failed",
     });
 
     const updatedResume = await getResumeById(user.id, resumeId);
@@ -116,7 +133,8 @@ export async function POST(request, context) {
           filename: validatedFile.filename,
           status: textExtractionStatus,
           extractedText,
-          textDraftAvailable: Boolean(extractedText),
+          parsedText,
+          textDraftAvailable: Boolean(parsedText),
           error: textExtractionError,
         },
       },

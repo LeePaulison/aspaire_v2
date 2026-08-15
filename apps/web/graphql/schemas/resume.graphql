@@ -21,6 +21,11 @@ type ResumeFile {
   contentType: String!
   fileSize: Int!
   textExtractionStatus: String!
+  extractedText: String!
+  parsedText: String!
+  parsedTextStatus: String!
+  parsedTextAcceptedAt: String
+  isPrimarySource: Boolean!
   uploadedAt: String!
   createdAt: String!
   updatedAt: String!
@@ -58,6 +63,10 @@ input UpdateResumeInput {
   isPrimary: Boolean
 }
 
+input AcceptParsedResumeTextInput {
+  resumeText: String!
+}
+
 extend type Query {
   resumes(includeArchived: Boolean): [Resume!]!
   resume(resumeId: String!): Resume
@@ -71,5 +80,7 @@ extend type Mutation {
   archiveResume(resumeId: String!): Resume
   restoreResume(resumeId: String!): Resume
   deleteResumeFile(resumeId: String!, fileId: String!): Resume
+  setPrimaryResumeFileSource(resumeId: String!, fileId: String!): Resume
+  acceptParsedResumeText(resumeId: String!, fileId: String!, input: AcceptParsedResumeTextInput!): Resume
   deleteResume(resumeId: String!): ResumeDeletionReceipt
 }

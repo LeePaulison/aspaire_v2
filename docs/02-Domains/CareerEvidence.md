@@ -32,7 +32,7 @@ The bidirectional Resume Library and Career Profile draft loop is implemented as
 
 Current implemented behavior includes:
 
-* Resume-to-profile draft generation from an owned Resume Library record with stored resume text
+* Resume-to-profile draft generation from an owned Resume Library record with stored resume text, or from an explicitly selected uploaded source file when accepted text does not exist yet
 * AI-assisted structured output through the resume-parser WebSocket workflow
 * Editable Career Profile draft review before durable profile creation
 * Contact and social information captured as structured profile contact info
@@ -303,6 +303,7 @@ The first implementation may use narrower operations if the Phase 4 UI can remai
 Current implemented GraphQL surface is intentionally narrower:
 
 * Resume-to-profile draft acceptance uses `createCareerProfileFromDraft`.
+* Parsed uploaded-resume Markdown acceptance uses `acceptParsedResumeText`.
 * Profile-to-resume draft acceptance uses the existing `createResume`.
 * Unaccepted drafts are not persisted server-side.
 
@@ -434,7 +435,7 @@ AI-generated changes should not mutate Career Profile or Resume Library data wit
 
 The AI server owns execution for AI-assisted resume-to-profile drafting. The web application owns context selection, client-session draft review state, and final data mutation. Profile-to-resume Markdown generation currently runs deterministically in the web app.
 
-Uploaded resume raw extraction should not be stored separately from accepted Markdown in Phase 4. Uploaded resume cards may expose a control to generate Markdown from the uploaded original or extracted text, but accepted `resume_text` remains the durable editable content.
+Uploaded resume raw extraction and parsed Markdown drafts are stored on the specific `resume_files` row that produced them. Accepted `resume_text` remains the durable editable resume content, and it changes only when the user accepts a reviewed parsed Markdown draft or edits the resume directly.
 
 ---
 
@@ -541,7 +542,7 @@ Resolved Phase 4 answers:
 
 * The first implemented slice derives evidence from Career Profile and Resume Library records. First-class Career Evidence persistence remains reserved for evidence that needs reuse, linking, or review state.
 * Resume-derived profile drafts should prefill every profile field that can be reasonably inferred. Unused, unknown, or ambiguous content should go into a new Markdown holding field for review.
-* Uploaded resume raw extraction should not be stored separately from accepted Markdown in Phase 4. Uploaded resume cards can expose a control to generate Markdown.
+* Uploaded resume raw extraction and parsed Markdown drafts are stored on `resume_files`; accepted `resumes.resume_text` remains the durable editable content.
 * Parsed resume content should never be silently discarded. Ambiguous or unclassified content should be preserved in `Additional Notes` for user review.
 * Rejected or unaccepted drafts should be retained only for the active browser session by default. IndexedDB may be used if recovery is needed.
 * Dedicated evidence inventory management is not part of the implemented draft-loop slice.

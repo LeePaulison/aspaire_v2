@@ -243,9 +243,137 @@ test("resume file creation does not apply extracted text without review", async 
 
   assert.equal(file.fileId, "file-1");
   assert.equal(insertedFile.textExtractionStatus, "completed");
+  assert.equal(insertedFile.extractedText, "Parsed resume text");
+  assert.equal(insertedFile.parsedText, "");
+  assert.equal(insertedFile.parsedTextStatus, "none");
+  assert.equal(insertedFile.isPrimarySource, true);
   assert.equal("resumeText" in resumeUpdate, false);
   assert.equal("sourceType" in resumeUpdate, false);
   assert.equal("status" in resumeUpdate, false);
+});
+
+test("accepting parsed resume text updates only the selected file source", async () => {
+  const updates = [];
+  const createdAt = new Date("2026-07-23T19:00:00.000Z");
+  const resumeRow = {
+    resumeId: "resume-1",
+    userId: "user-1",
+    title: "Resume",
+    resumeText: "",
+    sourceType: "manual",
+    status: "draft",
+    files: [],
+  };
+  const selectedFile = {
+    fileId: "file-2",
+    resumeId: "resume-1",
+    userId: "user-1",
+    originalFilename: "resume-2.pdf",
+    contentType: "application/pdf",
+    fileSize: 100,
+    storageKey: "users/user-1/resumes/resume-1/file-2-resume.pdf",
+    textExtractionStatus: "completed",
+    extractedText: "Raw selected text",
+    parsedText: "Parsed selected text",
+    parsedTextStatus: "ready",
+    isPrimarySource: false,
+    uploadedAt: createdAt,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  const selectResults = [
+    [resumeRow],
+    [],
+    [selectedFile],
+    [{ ...resumeRow, resumeText: "Accepted Markdown", sourceType: "upload", status: "active" }],
+    [{ ...selectedFile, parsedText: "Accepted Markdown", parsedTextStatus: "accepted", isPrimarySource: true }],
+  ];
+  const repository = createResumeRepository({
+    database: {
+      select() {
+        return new SelectQuery(selectResults.shift() ?? []);
+      },
+      update() {
+        return createUpdateQuery((value) => {
+          updates.push(value);
+        });
+      },
+    },
+  });
+
+  const updatedResume = await repository.acceptParsedResumeText(
+    "user-1",
+    "resume-1",
+    "file-2",
+    { resumeText: "Accepted Markdown" },
+  );
+
+  assert.equal(updates[0].resumeText, "Accepted Markdown");
+  assert.equal(updates[0].sourceType, "upload");
+  assert.equal(updates[0].status, "active");
+  assert.equal(updates[1].isPrimarySource, false);
+  assert.equal(updates[2].parsedText, "Accepted Markdown");
+  assert.equal(updates[2].parsedTextStatus, "accepted");
+  assert.equal(updates[2].isPrimarySource, true);
+  assert.equal(updatedResume.resumeText, "Accepted Markdown");
+  assert.equal(updatedResume.files[0].fileId, "file-2");
+  assert.equal(updatedResume.files[0].parsedTextStatus, "accepted");
+});
+
+test("setting primary resume file source returns the selected source as primary", async () => {
+  const updates = [];
+  const createdAt = new Date("2026-07-23T19:00:00.000Z");
+  const resumeRow = {
+    resumeId: "resume-1",
+    userId: "user-1",
+    title: "Resume",
+    status: "active",
+    files: [],
+  };
+  const selectedFile = {
+    fileId: "file-2",
+    resumeId: "resume-1",
+    userId: "user-1",
+    originalFilename: "resume-2.pdf",
+    contentType: "application/pdf",
+    fileSize: 100,
+    storageKey: "users/user-1/resumes/resume-1/file-2-resume.pdf",
+    textExtractionStatus: "completed",
+    isPrimarySource: false,
+    uploadedAt: createdAt,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  const selectResults = [
+    [resumeRow],
+    [],
+    [selectedFile],
+    [resumeRow],
+    [{ ...selectedFile, isPrimarySource: true }],
+  ];
+  const repository = createResumeRepository({
+    database: {
+      select() {
+        return new SelectQuery(selectResults.shift() ?? []);
+      },
+      update() {
+        return createUpdateQuery((value) => {
+          updates.push(value);
+        });
+      },
+    },
+  });
+
+  const updatedResume = await repository.setPrimaryResumeFileSource(
+    "user-1",
+    "resume-1",
+    "file-2",
+  );
+
+  assert.equal(updates[0].isPrimarySource, false);
+  assert.equal(updates[1].isPrimarySource, true);
+  assert.equal(updatedResume.files[0].fileId, "file-2");
+  assert.equal(updatedResume.files[0].isPrimarySource, true);
 });
 
 test("resume file creation preserves existing resume text before review", async () => {

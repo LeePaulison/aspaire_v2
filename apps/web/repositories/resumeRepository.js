@@ -8,6 +8,13 @@ import { deleteResumeOriginal } from "../lib/resumes/resumeFileStorage.js";
 
 const RESUME_STATUSES = new Set(["draft", "active", "archived"]);
 const SOURCE_TYPES = new Set(["manual", "upload"]);
+const PARSED_TEXT_STATUSES = new Set([
+  "none",
+  "ready",
+  "accepted",
+  "dismissed",
+  "failed",
+]);
 const MAX_RESUME_TEXT_LENGTH = 120000;
 
 function normalizeText(value) {
@@ -22,6 +29,11 @@ function normalizeStatus(value, fallback = "draft") {
 function normalizeSourceType(value) {
   const normalized = normalizeText(value).toLowerCase();
   return SOURCE_TYPES.has(normalized) ? normalized : "manual";
+}
+
+function normalizeParsedTextStatus(value, fallback = "none") {
+  const normalized = normalizeText(value).toLowerCase();
+  return PARSED_TEXT_STATUSES.has(normalized) ? normalized : fallback;
 }
 
 function validateTitle(title) {
@@ -62,6 +74,11 @@ function shapeResumeFile(row) {
     contentType: row.contentType,
     fileSize: row.fileSize,
     textExtractionStatus: row.textExtractionStatus,
+    extractedText: row.extractedText ?? "",
+    parsedText: row.parsedText ?? "",
+    parsedTextStatus: row.parsedTextStatus ?? "none",
+    parsedTextAcceptedAt: row.parsedTextAcceptedAt ?? null,
+    isPrimarySource: Boolean(row.isPrimarySource),
     uploadedAt: row.uploadedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -98,6 +115,28 @@ export function createResumeRepository({
     await database
       .update(resumes)
       .set({ isPrimary: false, updatedAt: new Date() })
+      .where(whereClause);
+  }
+
+  async function clearPrimarySource(userId, resumeId, exceptFileId) {
+    let whereClause = and(
+      eq(resumeFiles.userId, userId),
+      eq(resumeFiles.resumeId, resumeId),
+      eq(resumeFiles.isPrimarySource, true),
+    );
+
+    if (exceptFileId) {
+      whereClause = and(
+        eq(resumeFiles.userId, userId),
+        eq(resumeFiles.resumeId, resumeId),
+        eq(resumeFiles.isPrimarySource, true),
+        ne(resumeFiles.fileId, exceptFileId),
+      );
+    }
+
+    await database
+      .update(resumeFiles)
+      .set({ isPrimarySource: false, updatedAt: new Date() })
       .where(whereClause);
   }
 
@@ -297,7 +336,16 @@ export function createResumeRepository({
 
       const fileId = normalizeText(input.fileId) || createId();
       const extractedText = normalizeText(input.extractedText);
+      const parsedText = normalizeText(input.parsedText);
       validateResumeText(extractedText);
+      validateResumeText(parsedText);
+
+      const isPrimarySource =
+        Boolean(input.isPrimarySource) || existing.files.length === 0;
+
+      if (isPrimarySource) {
+        await clearPrimarySource(userId, resumeId);
+      }
 
       const [file] = await database
         .insert(resumeFiles)
@@ -310,6 +358,13 @@ export function createResumeRepository({
           fileSize: input.fileSize,
           storageKey: normalizeText(input.storageKey),
           textExtractionStatus: normalizeText(input.textExtractionStatus) || "pending",
+          extractedText,
+          parsedText,
+          parsedTextStatus: normalizeParsedTextStatus(
+            input.parsedTextStatus,
+            parsedText ? "ready" : "none",
+          ),
+          isPrimarySource,
         })
         .returning();
 
@@ -319,6 +374,105 @@ export function createResumeRepository({
         .where(and(eq(resumes.userId, userId), eq(resumes.resumeId, resumeId)));
 
       return shapeResumeFile(file);
+    },
+
+    async setPrimaryResumeFileSource(userId, resumeId, fileId) {
+      const existing = await getResumeById(userId, resumeId);
+
+      if (!existing || existing.status === "archived") {
+        return null;
+      }
+
+      const [file] = await database
+        .select()
+        .from(resumeFiles)
+        .where(
+          and(
+            eq(resumeFiles.userId, userId),
+            eq(resumeFiles.resumeId, resumeId),
+            eq(resumeFiles.fileId, fileId),
+          ),
+        )
+        .limit(1);
+
+      if (!file) {
+        return null;
+      }
+
+      await clearPrimarySource(userId, resumeId, fileId);
+
+      await database
+        .update(resumeFiles)
+        .set({ isPrimarySource: true, updatedAt: new Date() })
+        .where(
+          and(
+            eq(resumeFiles.userId, userId),
+            eq(resumeFiles.resumeId, resumeId),
+            eq(resumeFiles.fileId, fileId),
+          ),
+        );
+
+      return getResumeById(userId, resumeId);
+    },
+
+    async acceptParsedResumeText(userId, resumeId, fileId, input = {}) {
+      const existing = await getResumeById(userId, resumeId);
+
+      if (!existing || existing.status === "archived") {
+        return null;
+      }
+
+      const resumeText = normalizeText(input.resumeText);
+      validateResumeText(resumeText);
+
+      const [file] = await database
+        .select()
+        .from(resumeFiles)
+        .where(
+          and(
+            eq(resumeFiles.userId, userId),
+            eq(resumeFiles.resumeId, resumeId),
+            eq(resumeFiles.fileId, fileId),
+          ),
+        )
+        .limit(1);
+
+      if (!file) {
+        return null;
+      }
+
+      const now = new Date();
+
+      await database
+        .update(resumes)
+        .set({
+          resumeText,
+          sourceType: "upload",
+          status: existing.status === "draft" ? "active" : existing.status,
+          updatedAt: now,
+        })
+        .where(and(eq(resumes.userId, userId), eq(resumes.resumeId, resumeId)));
+
+      await clearPrimarySource(userId, resumeId, fileId);
+
+      await database
+        .update(resumeFiles)
+        .set({
+          parsedText: resumeText,
+          parsedTextStatus: "accepted",
+          parsedTextAcceptedAt: now,
+          isPrimarySource: true,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(resumeFiles.userId, userId),
+            eq(resumeFiles.resumeId, resumeId),
+            eq(resumeFiles.fileId, fileId),
+          ),
+        );
+
+      return getResumeById(userId, resumeId);
     },
 
     async getResumeFileStorage(userId, resumeId, fileId) {
@@ -462,6 +616,10 @@ export const getPrimaryResume = (...args) => resumeRepository.getPrimaryResume(.
 export const createResume = (...args) => resumeRepository.createResume(...args);
 export const updateResume = (...args) => resumeRepository.updateResume(...args);
 export const createResumeFile = (...args) => resumeRepository.createResumeFile(...args);
+export const setPrimaryResumeFileSource = (...args) =>
+  resumeRepository.setPrimaryResumeFileSource(...args);
+export const acceptParsedResumeText = (...args) =>
+  resumeRepository.acceptParsedResumeText(...args);
 export const getResumeFileStorage = (...args) =>
   resumeRepository.getResumeFileStorage(...args);
 export const deleteResumeFile = (...args) => resumeRepository.deleteResumeFile(...args);
